@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Backend/">
+    <Project Path="src/Backend/FalFul.API/FalFul.API.csproj" />
+    <Project Path="src/Backend/FalFul.Application/FalFul.Application.csproj" />
+    <Project Path="src/Backend/FalFul.Domain/FalFul.Domain.csproj" />
+    <Project Path="src/Backend/FalFul.Infrastructure/FalFul.Infrastructure.csproj" />
+    <Project Path="src/Backend/FalFul.Persistence/FalFul.Persistence.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,11 @@
+USE FalFulDb;
+GO
+
+CREATE OR ALTER PROCEDURE sp_User_ExistsByEmail
+    @Email NVARCHAR(150)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT COUNT(1) FROM Users WHERE Email = @Email AND IsDeleted = 0;
+END
+GO

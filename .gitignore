@@ -1,0 +1,29 @@
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.swp
+
+# Publish output
+publish/
+out/
+
+# Secrets (use appsettings.Production.json or secrets manager in prod)
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# Angular (each package has its own .gitignore, this is a safety net)
+**/node_modules/
+**/.angular/cache/
+**/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test results
+TestResults/
+coverage/
