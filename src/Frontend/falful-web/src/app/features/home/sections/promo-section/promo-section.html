@@ -1,0 +1,31 @@
+<section class="promo-section section-pad">
+  <div class="container">
+    <div class="promo-grid">
+      @for (p of promos; track p.title; let i = $index) {
+        <div class="promo-card promo-{{ p.color }}" [appScrollAnimate]="i === 0 ? 'reveal-left' : 'reveal-right'">
+          <div class="promo-content">
+            <span class="promo-badge">{{ p.badge }}</span>
+            <h3>{{ p.title }}</h3>
+            <p>{{ p.desc }}</p>
+            <a routerLink="/products" class="btn-primary">{{ p.cta }}</a>
+          </div>
+          <div class="promo-emoji" aria-hidden="true">{{ p.emoji }}</div>
+        </div>
+      }
+    </div>
+
+    <!-- Bottom CTA banner -->
+    <div class="final-cta" appScrollAnimate="reveal">
+      <div class="cta-content">
+        <div>
+          <h2>Ready to taste the difference?</h2>
+          <p>Join 2,400+ customers who get fresh fruits delivered weekly.</p>
+        </div>
+        <div class="cta-actions">
+          <a routerLink="/auth/register" class="btn-primary btn-lg">Create Free Account</a>
+          <a routerLink="/products" class="btn-secondary btn-lg">Browse Products</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

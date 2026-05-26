@@ -1,0 +1,42 @@
+<section class="showcase-section section-pad">
+  <div class="container">
+    <div class="showcase-header" appScrollAnimate="reveal">
+      <div>
+        <span class="section-label">Our Products</span>
+        <h2 class="section-title">Fresh picks, <span class="gradient-text">just for you</span></h2>
+        <p class="section-sub">Handpicked seasonal fruits sourced fresh daily from trusted farms.</p>
+      </div>
+      <a routerLink="/products" class="btn-primary">View All Products</a>
+    </div>
+
+    <div class="products-grid">
+      @for (p of products; track p.name; let i = $index) {
+        <div class="product-card" [appScrollAnimate]="'reveal'" [animDelay]="i * 70">
+          <div class="product-visual">
+            <span class="product-emoji">{{ p.emoji }}</span>
+            <span class="product-tag tag-{{ p.tagColor }}">{{ p.tag }}</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist">♡</button>
+          </div>
+          <div class="product-body">
+            <h3>{{ p.name }}</h3>
+            <div class="product-rating">
+              <span class="stars">
+                @for (s of starsArray(p.rating); track $index) { ★ }
+              </span>
+              <span class="review-count">({{ p.reviews }})</span>
+            </div>
+            <div class="product-footer">
+              <div class="product-price">
+                <span class="price-value">NPR {{ p.price }}</span>
+                <span class="price-unit">{{ p.unit }}</span>
+              </div>
+              <button class="add-btn" aria-label="Add to cart">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>

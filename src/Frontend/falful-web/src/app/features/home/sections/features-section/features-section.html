@@ -1,0 +1,19 @@
+<section class="features-section section-pad">
+  <div class="container">
+    <div class="section-head text-center" appScrollAnimate="reveal">
+      <span class="section-label">Why FalFul</span>
+      <h2 class="section-title">Everything you love about<br>fresh fruit, <span class="gradient-text">reimagined</span></h2>
+      <p class="section-sub">From farm to your doorstep — we handle the quality, you enjoy the taste.</p>
+    </div>
+
+    <div class="features-grid">
+      @for (f of features; track f.title; let i = $index) {
+        <div class="feature-card" [appScrollAnimate]="'reveal'" [animDelay]="i * 80">
+          <div class="feature-icon">{{ f.icon }}</div>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.desc }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
