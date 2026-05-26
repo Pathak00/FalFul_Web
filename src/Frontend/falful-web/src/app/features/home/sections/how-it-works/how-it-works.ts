@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HomepageSection } from '../../../../core/models/cms.models';
 import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-animate.directive';
 
 @Component({
@@ -10,6 +11,7 @@ import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-ani
   styleUrl: './how-it-works.scss'
 })
 export class HowItWorksComponent {
+  @Input() sectionData: HomepageSection | undefined;
   steps = [
     { num: '01', icon: '🔍', title: 'Browse & Select', desc: 'Explore our fresh catalogue. Filter by type, season, or price. Every item is in stock and ready.' },
     { num: '02', icon: '🛒', title: 'Customise Your Order', desc: 'Choose weight, cut style, or build a custom box. Add delivery instructions or schedule for later.' },

@@ -13,6 +13,11 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IPageRepository, PageRepository>();
+        services.AddScoped<IBannerRepository, BannerRepository>();
+        services.AddScoped<IHomepageSectionRepository, HomepageSectionRepository>();
+        services.AddScoped<IAdminRepository, AdminRepository>();
+        services.AddScoped<IMenuRepository, MenuRepository>();
         return services;
     }
 }

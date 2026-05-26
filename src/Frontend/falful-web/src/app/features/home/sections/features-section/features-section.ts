@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { HomepageSection } from '../../../../core/models/cms.models';
 import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-animate.directive';
 
 @Component({
@@ -9,6 +10,7 @@ import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-ani
   styleUrl: './features-section.scss'
 })
 export class FeaturesSectionComponent {
+  @Input() sectionData: HomepageSection | undefined;
   features = [
     { icon: '🚚', title: 'Same-Day Delivery', desc: 'Order before noon, receive by evening in Kathmandu Valley.' },
     { icon: '⚖️',  title: 'Buy by the KG',    desc: 'Order exactly what you need — no waste, no compromise.' },

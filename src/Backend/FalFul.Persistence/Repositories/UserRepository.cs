@@ -109,4 +109,48 @@ public class UserRepository : IUserRepository
             new { GoogleId = googleId, Email = email, FullName = fullName, ProfileImageUrl = profileImageUrl },
             commandType: System.Data.CommandType.StoredProcedure);
     }
+
+    public async Task<IEnumerable<User>> GetAllAsync()
+    {
+        using var conn = _context.CreateConnection();
+        return await conn.QueryAsync<User>(
+            "sp_User_GetAll",
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
+    public async Task SetActiveAsync(int userId, bool isActive, int? updatedBy)
+    {
+        using var conn = _context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_Admin_SetUserActive",
+            new { UserId = userId, IsActive = isActive, UpdatedBy = updatedBy },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
+    public async Task SetUserTypeAsync(int userId, int userType, int? updatedBy)
+    {
+        using var conn = _context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_Admin_SetUserType",
+            new { UserId = userId, UserType = userType, UpdatedBy = updatedBy },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
+    public async Task ResetPasswordAsync(int userId, string passwordHash, int? updatedBy)
+    {
+        using var conn = _context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_Admin_ResetPassword",
+            new { UserId = userId, PasswordHash = passwordHash, UpdatedBy = updatedBy },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
+    public async Task SoftDeleteAsync(int userId, int? deletedBy)
+    {
+        using var conn = _context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_User_SoftDelete",
+            new { UserId = userId, DeletedBy = deletedBy },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
 }

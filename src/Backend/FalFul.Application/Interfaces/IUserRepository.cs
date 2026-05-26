@@ -13,4 +13,11 @@ public interface IUserRepository
     Task<bool> ExistsByEmailAsync(string email);
     Task<bool> ExistsByPhoneAsync(string phone);
     Task<int> GetOrCreateByGoogleAsync(string googleId, string email, string fullName, string? profileImageUrl);
+
+    /* Admin operations */
+    Task<IEnumerable<User>> GetAllAsync();
+    Task SetActiveAsync(int userId, bool isActive, int? updatedBy);
+    Task SetUserTypeAsync(int userId, int userType, int? updatedBy);
+    Task ResetPasswordAsync(int userId, string passwordHash, int? updatedBy);
+    Task SoftDeleteAsync(int userId, int? deletedBy);
 }
