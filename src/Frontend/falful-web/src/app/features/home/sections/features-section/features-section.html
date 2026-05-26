@@ -2,8 +2,12 @@
   <div class="container">
     <div class="section-head text-center" appScrollAnimate="reveal">
       <span class="section-label">Why FalFul</span>
-      <h2 class="section-title">Everything you love about<br>fresh fruit, <span class="gradient-text">reimagined</span></h2>
-      <p class="section-sub">From farm to your doorstep — we handle the quality, you enjoy the taste.</p>
+      @if (sectionData?.title) {
+        <h2 class="section-title">{{ sectionData!.title }}</h2>
+      } @else {
+        <h2 class="section-title">Everything you love about<br>fresh fruit, <span class="gradient-text">reimagined</span></h2>
+      }
+      <p class="section-sub">{{ sectionData?.subtitle || 'From farm to your doorstep — we handle the quality, you enjoy the taste.' }}</p>
     </div>
 
     <div class="features-grid">

@@ -113,8 +113,8 @@ const VISIBLE_TO_OPTIONS = [
               </div>
               <div class="form-group">
                 <label>Icon</label>
-                <input [(ngModel)]="form.icon" placeholder="e.g. 🛒 🏠 📊" />
-                <span class="field-hint">Emoji shown before the label. Leave blank for no icon.</span>
+                <input [(ngModel)]="form.icon" placeholder="e.g. bi-house-fill, bi-cart, bi-person" />
+                <span class="field-hint">Bootstrap Icon class name (without the leading "bi "). Browse at icons.getbootstrap.com. Leave blank for no icon.</span>
               </div>
             </div>
             <div class="form-group">

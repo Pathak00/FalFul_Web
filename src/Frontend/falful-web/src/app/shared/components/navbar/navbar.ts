@@ -12,7 +12,7 @@ import { CmsService } from '../../../core/services/cms.service';
     <nav class="navbar">
       <div class="navbar-brand">
         <a routerLink="/" class="logo">
-          <i class="bi bi-apple logo-icon"></i>
+          <i class="bi bi-basket2-fill logo-icon"></i>
           <span class="logo-text">FalFul</span>
         </a>
       </div>
@@ -23,7 +23,10 @@ import { CmsService } from '../../../core/services/cms.service';
             <!-- Dropdown item -->
             <li class="nav-has-dropdown" (mouseenter)="openDropdown(item.id)" (mouseleave)="closeDropdown()">
               <a [href]="item.url || '#'" (click)="item.url ? null : $event.preventDefault()" class="nav-link-btn" routerLinkActive="active">
-                @if (item.icon) { <i class="bi {{ item.icon }}"></i> } {{ item.label }}
+                @if (item.icon) {
+                  @if (item.icon.startsWith('bi-')) { <i class="bi {{ item.icon }}"></i> }
+                  @else { <span class="nav-emoji">{{ item.icon }}</span> }
+                } {{ item.label }}
                 <i class="bi bi-chevron-down dropdown-caret"></i>
               </a>
               @if (activeDropdown() === item.id) {
@@ -33,7 +36,10 @@ import { CmsService } from '../../../core/services/cms.service';
                       <a [routerLink]="child.url" routerLinkActive="active"
                          [target]="child.openInNewTab ? '_blank' : '_self'"
                          class="dropdown-item">
-                        @if (child.icon) { <i class="bi {{ child.icon }} d-icon"></i> }
+                        @if (child.icon) {
+                          @if (child.icon.startsWith('bi-')) { <i class="bi {{ child.icon }} d-icon"></i> }
+                          @else { <span class="d-icon">{{ child.icon }}</span> }
+                        }
                         {{ child.label }}
                       </a>
                     </li>
@@ -47,7 +53,10 @@ import { CmsService } from '../../../core/services/cms.service';
               <a [routerLink]="item.url || '/'" routerLinkActive="active"
                  [routerLinkActiveOptions]="item.url === '/' ? {exact:true} : {}"
                  [target]="item.openInNewTab ? '_blank' : '_self'">
-                @if (item.icon) { <i class="bi {{ item.icon }}"></i> } {{ item.label }}
+                @if (item.icon) {
+                  @if (item.icon.startsWith('bi-')) { <i class="bi {{ item.icon }}"></i> }
+                  @else { <span class="nav-emoji">{{ item.icon }}</span> }
+                } {{ item.label }}
               </a>
             </li>
           }

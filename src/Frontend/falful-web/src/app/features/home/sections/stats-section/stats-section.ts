@@ -1,4 +1,5 @@
-import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { HomepageSection } from '../../../../core/models/cms.models';
 
 interface Stat { value: number; suffix: string; label: string; icon: string; }
 
@@ -9,6 +10,8 @@ interface Stat { value: number; suffix: string; label: string; icon: string; }
   styleUrl: './stats-section.scss'
 })
 export class StatsSectionComponent implements OnInit, OnDestroy {
+  @Input() sectionData: HomepageSection | undefined;
+
   stats: Stat[] = [
     { value: 2400, suffix: '+', label: 'Happy Customers',  icon: '😊' },
     { value: 15,   suffix: 'k+', label: 'Orders Delivered', icon: '📦' },

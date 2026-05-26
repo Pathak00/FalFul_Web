@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HomepageSection } from '../../../../core/models/cms.models';
 import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-animate.directive';
 
 interface Product {
@@ -21,6 +22,7 @@ interface Product {
   styleUrl: './product-showcase.scss'
 })
 export class ProductShowcaseComponent {
+  @Input() sectionData: HomepageSection | undefined;
   products: Product[] = [
     { emoji: '🍎', name: 'Fuji Apples',      tag: 'Best Seller', tagColor: 'amber', price: '220', unit: '/kg',  rating: 5, reviews: 128 },
     { emoji: '🥭', name: 'Alphonso Mango',   tag: 'Seasonal',    tagColor: 'green', price: '380', unit: '/kg',  rating: 5, reviews: 94  },

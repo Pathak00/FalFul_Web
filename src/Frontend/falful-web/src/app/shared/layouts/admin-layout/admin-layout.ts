@@ -11,7 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
       <aside class="admin-sidebar">
         <div class="sidebar-brand">
           <a routerLink="/" class="brand-logo">
-            <i class="bi bi-apple"></i> FalFul
+            <i class="bi bi-basket2-fill"></i> FalFul
           </a>
           <span class="admin-badge">Admin</span>
         </div>

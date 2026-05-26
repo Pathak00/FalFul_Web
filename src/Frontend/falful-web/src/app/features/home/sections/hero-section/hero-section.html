@@ -11,18 +11,21 @@
     <div class="hero-copy">
       <div class="badge-white hero-badge">
         <span class="badge-dot"></span>
-        Now delivering in Kathmandu Valley
+        {{ sectionData?.content || 'Now delivering in Kathmandu Valley' }}
       </div>
 
       <h1 class="hero-heading">
-        Premium Fruits,<br>
-        <span class="gradient-text">Delivered Fresh</span><br>
-        to Your Door
+        @if (sectionData?.title) {
+          {{ sectionData!.title }}
+        } @else {
+          Premium Fruits,<br>
+          <span class="gradient-text">Delivered Fresh</span><br>
+          to Your Door
+        }
       </h1>
 
       <p class="hero-sub">
-        Order the finest seasonal fruits online. Buy by KG, choose cut varieties,
-        or build a custom fruit box — delivered same day.
+        {{ sectionData?.subtitle || 'Order the finest seasonal fruits online. Buy by KG, choose cut varieties, or build a custom fruit box — delivered same day.' }}
       </p>
 
       <div class="hero-actions">

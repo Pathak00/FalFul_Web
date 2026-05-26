@@ -3,8 +3,12 @@
     <div class="showcase-header" appScrollAnimate="reveal">
       <div>
         <span class="section-label">Our Products</span>
-        <h2 class="section-title">Fresh picks, <span class="gradient-text">just for you</span></h2>
-        <p class="section-sub">Handpicked seasonal fruits sourced fresh daily from trusted farms.</p>
+        @if (sectionData?.title) {
+          <h2 class="section-title">{{ sectionData!.title }}</h2>
+        } @else {
+          <h2 class="section-title">Fresh picks, <span class="gradient-text">just for you</span></h2>
+        }
+        <p class="section-sub">{{ sectionData?.subtitle || 'Handpicked seasonal fruits sourced fresh daily from trusted farms.' }}</p>
       </div>
       <a routerLink="/products" class="btn-primary">View All Products</a>
     </div>

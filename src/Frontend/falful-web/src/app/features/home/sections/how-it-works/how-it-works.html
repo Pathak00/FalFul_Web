@@ -2,7 +2,11 @@
   <div class="container">
     <div class="text-center" appScrollAnimate="reveal">
       <span class="section-label">How It Works</span>
-      <h2 class="section-title">From orchard to doorstep<br>in <span class="gradient-text">four simple steps</span></h2>
+      @if (sectionData?.title) {
+        <h2 class="section-title">{{ sectionData!.title }}</h2>
+      } @else {
+        <h2 class="section-title">From orchard to doorstep<br>in <span class="gradient-text">four simple steps</span></h2>
+      }
     </div>
 
     <div class="steps-grid">

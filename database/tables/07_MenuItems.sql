@@ -21,21 +21,21 @@ BEGIN
         UpdatedBy    INT            NULL
     );
 
-    -- Seed default navigation
+    -- Seed default navigation (icons use Bootstrap Icons class names, e.g. bi-house-fill)
     INSERT INTO MenuItems (Label, Url, Icon, DisplayOrder, IsVisible, VisibleTo) VALUES
-        ('Home',       '/',           '🏠', 1, 1, 0),
-        ('Products',   '/products',   '🛒', 2, 1, 0),
-        ('Dashboard',  '/dashboard',  '📊', 3, 1, 1),
-        ('Admin',      '/admin',      '⚙️', 4, 1, 3);
+        ('Home',       '/',           'bi-house-fill',  1, 1, 0),
+        ('Products',   '/products',   'bi-cart-fill',   2, 1, 0),
+        ('Dashboard',  '/dashboard',  'bi-speedometer2',3, 1, 1),
+        ('Admin',      '/admin',      'bi-shield-fill', 4, 1, 3);
 
     -- Sub-menu items under Admin (ParentId = 4)
     INSERT INTO MenuItems (ParentId, Label, Url, Icon, DisplayOrder, IsVisible, VisibleTo) VALUES
-        (4, 'Overview',          '/admin',          '📊', 1, 1, 3),
-        (4, 'Menus',             '/admin/menus',    '📋', 2, 1, 3),
-        (4, 'Pages',             '/admin/pages',    '📄', 3, 1, 3),
-        (4, 'Banners',           '/admin/banners',  '🖼️', 4, 1, 3),
-        (4, 'Homepage Sections', '/admin/sections', '🏠', 5, 1, 3),
-        (4, 'Users',             '/admin/users',    '👥', 6, 1, 3);
+        (4, 'Overview',          '/admin',          'bi-speedometer2',               1, 1, 3),
+        (4, 'Menus',             '/admin/menus',    'bi-list-nested',                2, 1, 3),
+        (4, 'Pages',             '/admin/pages',    'bi-file-earmark-text',          3, 1, 3),
+        (4, 'Banners',           '/admin/banners',  'bi-images',                     4, 1, 3),
+        (4, 'Homepage Sections', '/admin/sections', 'bi-layout-text-window-reverse', 5, 1, 3),
+        (4, 'Users',             '/admin/users',    'bi-people',                     6, 1, 3);
 
     PRINT 'MenuItems table created and seeded.';
 END
