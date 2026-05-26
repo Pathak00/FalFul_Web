@@ -1,0 +1,27 @@
+<section class="hiw-section section-pad">
+  <div class="container">
+    <div class="text-center" appScrollAnimate="reveal">
+      <span class="section-label">How It Works</span>
+      <h2 class="section-title">From orchard to doorstep<br>in <span class="gradient-text">four simple steps</span></h2>
+    </div>
+
+    <div class="steps-grid">
+      @for (s of steps; track s.num; let i = $index) {
+        <div class="step-card" [appScrollAnimate]="'reveal'" [animDelay]="i * 100">
+          <div class="step-num">{{ s.num }}</div>
+          <div class="step-icon">{{ s.icon }}</div>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.desc }}</p>
+          @if (i < steps.length - 1) {
+            <div class="step-arrow" aria-hidden="true">→</div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="hiw-cta text-center" [appScrollAnimate]="'reveal'" [animDelay]="400">
+      <a routerLink="/auth/register" class="btn-primary btn-lg">Start Ordering Now</a>
+    </div>
+  </div>
+</section>
+

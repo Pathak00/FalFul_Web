@@ -1,0 +1,125 @@
+.promo-section {
+  background: var(--gray-50);
+}
+
+.promo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.promo-card {
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  overflow: hidden;
+  position: relative;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+
+    .promo-emoji { transform: scale(1.15) rotate(8deg); }
+  }
+
+  &.promo-amber {
+    background: linear-gradient(135deg, #78350f, #b45309);
+    .promo-badge { background: rgba(251,191,36,0.25); color: #fef3c7; }
+  }
+
+  &.promo-green {
+    background: var(--gradient-hero);
+    .promo-badge { background: rgba(72,199,116,0.25); color: #d5f0dc; }
+  }
+}
+
+.promo-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  z-index: 1;
+
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    font-family: var(--font-heading);
+  }
+
+  p {
+    font-size: 0.9375rem;
+    color: rgba(255,255,255,0.75);
+    max-width: 260px;
+  }
+}
+
+.promo-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.promo-emoji {
+  font-size: 5rem;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+  transition: transform var(--transition-spring);
+  flex-shrink: 0;
+
+  @media (max-width: 480px) { font-size: 3.5rem; }
+}
+
+/* Final CTA */
+.final-cta {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-10);
+}
+
+.cta-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+
+  h2 {
+    font-size: clamp(1.375rem, 3vw, 1.875rem);
+    font-weight: 800;
+    margin-bottom: var(--space-2);
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.cta-actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    width: 100%;
+
+    .btn-primary, .btn-secondary { justify-content: center; }
+  }
+}
