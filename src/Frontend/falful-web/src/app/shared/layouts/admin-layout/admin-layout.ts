@@ -10,45 +10,47 @@ import { AuthService } from '../../../core/services/auth.service';
     <div class="admin-shell">
       <aside class="admin-sidebar">
         <div class="sidebar-brand">
-          <a routerLink="/" class="brand-logo">🍎 FalFul</a>
+          <a routerLink="/" class="brand-logo">
+            <i class="bi bi-apple"></i> FalFul
+          </a>
           <span class="admin-badge">Admin</span>
         </div>
 
         <nav class="sidebar-nav">
           <a routerLink="/admin" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">📊</span> Dashboard
+            <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
           </a>
 
           <p class="nav-section-label">Content Management</p>
           <a routerLink="/admin/menus" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">📋</span> Menus
+            <i class="bi bi-list-nested nav-icon"></i> Menus
             <span class="nav-hint">Navigation</span>
           </a>
           <a routerLink="/admin/pages" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">📄</span> Pages
+            <i class="bi bi-file-earmark-text nav-icon"></i> Pages
             <span class="nav-hint">Custom pages</span>
           </a>
           <a routerLink="/admin/banners" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">🖼️</span> Banners
+            <i class="bi bi-image nav-icon"></i> Banners
             <span class="nav-hint">Promotions</span>
           </a>
           <a routerLink="/admin/sections" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">🏠</span> Homepage
+            <i class="bi bi-layout-text-window-reverse nav-icon"></i> Homepage
             <span class="nav-hint">Section content</span>
           </a>
 
           <p class="nav-section-label">User Management</p>
           <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">👥</span> Users
+            <i class="bi bi-people nav-icon"></i> Users
             <span class="nav-hint">All accounts</span>
           </a>
 
           <p class="nav-section-label" style="margin-top:auto">Account</p>
           <a routerLink="/dashboard" class="nav-item">
-            <span class="nav-icon">↩️</span> Back to Site
+            <i class="bi bi-arrow-left-circle nav-icon"></i> Back to Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
-            <span class="nav-icon">🚪</span> Logout
+            <i class="bi bi-box-arrow-right nav-icon"></i> Logout
           </button>
         </nav>
       </aside>
@@ -79,7 +81,11 @@ import { AuthService } from '../../../core/services/auth.service';
     .sidebar-brand {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08);
-      .brand-logo { color: #fff; text-decoration: none; font-weight: 800; font-size: 1rem; }
+      .brand-logo {
+        color: #fff; text-decoration: none; font-weight: 800; font-size: 1rem;
+        display: flex; align-items: center; gap: .4rem;
+        i { color: #4ade80; font-size: 1.1rem; }
+      }
       .admin-badge {
         font-size: .6rem; background: #22c55e; color: #fff;
         padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .06em;
@@ -105,7 +111,7 @@ import { AuthService } from '../../../core/services/auth.service';
       &.active { background: rgba(34,197,94,.15); color: #4ade80;
         &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #4ade80; border-radius: 0 2px 2px 0; }
       }
-      .nav-icon { font-size: .9rem; flex-shrink: 0; }
+      .nav-icon { font-size: 1rem; flex-shrink: 0; width: 16px; text-align: center; }
       .nav-hint { margin-left: auto; font-size: .65rem; color: rgba(255,255,255,.25); font-style: italic; }
     }
 

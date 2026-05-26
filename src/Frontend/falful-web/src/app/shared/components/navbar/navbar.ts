@@ -12,7 +12,7 @@ import { CmsService } from '../../../core/services/cms.service';
     <nav class="navbar">
       <div class="navbar-brand">
         <a routerLink="/" class="logo">
-          <span class="logo-icon">🍎</span>
+          <i class="bi bi-apple logo-icon"></i>
           <span class="logo-text">FalFul</span>
         </a>
       </div>
@@ -23,8 +23,8 @@ import { CmsService } from '../../../core/services/cms.service';
             <!-- Dropdown item -->
             <li class="nav-has-dropdown" (mouseenter)="openDropdown(item.id)" (mouseleave)="closeDropdown()">
               <a [href]="item.url || '#'" (click)="item.url ? null : $event.preventDefault()" class="nav-link-btn" routerLinkActive="active">
-                @if (item.icon) { <span>{{ item.icon }}</span> } {{ item.label }}
-                <span class="dropdown-caret">▾</span>
+                @if (item.icon) { <i class="bi {{ item.icon }}"></i> } {{ item.label }}
+                <i class="bi bi-chevron-down dropdown-caret"></i>
               </a>
               @if (activeDropdown() === item.id) {
                 <ul class="dropdown-menu">
@@ -33,7 +33,7 @@ import { CmsService } from '../../../core/services/cms.service';
                       <a [routerLink]="child.url" routerLinkActive="active"
                          [target]="child.openInNewTab ? '_blank' : '_self'"
                          class="dropdown-item">
-                        @if (child.icon) { <span class="d-icon">{{ child.icon }}</span> }
+                        @if (child.icon) { <i class="bi {{ child.icon }} d-icon"></i> }
                         {{ child.label }}
                       </a>
                     </li>
@@ -47,7 +47,7 @@ import { CmsService } from '../../../core/services/cms.service';
               <a [routerLink]="item.url || '/'" routerLinkActive="active"
                  [routerLinkActiveOptions]="item.url === '/' ? {exact:true} : {}"
                  [target]="item.openInNewTab ? '_blank' : '_self'">
-                @if (item.icon) { <span>{{ item.icon }}</span> } {{ item.label }}
+                @if (item.icon) { <i class="bi {{ item.icon }}"></i> } {{ item.label }}
               </a>
             </li>
           }
@@ -56,11 +56,19 @@ import { CmsService } from '../../../core/services/cms.service';
 
       <div class="nav-actions">
         @if (isAuthenticated()) {
-          <span class="user-greeting">{{ user()?.fullName }}</span>
-          <button class="btn-logout" (click)="logout()">Logout</button>
+          <span class="user-greeting">
+            <i class="bi bi-person-circle"></i> {{ user()?.fullName }}
+          </span>
+          <button class="btn-logout" (click)="logout()">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
         } @else {
-          <a routerLink="/auth/login"    class="btn-login">Login</a>
-          <a routerLink="/auth/register" class="btn-register">Get Started</a>
+          <a routerLink="/auth/login" class="btn-login">
+            <i class="bi bi-person"></i> Login
+          </a>
+          <a routerLink="/auth/register" class="btn-register">
+            <i class="bi bi-rocket-takeoff"></i> Get Started
+          </a>
         }
       </div>
     </nav>

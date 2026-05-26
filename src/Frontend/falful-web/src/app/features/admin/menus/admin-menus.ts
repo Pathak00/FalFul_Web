@@ -76,7 +76,7 @@ const VISIBLE_TO_OPTIONS = [
 
           @if (allItems().length === 0) {
             <div class="empty-state">
-              <span class="empty-icon">📋</span>
+              <i class="bi bi-list-nested empty-icon"></i>
               <h3>No menu items yet</h3>
               <p>Create your first navigation link above.</p>
             </div>
@@ -176,7 +176,7 @@ const VISIBLE_TO_OPTIONS = [
             </label>
           </div>
 
-          @if (error()) { <div class="form-error-box">⚠️ {{ error() }}</div> }
+          @if (error()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ error() }}</div> }
 
           <div class="modal-actions">
             <button class="btn-secondary" (click)="closeForm()">Cancel</button>
@@ -192,7 +192,7 @@ const VISIBLE_TO_OPTIONS = [
     @if (deleteTarget()) {
       <div class="modal-overlay" (click)="deleteTarget.set(null)">
         <div class="modal modal-sm" (click)="$event.stopPropagation()">
-          <div class="confirm-icon">🗑️</div>
+          <div class="confirm-icon"><i class="bi bi-trash3"></i></div>
           <h2>Delete "{{ deleteTarget()!.label }}"?</h2>
           <p>
             @if (!deleteTarget()!.parentId) {

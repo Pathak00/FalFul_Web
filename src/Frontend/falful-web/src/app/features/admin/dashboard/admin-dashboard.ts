@@ -21,7 +21,7 @@ import { AdminService } from '../../../core/services/admin.service';
       } @else if (stats()) {
         <div class="stats-grid">
           <a routerLink="/admin/users" class="stat-card stat-blue">
-            <div class="stat-icon">👥</div>
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
             <div class="stat-body">
               <div class="stat-value">{{ stats()!.totalUsers }}</div>
               <div class="stat-label">Total Users</div>
@@ -30,7 +30,7 @@ import { AdminService } from '../../../core/services/admin.service';
           </a>
 
           <a routerLink="/admin/pages" class="stat-card stat-green">
-            <div class="stat-icon">📄</div>
+            <div class="stat-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
             <div class="stat-body">
               <div class="stat-value">{{ stats()!.totalPages }}</div>
               <div class="stat-label">Pages</div>
@@ -39,7 +39,7 @@ import { AdminService } from '../../../core/services/admin.service';
           </a>
 
           <a routerLink="/admin/banners" class="stat-card stat-orange">
-            <div class="stat-icon">🖼️</div>
+            <div class="stat-icon"><i class="bi bi-images"></i></div>
             <div class="stat-body">
               <div class="stat-value">{{ stats()!.totalBanners }}</div>
               <div class="stat-label">Banners</div>
@@ -48,7 +48,7 @@ import { AdminService } from '../../../core/services/admin.service';
           </a>
 
           <a routerLink="/admin/sections" class="stat-card stat-purple">
-            <div class="stat-icon">🏠</div>
+            <div class="stat-icon"><i class="bi bi-layout-text-window-reverse"></i></div>
             <div class="stat-body">
               <div class="stat-value">{{ stats()!.visibleSections }}</div>
               <div class="stat-label">Homepage Sections</div>
@@ -61,35 +61,35 @@ import { AdminService } from '../../../core/services/admin.service';
           <h2>Quick Actions</h2>
           <div class="link-grid">
             <a routerLink="/admin/menus" class="quick-link">
-              <span>📋</span>
+              <i class="bi bi-list-nested ql-icon"></i>
               <div>
                 <strong>Navigation Menus</strong>
                 <p>Build the site navigation — create links, dropdowns, and control who sees each item</p>
               </div>
             </a>
             <a routerLink="/admin/pages" class="quick-link">
-              <span>📄</span>
+              <i class="bi bi-file-earmark-text ql-icon"></i>
               <div>
                 <strong>Manage Pages</strong>
                 <p>Add legal, about, or custom content pages accessible via /pages/[slug]</p>
               </div>
             </a>
             <a routerLink="/admin/banners" class="quick-link">
-              <span>🖼️</span>
+              <i class="bi bi-images ql-icon"></i>
               <div>
                 <strong>Manage Banners</strong>
                 <p>Create promotional banners shown on the homepage and product pages</p>
               </div>
             </a>
             <a routerLink="/admin/sections" class="quick-link">
-              <span>🏠</span>
+              <i class="bi bi-layout-text-window-reverse ql-icon"></i>
               <div>
                 <strong>Homepage Sections</strong>
                 <p>Edit the text content of each section on the landing page</p>
               </div>
             </a>
             <a routerLink="/admin/users" class="quick-link">
-              <span>👥</span>
+              <i class="bi bi-people-fill ql-icon"></i>
               <div>
                 <strong>Manage Users</strong>
                 <p>View, activate, promote, reset passwords, or remove users</p>
@@ -116,7 +116,7 @@ import { AdminService } from '../../../core/services/admin.service';
       &:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
     }
 
-    .stat-icon { font-size: 2rem; }
+    .stat-icon { font-size: 2rem; line-height: 1; display: flex; align-items: center; }
     .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1; }
     .stat-label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin: .25rem 0 .125rem; }
     .stat-sub { font-size: .75rem; color: #64748b; }
@@ -136,9 +136,9 @@ import { AdminService } from '../../../core/services/admin.service';
       display: flex; align-items: flex-start; gap: 1rem;
       background: #fff; border-radius: 10px; padding: 1rem 1.25rem;
       border: 1px solid #e2e8f0; text-decoration: none; color: #0f172a;
-      transition: background .15s;
-      &:hover { background: #f8fafc; }
-      span { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+      transition: background .15s, border-color .15s;
+      &:hover { background: #f0fdf4; border-color: #bbf7d0; }
+      .ql-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; color: #16a34a; }
       strong { font-size: .9rem; font-weight: 600; display: block; margin-bottom: .25rem; }
       p { font-size: .8rem; color: #64748b; margin: 0; line-height: 1.4; }
     }

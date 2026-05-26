@@ -26,7 +26,7 @@ import { CmsService } from '../../../core/services/cms.service';
         </div>
       } @else if (banners().length === 0) {
         <div class="empty-state">
-          <span class="empty-icon">🖼️</span>
+          <i class="bi bi-images empty-icon"></i>
           <h3>No banners yet</h3>
           <p>Create a promotional banner to show on your homepage — like a sale announcement or seasonal offer.</p>
           <button class="btn-primary" (click)="openForm()">+ Create First Banner</button>
@@ -126,9 +126,9 @@ import { CmsService } from '../../../core/services/cms.service';
               <div class="form-group">
                 <label>Where to Show (Position)</label>
                 <select [(ngModel)]="form.position">
-                  <option value="home">🏠 Homepage</option>
-                  <option value="products">🛒 Products Page</option>
-                  <option value="sidebar">📌 Sidebar</option>
+                  <option value="home">Homepage</option>
+                  <option value="products">Products Page</option>
+                  <option value="sidebar">Sidebar</option>
                 </select>
                 <span class="field-hint">Which page this banner will appear on.</span>
               </div>
@@ -169,7 +169,7 @@ import { CmsService } from '../../../core/services/cms.service';
           </div>
 
           @if (error()) {
-            <div class="form-error-box">⚠️ {{ error() }}</div>
+            <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ error() }}</div>
           }
 
           <div class="modal-actions">
@@ -185,7 +185,7 @@ import { CmsService } from '../../../core/services/cms.service';
     @if (deleteTarget()) {
       <div class="modal-overlay" (click)="deleteTarget.set(null)">
         <div class="modal modal-sm" (click)="$event.stopPropagation()">
-          <div class="confirm-icon">🗑️</div>
+          <div class="confirm-icon"><i class="bi bi-trash3"></i></div>
           <h2>Delete Banner?</h2>
           <p>Are you sure you want to delete <strong>"{{ deleteTarget()!.title }}"</strong>?</p>
           <div class="modal-actions">

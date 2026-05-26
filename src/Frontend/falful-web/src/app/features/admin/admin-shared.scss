@@ -14,7 +14,7 @@
 .empty-state {
   display: flex; flex-direction: column; align-items: center;
   padding: 4rem 2rem; text-align: center; color: #64748b;
-  .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-icon { font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; }
   h3 { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 .5rem; }
   p { margin: 0 0 1.5rem; font-size: .9rem; }
   .spinner {
@@ -92,6 +92,7 @@
 .btn-sm {
   padding: .3rem .75rem; border-radius: 5px; font-size: .775rem; font-weight: 600;
   border: none; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: .3rem;
 }
 .btn-edit   { background: #eff6ff; color: #1d4ed8; &:hover { background: #dbeafe; } }
 .btn-danger { background: #fef2f2; color: #dc2626; &:hover { background: #fee2e2; } }
@@ -131,7 +132,10 @@
   display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem;
 }
 
-.confirm-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+.confirm-icon {
+  font-size: 2.5rem; margin-bottom: .5rem; display: block;
+  i { color: #dc2626; }
+}
 
 /* ─── Form ─── */
 .form-section {
@@ -235,6 +239,8 @@
 .form-error-box {
   background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
   border-radius: 7px; padding: .625rem .875rem; font-size: .825rem; margin: .75rem 0 0;
+  display: flex; align-items: center; gap: .4rem;
+  i { font-size: 1rem; flex-shrink: 0; }
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }

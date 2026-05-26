@@ -34,7 +34,7 @@ import { AdminService } from '../../../core/services/admin.service';
         </div>
       } @else if (filtered().length === 0) {
         <div class="empty-state">
-          <span class="empty-icon">👥</span>
+          <i class="bi bi-people empty-icon"></i>
           <h3>No users found</h3>
           <p>Try a different filter.</p>
         </div>
@@ -83,7 +83,7 @@ import { AdminService } from '../../../core/services/admin.service';
                   <td class="text-muted text-sm">{{ u.createdAt | date:'d MMM y' }}</td>
                   <td class="text-muted text-sm">{{ u.lastLoginAt ? (u.lastLoginAt | date:'d MMM y') : '—' }}</td>
                   <td class="actions">
-                    <button class="btn-sm btn-edit" (click)="openReset(u)" title="Reset password">🔑 Reset</button>
+                    <button class="btn-sm btn-edit" (click)="openReset(u)" title="Reset password"><i class="bi bi-key"></i> Reset</button>
                     <button class="btn-sm" [class.btn-warn]="u.isActive" [class.btn-success]="!u.isActive"
                             (click)="toggleActive(u)" [title]="u.isActive ? 'Deactivate account' : 'Activate account'">
                       {{ u.isActive ? 'Deactivate' : 'Activate' }}
@@ -116,7 +116,7 @@ import { AdminService } from '../../../core/services/admin.service';
             <span class="field-hint">The user will need to use this password to log in next time.</span>
           </div>
 
-          @if (resetError()) { <div class="form-error-box">⚠️ {{ resetError() }}</div> }
+          @if (resetError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ resetError() }}</div> }
 
           <div class="modal-actions">
             <button class="btn-secondary" (click)="resetTarget.set(null)">Cancel</button>
@@ -132,7 +132,7 @@ import { AdminService } from '../../../core/services/admin.service';
     @if (deleteTarget()) {
       <div class="modal-overlay" (click)="deleteTarget.set(null)">
         <div class="modal modal-sm" (click)="$event.stopPropagation()">
-          <div class="confirm-icon">🗑️</div>
+          <div class="confirm-icon"><i class="bi bi-person-x"></i></div>
           <h2>Delete User?</h2>
           <p>Permanently remove <strong>{{ deleteTarget()!.fullName }}</strong>? This cannot be undone.</p>
           <div class="modal-actions">

@@ -27,7 +27,7 @@ import { CmsService } from '../../../core/services/cms.service';
         </div>
       } @else if (pages().length === 0) {
         <div class="empty-state">
-          <span class="empty-icon">📄</span>
+          <i class="bi bi-file-earmark-text empty-icon"></i>
           <h3>No pages yet</h3>
           <p>Create your first page — like an About Us or Terms & Conditions page.</p>
           <button class="btn-primary" (click)="openForm()">+ Create First Page</button>
@@ -134,7 +134,7 @@ import { CmsService } from '../../../core/services/cms.service';
           </div>
 
           @if (error()) {
-            <div class="form-error-box">⚠️ {{ error() }}</div>
+            <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ error() }}</div>
           }
 
           <div class="modal-actions">
@@ -150,7 +150,7 @@ import { CmsService } from '../../../core/services/cms.service';
     @if (deleteTarget()) {
       <div class="modal-overlay" (click)="deleteTarget.set(null)">
         <div class="modal modal-sm" (click)="$event.stopPropagation()">
-          <div class="confirm-icon">🗑️</div>
+          <div class="confirm-icon"><i class="bi bi-trash3"></i></div>
           <h2>Delete Page?</h2>
           <p>Are you sure you want to delete <strong>"{{ deleteTarget()!.title }}"</strong>? This cannot be undone.</p>
           <div class="modal-actions">
