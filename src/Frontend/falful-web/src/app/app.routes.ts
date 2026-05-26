@@ -41,7 +41,14 @@ export const routes: Routes = [
         path: 'sections',
         loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent)
       },
-      { path: '', redirectTo: 'pages', pathMatch: 'full' }
+      {
+        path: 'users',
+        loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent)
+      },
+      {
+        path: '',
+        loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent)
+      }
     ]
   },
   {

@@ -10,27 +10,38 @@ import { AuthService } from '../../../core/services/auth.service';
     <div class="admin-shell">
       <aside class="admin-sidebar">
         <div class="sidebar-brand">
-          <a routerLink="/" class="brand-logo">
-            <span>🍎</span> FalFul
-          </a>
+          <a routerLink="/" class="brand-logo">🍎 FalFul</a>
           <span class="admin-badge">Admin</span>
         </div>
 
         <nav class="sidebar-nav">
-          <p class="nav-section-label">Content</p>
+          <a routerLink="/admin" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="active" class="nav-item">
+            <span class="nav-icon">📊</span> Dashboard
+          </a>
+
+          <p class="nav-section-label">Content Management</p>
           <a routerLink="/admin/pages" routerLinkActive="active" class="nav-item">
             <span class="nav-icon">📄</span> Pages
+            <span class="nav-hint">Custom pages</span>
           </a>
           <a routerLink="/admin/banners" routerLinkActive="active" class="nav-item">
             <span class="nav-icon">🖼️</span> Banners
+            <span class="nav-hint">Promotions</span>
           </a>
           <a routerLink="/admin/sections" routerLinkActive="active" class="nav-item">
-            <span class="nav-icon">🏠</span> Homepage Sections
+            <span class="nav-icon">🏠</span> Homepage
+            <span class="nav-hint">Section content</span>
           </a>
 
-          <p class="nav-section-label" style="margin-top:1.5rem">General</p>
+          <p class="nav-section-label">User Management</p>
+          <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+            <span class="nav-icon">👥</span> Users
+            <span class="nav-hint">All accounts</span>
+          </a>
+
+          <p class="nav-section-label" style="margin-top:auto">Account</p>
           <a routerLink="/dashboard" class="nav-item">
-            <span class="nav-icon">📊</span> Dashboard
+            <span class="nav-icon">↩️</span> Back to Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
             <span class="nav-icon">🚪</span> Logout
@@ -40,7 +51,11 @@ import { AuthService } from '../../../core/services/auth.service';
 
       <div class="admin-main">
         <header class="admin-topbar">
-          <span class="topbar-user">{{ user()?.fullName }}</span>
+          <div class="topbar-breadcrumb">FalFul Admin Panel</div>
+          <div class="topbar-user">
+            <div class="topbar-avatar">{{ initial() }}</div>
+            <span>{{ user()?.fullName }}</span>
+          </div>
         </header>
         <main class="admin-content">
           <router-outlet />
@@ -52,58 +67,71 @@ import { AuthService } from '../../../core/services/auth.service';
     .admin-shell { display: flex; min-height: 100vh; background: #f8fafc; }
 
     .admin-sidebar {
-      width: 240px; min-height: 100vh; background: #0a2218;
+      width: 220px; min-height: 100vh; background: #0a2218;
       display: flex; flex-direction: column; flex-shrink: 0;
-      padding: 1.5rem 0;
+      position: sticky; top: 0; height: 100vh;
     }
 
     .sidebar-brand {
-      display: flex; align-items: center; gap: .5rem;
-      padding: 0 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.08);
-      .brand-logo { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08);
+      .brand-logo { color: #fff; text-decoration: none; font-weight: 800; font-size: 1rem; }
       .admin-badge {
-        font-size: .65rem; background: #22c55e; color: #fff;
-        padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: .05em;
+        font-size: .6rem; background: #22c55e; color: #fff;
+        padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .06em;
       }
     }
 
-    .sidebar-nav { padding: 1rem 0; flex: 1; }
+    .sidebar-nav {
+      padding: .75rem 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    }
 
     .nav-section-label {
-      font-size: .65rem; color: rgba(255,255,255,.35); text-transform: uppercase;
-      letter-spacing: .1em; padding: .25rem 1.25rem .5rem; margin: 0;
+      font-size: .6rem; color: rgba(255,255,255,.3); text-transform: uppercase;
+      letter-spacing: .1em; padding: .875rem 1.25rem .3rem; margin: 0;
     }
 
     .nav-item {
-      display: flex; align-items: center; gap: .625rem;
-      padding: .625rem 1.25rem; color: rgba(255,255,255,.7);
-      text-decoration: none; font-size: .875rem; transition: all .15s;
+      display: flex; align-items: center; gap: .5rem;
+      padding: .5rem 1.25rem; color: rgba(255,255,255,.65);
+      text-decoration: none; font-size: .825rem; transition: all .15s;
       border: none; background: none; width: 100%; cursor: pointer; text-align: left;
+      position: relative;
       &:hover { background: rgba(255,255,255,.06); color: #fff; }
-      &.active { background: rgba(34,197,94,.15); color: #4ade80; }
-      .nav-icon { font-size: 1rem; }
+      &.active { background: rgba(34,197,94,.15); color: #4ade80;
+        &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #4ade80; border-radius: 0 2px 2px 0; }
+      }
+      .nav-icon { font-size: .9rem; flex-shrink: 0; }
+      .nav-hint { margin-left: auto; font-size: .65rem; color: rgba(255,255,255,.25); font-style: italic; }
     }
 
     .nav-btn { border-radius: 0; }
 
-    .admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
     .admin-topbar {
-      height: 56px; background: #fff; border-bottom: 1px solid #e2e8f0;
-      display: flex; align-items: center; justify-content: flex-end;
-      padding: 0 1.5rem;
-      .topbar-user { font-size: .875rem; color: #64748b; font-weight: 500; }
+      height: 52px; background: #fff; border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; position: sticky; top: 0; z-index: 10;
+      .topbar-breadcrumb { font-size: .8rem; color: #94a3b8; font-weight: 500; }
+      .topbar-user { display: flex; align-items: center; gap: .625rem;
+        span { font-size: .825rem; color: #374151; font-weight: 600; }
+      }
     }
 
-    .admin-content { flex: 1; padding: 1.5rem; overflow-y: auto; }
+    .topbar-avatar {
+      width: 30px; height: 30px; border-radius: 50%; background: #dcfce7; color: #16a34a;
+      font-size: .8rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+
+    .admin-content { flex: 1; padding: 1.75rem; overflow-y: auto; }
   `]
 })
 export class AdminLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   readonly user = this.authService.currentUser;
+  readonly initial = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'A';
 
-  logout() {
-    this.authService.logout();
-  }
+  logout() { this.authService.logout(); }
 }
