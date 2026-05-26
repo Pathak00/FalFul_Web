@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<IHomepageSectionRepository, HomepageSectionRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IMenuRepository, MenuRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
         return services;
     }
 }

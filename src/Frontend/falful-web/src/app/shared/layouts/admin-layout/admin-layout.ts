@@ -39,6 +39,16 @@ import { AuthService } from '../../../core/services/auth.service';
             <span class="nav-hint">Section content</span>
           </a>
 
+          <p class="nav-section-label">Product Catalog</p>
+          <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
+            <i class="bi bi-tags nav-icon"></i> Categories
+            <span class="nav-hint">Fruit categories</span>
+          </a>
+          <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
+            <i class="bi bi-box-seam nav-icon"></i> Products
+            <span class="nav-hint">Fruit catalog</span>
+          </a>
+
           <p class="nav-section-label">User Management</p>
           <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
             <i class="bi bi-people nav-icon"></i> Users

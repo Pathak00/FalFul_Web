@@ -35,7 +35,9 @@ BEGIN
         (4, 'Pages',             '/admin/pages',    'bi-file-earmark-text',          3, 1, 3),
         (4, 'Banners',           '/admin/banners',  'bi-images',                     4, 1, 3),
         (4, 'Homepage Sections', '/admin/sections', 'bi-layout-text-window-reverse', 5, 1, 3),
-        (4, 'Users',             '/admin/users',    'bi-people',                     6, 1, 3);
+        (4, 'Users',             '/admin/users',       'bi-people',                     6, 1, 3),
+        (4, 'Categories',        '/admin/categories', 'bi-tags',                       7, 1, 3),
+        (4, 'Products',          '/admin/products',   'bi-box-seam',                   8, 1, 3);
 
     PRINT 'MenuItems table created and seeded.';
 END

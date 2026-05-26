@@ -1,0 +1,18 @@
+.product-img-preview {
+  width: 40px; height: 40px; border-radius: 6px;
+  object-fit: cover; border: 1px solid #e2e8f0;
+}
+
+.no-img {
+  width: 40px; height: 40px; border-radius: 6px; background: #f1f5f9;
+  display: flex; align-items: center; justify-content: center;
+  color: #94a3b8; font-size: .85rem;
+}
+
+.unit-badge {
+  background: #f0fdf4; color: #16a34a;
+  padding: .1rem .4rem; border-radius: 4px; font-size: .75rem; font-weight: 600;
+}
+
+.price-cell { font-weight: 700; color: #2d9348; }
+.featured-star { color: #f59e0b; }

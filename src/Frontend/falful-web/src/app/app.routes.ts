@@ -21,6 +21,14 @@ export const routes: Routes = [
       {
         path: 'pages/:slug',
         loadComponent: () => import('./features/pages/page-view/page-view').then(m => m.PageViewComponent)
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./features/products/product-list/product-list').then(m => m.ProductListComponent)
+      },
+      {
+        path: 'products/:slug',
+        loadComponent: () => import('./features/products/product-detail/product-detail').then(m => m.ProductDetailComponent)
       }
     ]
   },
@@ -48,6 +56,14 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent)
+      },
+      {
+        path: 'categories',
+        loadComponent: () => import('./features/admin/categories/admin-categories').then(m => m.AdminCategoriesComponent)
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent)
       },
       {
         path: '',
