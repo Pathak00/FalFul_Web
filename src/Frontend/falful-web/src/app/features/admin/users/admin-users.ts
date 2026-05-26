@@ -4,6 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AdminUser } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
 
+const USER_TYPE_OPTS = [
+  { value: 1, label: 'Individual',   desc: 'Regular customer buying for personal use' },
+  { value: 2, label: 'Organization', desc: 'Business or institutional buyer' },
+  { value: 3, label: 'Admin',        desc: 'Full admin access to the control panel' },
+];
+
 @Component({
   selector: 'app-admin-users',
   standalone: true,
@@ -16,6 +22,9 @@ import { AdminService } from '../../../core/services/admin.service';
           <h1>Users</h1>
           <p class="page-sub">View and manage all registered users. You can activate/deactivate accounts, change roles, reset passwords, or remove users.</p>
         </div>
+        <button class="btn-primary" (click)="openCreate()">
+          <i class="bi bi-person-plus"></i> Add User
+        </button>
       </div>
 
       <!-- Filter bar -->
@@ -142,6 +151,75 @@ import { AdminService } from '../../../core/services/admin.service';
         </div>
       </div>
     }
+
+    <!-- Create User Modal -->
+    @if (showCreate()) {
+      <div class="modal-overlay" (click)="closeCreate()">
+        <div class="modal modal-lg" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Add New User</h2>
+              <p class="modal-sub">Create an account for a user of any type. They can log in with the password you set.</p>
+            </div>
+            <button class="btn-close" (click)="closeCreate()"><i class="bi bi-x-lg"></i></button>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label>Full Name <span class="required">*</span></label>
+              <input [(ngModel)]="createForm.fullName" placeholder="e.g. Rupak Pathak" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" [(ngModel)]="createForm.email" placeholder="user@example.com" />
+                <span class="field-hint">Required if no phone number is provided.</span>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input [(ngModel)]="createForm.phoneNumber" placeholder="+977 98XXXXXXXX" />
+                <span class="field-hint">Required if no email is provided.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label>User Type <span class="required">*</span></label>
+              <div class="type-options">
+                @for (opt of userTypeOpts; track opt.value) {
+                  <label class="type-option" [class.selected]="createForm.userType === opt.value"
+                         (click)="createForm.userType = opt.value">
+                    <div class="type-radio"></div>
+                    <div>
+                      <strong>{{ opt.label }}</strong>
+                      <span>{{ opt.desc }}</span>
+                    </div>
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label>Password <span class="required">*</span></label>
+              <input type="password" [(ngModel)]="createForm.password" placeholder="Minimum 6 characters" />
+              <span class="field-hint">The user will use this password to log in. You can reset it later if needed.</span>
+            </div>
+          </div>
+
+          @if (createError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ createError() }}</div> }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="closeCreate()">Cancel</button>
+            <button class="btn-primary" (click)="submitCreate()" [disabled]="creating()">
+              {{ creating() ? 'Creating…' : 'Create User' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .page-sub { color: #64748b; margin: .25rem 0 0; font-size: .875rem; }
@@ -175,6 +253,29 @@ import { AdminService } from '../../../core/services/admin.service';
 
     .btn-warn    { background: #fff7ed; color: #ea580c; &:hover { background: #ffedd5; } }
     .btn-success { background: #f0fdf4; color: #16a34a; &:hover { background: #dcfce7; } }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: .35rem;
+    }
+
+    /* User type selector */
+    .type-options { display: flex; flex-direction: column; gap: .5rem; }
+
+    .type-option {
+      display: flex; align-items: flex-start; gap: .75rem;
+      padding: .75rem 1rem; border-radius: 8px; border: 1.5px solid #e2e8f0;
+      cursor: pointer; transition: border-color .15s, background .15s;
+      &.selected { border-color: #16a34a; background: #f0fdf4;
+        .type-radio { border-color: #16a34a; background: #16a34a; box-shadow: inset 0 0 0 3px #fff; }
+      }
+      &:hover:not(.selected) { border-color: #94a3b8; }
+      .type-radio {
+        width: 16px; height: 16px; border-radius: 50%; border: 2px solid #d1d5db;
+        flex-shrink: 0; margin-top: 2px; transition: all .15s;
+      }
+      strong { display: block; font-size: .875rem; font-weight: 600; color: #0f172a; }
+      span { font-size: .775rem; color: #64748b; }
+    }
   `]
 })
 export class AdminUsersComponent implements OnInit {
@@ -190,6 +291,39 @@ export class AdminUsersComponent implements OnInit {
   resetting = signal(false);
 
   deleteTarget = signal<AdminUser | null>(null);
+
+  /* Create user */
+  userTypeOpts = USER_TYPE_OPTS;
+  showCreate = signal(false);
+  creating = signal(false);
+  createError = signal('');
+  createForm = this.emptyCreateForm();
+
+  openCreate() { this.createForm = this.emptyCreateForm(); this.createError.set(''); this.showCreate.set(true); }
+  closeCreate() { this.showCreate.set(false); }
+
+  submitCreate() {
+    if (!this.createForm.fullName.trim()) { this.createError.set('Full name is required.'); return; }
+    if (!this.createForm.email?.trim() && !this.createForm.phoneNumber?.trim()) {
+      this.createError.set('Email or phone number is required.'); return;
+    }
+    if (this.createForm.password.length < 6) { this.createError.set('Password must be at least 6 characters.'); return; }
+    this.creating.set(true);
+    this.adminService.createUser({
+      fullName: this.createForm.fullName,
+      email: this.createForm.email || undefined,
+      phoneNumber: this.createForm.phoneNumber || undefined,
+      password: this.createForm.password,
+      userType: this.createForm.userType
+    }).subscribe({
+      next: () => { this.creating.set(false); this.closeCreate(); this.load(); },
+      error: (e: any) => { this.creating.set(false); this.createError.set(e.error?.message ?? 'Failed to create user.'); }
+    });
+  }
+
+  private emptyCreateForm() {
+    return { fullName: '', email: '', phoneNumber: '', password: '', userType: 1 };
+  }
 
   filtered = () => {
     const f = this.filter();

@@ -23,6 +23,13 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> GetUsers() =>
         Ok(await _admin.GetAllUsersAsync());
 
+    [HttpPost("users")]
+    public async Task<IActionResult> CreateUser([FromBody] CreateAdminUserDto dto)
+    {
+        var result = await _admin.CreateUserAsync(dto, GetUserId());
+        return result.IsSuccess ? Ok(new { id = result.Data }) : BadRequest(new { message = result.Error });
+    }
+
     [HttpPost("users/set-active")]
     public async Task<IActionResult> SetActive([FromBody] SetUserActiveDto dto)
     {

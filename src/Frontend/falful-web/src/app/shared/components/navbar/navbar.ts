@@ -108,8 +108,16 @@ export class NavbarComponent implements OnInit {
     });
   }
 
-  openDropdown(id: number)  { this.activeDropdown.set(id); }
-  closeDropdown()            { this.activeDropdown.set(null); }
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  openDropdown(id: number) {
+    if (this.closeTimer) { clearTimeout(this.closeTimer); this.closeTimer = null; }
+    this.activeDropdown.set(id);
+  }
+
+  closeDropdown() {
+    this.closeTimer = setTimeout(() => { this.activeDropdown.set(null); this.closeTimer = null; }, 120);
+  }
 
   logout() { this.authService.logout(); }
 }

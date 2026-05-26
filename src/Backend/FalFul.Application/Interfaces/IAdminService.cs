@@ -7,6 +7,7 @@ public interface IAdminService
 {
     Task<IEnumerable<AdminUserDto>> GetAllUsersAsync();
     Task<AdminStatsDto> GetStatsAsync();
+    Task<Result<int>> CreateUserAsync(CreateAdminUserDto dto, int? adminId);
     Task<Result> SetUserActiveAsync(SetUserActiveDto dto, int? adminId);
     Task<Result> SetUserTypeAsync(SetUserTypeDto dto, int? adminId);
     Task<Result> ResetPasswordAsync(AdminResetPasswordDto dto, int? adminId);

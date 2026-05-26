@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  AdminResetPasswordRequest, AdminStats, AdminUser,
+  AdminCreateUserRequest, AdminResetPasswordRequest, AdminStats, AdminUser,
   SetUserActiveRequest, SetUserTypeRequest
 } from '../models/admin.models';
 import { ApiService } from './api.service';
@@ -28,6 +28,10 @@ export class AdminService {
 
   resetPassword(dto: AdminResetPasswordRequest): Observable<void> {
     return this.api.post<void>('/api/admin/users/reset-password', dto);
+  }
+
+  createUser(dto: AdminCreateUserRequest): Observable<{ id: number }> {
+    return this.api.post<{ id: number }>('/api/admin/users', dto);
   }
 
   deleteUser(id: number): Observable<void> {

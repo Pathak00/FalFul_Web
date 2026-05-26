@@ -36,7 +36,10 @@ const VISIBLE_TO_OPTIONS = [
             <!-- Top-level row -->
             <div class="menu-row menu-row-top" [class.row-hidden]="!item.isVisible">
               <div class="menu-row-left">
-                @if (item.icon) { <span class="menu-icon">{{ item.icon }}</span> }
+                @if (item.icon) {
+                  @if (item.icon.startsWith('bi-')) { <i class="bi {{ item.icon }} menu-icon"></i> }
+                  @else { <span class="menu-icon">{{ item.icon }}</span> }
+                }
                 <div class="menu-label-block">
                   <strong>{{ item.label }}</strong>
                   @if (item.url) { <span class="menu-url">{{ item.url }}</span> }
@@ -57,7 +60,10 @@ const VISIBLE_TO_OPTIONS = [
               <div class="menu-row menu-row-child" [class.row-hidden]="!child.isVisible">
                 <div class="menu-row-left">
                   <span class="child-indent">↳</span>
-                  @if (child.icon) { <span class="menu-icon">{{ child.icon }}</span> }
+                  @if (child.icon) {
+                    @if (child.icon.startsWith('bi-')) { <i class="bi {{ child.icon }} menu-icon"></i> }
+                    @else { <span class="menu-icon">{{ child.icon }}</span> }
+                  }
                   <div class="menu-label-block">
                     <strong>{{ child.label }}</strong>
                     @if (child.url) { <span class="menu-url">{{ child.url }}</span> }
@@ -232,7 +238,7 @@ const VISIBLE_TO_OPTIONS = [
     .menu-row-left { display: flex; align-items: center; gap: .625rem; flex: 1; min-width: 0; flex-wrap: wrap; }
     .menu-row-actions { display: flex; gap: .375rem; flex-shrink: 0; }
 
-    .menu-icon { font-size: 1.1rem; }
+    .menu-icon { font-size: 1rem; width: 18px; text-align: center; color: #475569; flex-shrink: 0; }
 
     .menu-label-block {
       display: flex; flex-direction: column; gap: .125rem;

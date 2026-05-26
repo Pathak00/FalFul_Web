@@ -1,6 +1,8 @@
 using FalFul.Application.DTOs.Admin;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Common;
+using FalFul.Domain.Entities;
+using FalFul.Domain.Enums;
 
 namespace FalFul.Application.Services;
 
@@ -35,6 +37,37 @@ public class AdminService : IAdminService
 
     public async Task<AdminStatsDto> GetStatsAsync() =>
         await _admin.GetStatsAsync();
+
+    public async Task<Result<int>> CreateUserAsync(CreateAdminUserDto dto, int? adminId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(dto.FullName))
+                return Result<int>.Failure("Full name is required.");
+            if (string.IsNullOrWhiteSpace(dto.Email) && string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                return Result<int>.Failure("Email or phone number is required.");
+            if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
+                return Result<int>.Failure("Password must be at least 6 characters.");
+            if (!string.IsNullOrWhiteSpace(dto.Email) && await _users.ExistsByEmailAsync(dto.Email))
+                return Result<int>.Failure("A user with this email already exists.");
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && await _users.ExistsByPhoneAsync(dto.PhoneNumber))
+                return Result<int>.Failure("A user with this phone number already exists.");
+
+            var user = new User
+            {
+                FullName = dto.FullName,
+                Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email,
+                PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? null : dto.PhoneNumber,
+                PasswordHash = _hasher.Hash(dto.Password),
+                UserType = (UserType)dto.UserType,
+                IsActive = true
+            };
+
+            var id = await _users.CreateAsync(user);
+            return Result<int>.Success(id);
+        }
+        catch (Exception ex) { return Result<int>.Failure(ex.Message); }
+    }
 
     public async Task<Result> SetUserActiveAsync(SetUserActiveDto dto, int? adminId)
     {

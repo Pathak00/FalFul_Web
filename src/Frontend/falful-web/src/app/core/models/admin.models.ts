@@ -34,3 +34,11 @@ export interface AdminResetPasswordRequest {
   userId: number;
   newPassword: string;
 }
+
+export interface AdminCreateUserRequest {
+  fullName: string;
+  email?: string;
+  phoneNumber?: string;
+  password: string;
+  userType: number; // 1=Individual 2=Organization 3=Admin
+}
