@@ -60,6 +60,13 @@ import { AdminService } from '../../../core/services/admin.service';
         <div class="quick-links">
           <h2>Quick Actions</h2>
           <div class="link-grid">
+            <a routerLink="/admin/menus" class="quick-link">
+              <span>📋</span>
+              <div>
+                <strong>Navigation Menus</strong>
+                <p>Build the site navigation — create links, dropdowns, and control who sees each item</p>
+              </div>
+            </a>
             <a routerLink="/admin/pages" class="quick-link">
               <span>📄</span>
               <div>

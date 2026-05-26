@@ -20,6 +20,10 @@ import { AuthService } from '../../../core/services/auth.service';
           </a>
 
           <p class="nav-section-label">Content Management</p>
+          <a routerLink="/admin/menus" routerLinkActive="active" class="nav-item">
+            <span class="nav-icon">📋</span> Menus
+            <span class="nav-hint">Navigation</span>
+          </a>
           <a routerLink="/admin/pages" routerLinkActive="active" class="nav-item">
             <span class="nav-icon">📄</span> Pages
             <span class="nav-hint">Custom pages</span>

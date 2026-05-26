@@ -67,6 +67,35 @@ export interface HomepageSection {
   displayOrder: number;
 }
 
+export interface MenuItem {
+  id: number;
+  parentId?: number;
+  label: string;
+  url?: string;
+  icon?: string;
+  displayOrder: number;
+  isVisible: boolean;
+  /** 0=Everyone 1=LoggedIn 2=GuestOnly 3=Admin 4=Org 5=Individual */
+  visibleTo: number;
+  openInNewTab: boolean;
+  children?: MenuItem[];
+}
+
+export interface CreateMenuItemRequest {
+  parentId?: number;
+  label: string;
+  url?: string;
+  icon?: string;
+  displayOrder: number;
+  isVisible: boolean;
+  visibleTo: number;
+  openInNewTab: boolean;
+}
+
+export interface UpdateMenuItemRequest extends CreateMenuItemRequest {
+  id: number;
+}
+
 export interface UpsertSectionRequest {
   sectionKey: string;
   title?: string;

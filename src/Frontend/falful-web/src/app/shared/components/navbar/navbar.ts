@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { MenuItem } from '../../../core/models/cms.models';
 import { AuthService } from '../../../core/services/auth.service';
+import { CmsService } from '../../../core/services/cms.service';
 
 @Component({
   selector: 'app-navbar',
@@ -16,22 +18,48 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
 
       <ul class="nav-links">
-        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Home</a></li>
-        <li><a routerLink="/products" routerLinkActive="active">Products</a></li>
-        @if (isAuthenticated()) {
-          <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
-        }
-        @if (isAdmin()) {
-          <li><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
+        @for (item of topLevel(); track item.id) {
+          @if (hasChildren(item.id)) {
+            <!-- Dropdown item -->
+            <li class="nav-has-dropdown" (mouseenter)="openDropdown(item.id)" (mouseleave)="closeDropdown()">
+              <a [href]="item.url || '#'" (click)="item.url ? null : $event.preventDefault()" class="nav-link-btn" routerLinkActive="active">
+                @if (item.icon) { <span>{{ item.icon }}</span> } {{ item.label }}
+                <span class="dropdown-caret">▾</span>
+              </a>
+              @if (activeDropdown() === item.id) {
+                <ul class="dropdown-menu">
+                  @for (child of childrenOf(item.id); track child.id) {
+                    <li>
+                      <a [routerLink]="child.url" routerLinkActive="active"
+                         [target]="child.openInNewTab ? '_blank' : '_self'"
+                         class="dropdown-item">
+                        @if (child.icon) { <span class="d-icon">{{ child.icon }}</span> }
+                        {{ child.label }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          } @else {
+            <!-- Plain link -->
+            <li>
+              <a [routerLink]="item.url || '/'" routerLinkActive="active"
+                 [routerLinkActiveOptions]="item.url === '/' ? {exact:true} : {}"
+                 [target]="item.openInNewTab ? '_blank' : '_self'">
+                @if (item.icon) { <span>{{ item.icon }}</span> } {{ item.label }}
+              </a>
+            </li>
+          }
         }
       </ul>
 
       <div class="nav-actions">
         @if (isAuthenticated()) {
-          <span class="user-greeting">Hello, {{ user()?.fullName }}</span>
+          <span class="user-greeting">{{ user()?.fullName }}</span>
           <button class="btn-logout" (click)="logout()">Logout</button>
         } @else {
-          <a routerLink="/auth/login" class="btn-login">Login</a>
+          <a routerLink="/auth/login"    class="btn-login">Login</a>
           <a routerLink="/auth/register" class="btn-register">Get Started</a>
         }
       </div>
@@ -39,13 +67,32 @@ import { AuthService } from '../../../core/services/auth.service';
   `,
   styleUrl: './navbar.scss'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
+  private cmsService  = inject(CmsService);
+
   readonly isAuthenticated = this.authService.isAuthenticated;
   readonly isAdmin = this.authService.isAdmin;
   readonly user = this.authService.currentUser;
 
-  logout() {
-    this.authService.logout();
+  private menuItems = signal<MenuItem[]>([]);
+  activeDropdown = signal<number | null>(null);
+
+  topLevel   = () => this.menuItems().filter(i => !i.parentId);
+  childrenOf = (id: number) => this.menuItems().filter(i => i.parentId === id);
+  hasChildren = (id: number) => this.menuItems().some(i => i.parentId === id);
+
+  ngOnInit() { this.loadMenu(); }
+
+  private loadMenu() {
+    this.cmsService.getVisibleMenuItems().subscribe({
+      next: items => this.menuItems.set(items),
+      error: () => {}
+    });
   }
+
+  openDropdown(id: number)  { this.activeDropdown.set(id); }
+  closeDropdown()            { this.activeDropdown.set(null); }
+
+  logout() { this.authService.logout(); }
 }

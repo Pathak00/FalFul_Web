@@ -30,6 +30,10 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard],
     children: [
       {
+        path: 'menus',
+        loadComponent: () => import('./features/admin/menus/admin-menus').then(m => m.AdminMenusComponent)
+      },
+      {
         path: 'pages',
         loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent)
       },

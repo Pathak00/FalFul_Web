@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  Banner, CreateBannerRequest, CreatePageRequest,
-  HomepageSection, PageDetail, PageListItem,
-  UpdateBannerRequest, UpdatePageRequest, UpsertSectionRequest
+  Banner, CreateBannerRequest, CreateMenuItemRequest, CreatePageRequest,
+  HomepageSection, MenuItem, PageDetail, PageListItem,
+  UpdateBannerRequest, UpdateMenuItemRequest, UpdatePageRequest, UpsertSectionRequest
 } from '../models/cms.models';
 import { ApiService } from './api.service';
 
@@ -69,5 +69,26 @@ export class CmsService {
 
   upsertSection(dto: UpsertSectionRequest): Observable<{ id: number }> {
     return this.api.post<{ id: number }>('/api/homepagesections/upsert', dto);
+  }
+
+  /* Menus */
+  getAllMenuItems(): Observable<MenuItem[]> {
+    return this.api.get<MenuItem[]>('/api/menus');
+  }
+
+  getVisibleMenuItems(): Observable<MenuItem[]> {
+    return this.api.get<MenuItem[]>('/api/menus/visible');
+  }
+
+  createMenuItem(dto: CreateMenuItemRequest): Observable<{ id: number }> {
+    return this.api.post<{ id: number }>('/api/menus', dto);
+  }
+
+  updateMenuItem(dto: UpdateMenuItemRequest): Observable<void> {
+    return this.api.put<void>('/api/menus', dto);
+  }
+
+  deleteMenuItem(id: number): Observable<void> {
+    return this.api.delete<void>(`/api/menus/${id}`);
   }
 }

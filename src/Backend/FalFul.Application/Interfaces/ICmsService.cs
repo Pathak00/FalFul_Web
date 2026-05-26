@@ -5,6 +5,12 @@ namespace FalFul.Application.Interfaces;
 
 public interface ICmsService
 {
+    /* Menu Items */
+    Task<IEnumerable<MenuItemDto>> GetAllMenuItemsAsync();
+    Task<IEnumerable<MenuItemDto>> GetVisibleMenuItemsAsync(int? userType);
+    Task<Result<int>> CreateMenuItemAsync(CreateMenuItemDto dto, int? adminId);
+    Task<Result> UpdateMenuItemAsync(UpdateMenuItemDto dto, int? adminId);
+    Task<Result> DeleteMenuItemAsync(int id, int? adminId);
     /* Pages */
     Task<Result<int>> CreatePageAsync(CreatePageDto dto, int? adminId);
     Task<Result> UpdatePageAsync(UpdatePageDto dto, int? adminId);

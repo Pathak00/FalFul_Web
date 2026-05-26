@@ -10,13 +10,63 @@ public class CmsService : ICmsService
     private readonly IPageRepository _pages;
     private readonly IBannerRepository _banners;
     private readonly IHomepageSectionRepository _sections;
+    private readonly IMenuRepository _menus;
 
-    public CmsService(IPageRepository pages, IBannerRepository banners, IHomepageSectionRepository sections)
+    public CmsService(IPageRepository pages, IBannerRepository banners, IHomepageSectionRepository sections, IMenuRepository menus)
     {
         _pages = pages;
         _banners = banners;
         _sections = sections;
+        _menus = menus;
     }
+
+    /* ---- Menu Items ---- */
+
+    public async Task<IEnumerable<MenuItemDto>> GetAllMenuItemsAsync()
+    {
+        var items = await _menus.GetAllAsync();
+        return items.Select(MapMenuDto);
+    }
+
+    public async Task<IEnumerable<MenuItemDto>> GetVisibleMenuItemsAsync(int? userType)
+    {
+        var items = await _menus.GetVisibleAsync(userType);
+        return items.Select(MapMenuDto);
+    }
+
+    public async Task<Result<int>> CreateMenuItemAsync(CreateMenuItemDto dto, int? adminId)
+    {
+        try
+        {
+            var item = new MenuItem { ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab };
+            var id = await _menus.CreateAsync(item, adminId);
+            return Result<int>.Success(id);
+        }
+        catch (Exception ex) { return Result<int>.Failure(ex.Message); }
+    }
+
+    public async Task<Result> UpdateMenuItemAsync(UpdateMenuItemDto dto, int? adminId)
+    {
+        try
+        {
+            var item = new MenuItem { Id = dto.Id, ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab };
+            await _menus.UpdateAsync(item, adminId);
+            return Result.Success();
+        }
+        catch (Exception ex) { return Result.Failure(ex.Message); }
+    }
+
+    public async Task<Result> DeleteMenuItemAsync(int id, int? adminId)
+    {
+        try { await _menus.DeleteAsync(id, adminId); return Result.Success(); }
+        catch (Exception ex) { return Result.Failure(ex.Message); }
+    }
+
+    private static MenuItemDto MapMenuDto(MenuItem m) => new()
+    {
+        Id = m.Id, ParentId = m.ParentId, Label = m.Label, Url = m.Url, Icon = m.Icon,
+        DisplayOrder = m.DisplayOrder, IsVisible = m.IsVisible, VisibleTo = m.VisibleTo, OpenInNewTab = m.OpenInNewTab
+    };
 
     /* ---- Pages ---- */
 
