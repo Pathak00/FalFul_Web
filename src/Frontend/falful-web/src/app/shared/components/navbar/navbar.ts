@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -21,6 +21,9 @@ import { AuthService } from '../../../core/services/auth.service';
         @if (isAuthenticated()) {
           <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
         }
+        @if (isAdmin()) {
+          <li><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
+        }
       </ul>
 
       <div class="nav-actions">
@@ -39,6 +42,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class NavbarComponent {
   private authService = inject(AuthService);
   readonly isAuthenticated = this.authService.isAuthenticated;
+  readonly isAdmin = this.authService.isAdmin;
   readonly user = this.authService.currentUser;
 
   logout() {

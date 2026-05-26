@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { adminGuard, authGuard, guestGuard } from './core/guards/auth.guard';
+import { AdminLayoutComponent } from './shared/layouts/admin-layout/admin-layout';
 import { AuthLayoutComponent } from './shared/layouts/auth-layout/auth-layout';
 import { MainLayoutComponent } from './shared/layouts/main-layout/main-layout';
 
@@ -16,7 +17,31 @@ export const routes: Routes = [
         path: 'dashboard',
         canActivate: [authGuard],
         loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'pages/:slug',
+        loadComponent: () => import('./features/pages/page-view/page-view').then(m => m.PageViewComponent)
       }
+    ]
+  },
+  {
+    path: 'admin',
+    component: AdminLayoutComponent,
+    canActivate: [authGuard, adminGuard],
+    children: [
+      {
+        path: 'pages',
+        loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent)
+      },
+      {
+        path: 'banners',
+        loadComponent: () => import('./features/admin/banners/admin-banners').then(m => m.AdminBannersComponent)
+      },
+      {
+        path: 'sections',
+        loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent)
+      },
+      { path: '', redirectTo: 'pages', pathMatch: 'full' }
     ]
   },
   {

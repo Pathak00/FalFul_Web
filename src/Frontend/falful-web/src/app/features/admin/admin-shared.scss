@@ -1,0 +1,211 @@
+.admin-page {
+  max-width: 1100px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: .9rem;
+}
+
+.data-table-wrap {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: #f8fafc;
+    th {
+      padding: .75rem 1rem;
+      text-align: left;
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+    }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    &:last-child { border-bottom: none; }
+    &:hover { background: #fafafa; }
+
+    td {
+      padding: .75rem 1rem;
+      font-size: .875rem;
+      color: #334155;
+      code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: .8rem; }
+    }
+  }
+}
+
+.empty-cell { text-align: center; color: #94a3b8; font-style: italic; }
+
+.actions {
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  font-size: .7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.badge-green { background: #dcfce7; color: #16a34a; }
+.badge-gray  { background: #f1f5f9; color: #64748b; }
+.badge-blue  { background: #dbeafe; color: #1d4ed8; }
+
+/* Buttons */
+.btn-primary {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  padding: .5rem 1.25rem;
+  border-radius: 6px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: #15803d; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border: none;
+  padding: .5rem 1.25rem;
+  border-radius: 6px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #e2e8f0; }
+}
+
+.btn-sm {
+  padding: .3rem .75rem;
+  border-radius: 5px;
+  font-size: .775rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-edit   { background: #eff6ff; color: #1d4ed8; &:hover { background: #dbeafe; } }
+.btn-danger { background: #fef2f2; color: #dc2626; &:hover { background: #fee2e2; } }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 560px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 1.25rem;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  gap: .75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+/* Form elements */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  margin-bottom: .75rem;
+
+  label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  input, select, textarea {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: .5rem .75rem;
+    font-size: .875rem;
+    color: #0f172a;
+    background: #fff;
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    &:focus { border-color: #16a34a; }
+  }
+
+  textarea { resize: vertical; }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .875rem;
+  color: #334155;
+  cursor: pointer;
+  margin-bottom: .75rem;
+
+  input[type="checkbox"] { width: auto; }
+}
+
+.form-error {
+  color: #dc2626;
+  font-size: .8rem;
+  margin: .25rem 0;
+}
