@@ -40,8 +40,8 @@ import { OrderSummary, ORDER_STATUSES, PAYMENT_METHODS } from '../../../core/mod
             <a [routerLink]="['/orders', order.id]" class="order-card">
               <div class="oc-left">
                 <span class="oc-number">{{ order.orderNumber }}</span>
-                <span class="oc-date">{{ order.createdAt | date:'dd MMM yyyy, h:mm a' }}</span>
-                <span class="oc-items">{{ order.itemCount }} item{{ order.itemCount > 1 ? 's' : '' }} · {{ order.deliveryDate | date:'dd MMM' }} · {{ order.deliveryTimeSlot }}</span>
+                <span class="oc-date">{{ order.createdAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}</span>
+                <span class="oc-items">{{ order.itemCount }} item{{ order.itemCount > 1 ? 's' : '' }} · {{ order.deliveryDate | date:'dd MMM':'Asia/Kathmandu' }} · {{ order.deliveryTimeSlot }}</span>
               </div>
               <div class="oc-right">
                 <span class="oc-amount">Rs. {{ order.totalAmount | number:'1.0-0' }}</span>

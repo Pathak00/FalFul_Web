@@ -17,6 +17,9 @@ public class Product
     public string?  ImageUrl         { get; set; }
     public string?  Tags             { get; set; }
     public int      DisplayOrder     { get; set; }
+    public int?     MinOrderGrams    { get; set; }
+    public int?     GramStep         { get; set; }
+    public decimal? CutFruitPrice    { get; set; }
     public DateTime CreatedAt        { get; set; }
     public DateTime? UpdatedAt       { get; set; }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
@@ -23,30 +23,60 @@ import { CartService } from '../../../core/services/cart.service';
         </div>
       } @else {
         <div class="cart-items">
-          @for (item of cart.items(); track $index) {
-            <div class="cart-item">
-              <div class="item-img">
-                @if (item.imageUrl) {
-                  <img [src]="item.imageUrl" [alt]="item.productName" />
-                } @else {
-                  <div class="img-placeholder"><i class="bi bi-image"></i></div>
-                }
-              </div>
-              <div class="item-info">
-                <span class="item-name">{{ item.productName }}</span>
-                @if (item.isCustomBuild) {
-                  <span class="custom-badge"><i class="bi bi-scissors"></i> Custom Build</span>
-                }
-                <span class="item-qty">{{ item.quantity | number:'1.0-2' }} {{ item.unit }} × Rs. {{ item.unitPrice | number:'1.0-0' }}</span>
-              </div>
-              <div class="item-right">
-                <span class="item-price">Rs. {{ item.totalPrice | number:'1.0-0' }}</span>
-                <button class="remove-btn" (click)="cart.removeItem($index)">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </div>
+
+          <!-- Regular Products section -->
+          @if (productEntries().length > 0) {
+            <div class="section-header">
+              <i class="bi bi-box-seam"></i> Products
             </div>
+            @for (entry of productEntries(); track entry.index) {
+              <div class="cart-item">
+                <div class="item-img">
+                  @if (entry.item.imageUrl) {
+                    <img [src]="entry.item.imageUrl" [alt]="entry.item.productName" />
+                  } @else {
+                    <div class="img-placeholder"><i class="bi bi-image"></i></div>
+                  }
+                </div>
+                <div class="item-info">
+                  <span class="item-name">{{ entry.item.productName }}</span>
+                  <span class="item-qty">{{ entry.item.quantity }} {{ entry.item.unit }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
+                </div>
+                <div class="item-right">
+                  <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+            }
           }
+
+          <!-- Fruit Bowls section -->
+          @if (bowlEntries().length > 0) {
+            <div class="section-header bowl-section-header">
+              <i class="bi bi-scissors"></i> Fruit Bowls
+            </div>
+            @for (entry of bowlEntries(); track entry.index) {
+              <div class="cart-item bowl-item">
+                <div class="item-img bowl-img">
+                  <i class="bi bi-basket2"></i>
+                </div>
+                <div class="item-info">
+                  <span class="item-name">{{ entry.item.productName }}</span>
+                  <span class="bowl-badge"><i class="bi bi-scissors"></i> Custom Build</span>
+                  <span class="item-qty">{{ entry.item.quantity }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
+                </div>
+                <div class="item-right">
+                  <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          }
+
         </div>
 
         <div class="cart-footer">
@@ -106,19 +136,35 @@ import { CartService } from '../../../core/services/cart.service';
       }
     }
 
-    .cart-items { flex: 1; overflow-y: auto; padding: .75rem 1.25rem; display: flex; flex-direction: column; gap: .75rem; }
+    .cart-items { flex: 1; overflow-y: auto; padding: .75rem 1.25rem; display: flex; flex-direction: column; gap: .625rem; }
+
+    .section-header {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: #94a3b8; display: flex; align-items: center; gap: .35rem;
+      padding: .25rem 0 .1rem;
+      &.bowl-section-header { color: #7c3aed; margin-top: .25rem; }
+    }
 
     .cart-item {
       display: flex; gap: .75rem; align-items: flex-start;
       padding: .75rem; background: #f9fafb; border-radius: 8px; border: 1px solid #f0f0f0;
+
+      &.bowl-item { background: #faf5ff; border-color: #ede9fe; }
+
       .item-img {
         width: 52px; height: 52px; flex-shrink: 0; border-radius: 6px; overflow: hidden;
         img { width: 100%; height: 100%; object-fit: cover; }
         .img-placeholder { width: 100%; height: 100%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #9ca3af; }
       }
+      .bowl-img {
+        background: #ede9fe; display: flex; align-items: center; justify-content: center;
+        color: #7c3aed; font-size: 1.4rem; border-radius: 6px;
+      }
       .item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .2rem;
         .item-name { font-size: .85rem; font-weight: 600; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .custom-badge { font-size: .7rem; color: #7c3aed; background: #f5f3ff; padding: 1px 6px; border-radius: 4px; width: fit-content; }
+        .bowl-badge { font-size: .7rem; color: #7c3aed; background: #f5f3ff; padding: 1px 6px; border-radius: 4px; width: fit-content;
+          display: flex; align-items: center; gap: .25rem;
+        }
         .item-qty { font-size: .75rem; color: #6b7280; }
       }
       .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: .4rem;
@@ -155,4 +201,16 @@ import { CartService } from '../../../core/services/cart.service';
 export class CartSidebarComponent {
   readonly close = output<void>();
   readonly cart  = inject(CartService);
+
+  readonly productEntries = computed(() =>
+    this.cart.items()
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.itemType === 'PRODUCT')
+  );
+
+  readonly bowlEntries = computed(() =>
+    this.cart.items()
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.itemType === 'BUILD_BOWL')
+  );
 }

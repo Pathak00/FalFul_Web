@@ -7,10 +7,11 @@ using FalFul.Domain.Enums;
 namespace FalFul.Application.Services;
 
 public class OrderService(
-    IAddressRepository  addresses,
-    IOrderRepository    orders,
-    IDeliveryRepository deliveries,
-    IPriceRuleRepository priceRules) : IOrderService
+    IAddressRepository   addresses,
+    IOrderRepository     orders,
+    IDeliveryRepository  deliveries,
+    IPriceRuleRepository priceRules,
+    IOrderRatingRepository ratings) : IOrderService
 {
     // ── Addresses ─────────────────────────────────────────────────────────────
 
@@ -37,11 +38,7 @@ public class OrderService(
             IsDefault   = dto.IsDefault
         };
 
-        try
-        {
-            var id = await addresses.CreateAsync(entity);
-            return Result<int>.Success(id);
-        }
+        try { var id = await addresses.CreateAsync(entity); return Result<int>.Success(id); }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
 
@@ -61,11 +58,7 @@ public class OrderService(
         existing.PhoneNumber = dto.PhoneNumber.Trim();
         existing.IsDefault   = dto.IsDefault;
 
-        try
-        {
-            await addresses.UpdateAsync(existing);
-            return Result.Success();
-        }
+        try { await addresses.UpdateAsync(existing); return Result.Success(); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -91,11 +84,7 @@ public class OrderService(
         if (string.IsNullOrWhiteSpace(dto.RuleKey)) return Result.Failure("RuleKey is required.");
         if (dto.Value < 0)                           return Result.Failure("Value cannot be negative.");
 
-        try
-        {
-            await priceRules.UpsertAsync(dto.RuleKey.Trim(), dto.Value, dto.IsActive);
-            return Result.Success();
-        }
+        try { await priceRules.UpsertAsync(dto.RuleKey.Trim(), dto.Value, dto.IsActive); return Result.Success(); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -103,18 +92,18 @@ public class OrderService(
 
     public async Task<Result<string>> PlaceOrderAsync(int userId, string customerName, PlaceOrderDto dto)
     {
-        if (dto.Items.Count == 0)                          return Result<string>.Failure("Cart is empty.");
-        if (string.IsNullOrWhiteSpace(dto.FullAddress))    return Result<string>.Failure("Delivery address is required.");
-        if (string.IsNullOrWhiteSpace(dto.DeliveryPhone))  return Result<string>.Failure("Delivery phone is required.");
+        if (dto.Items.Count == 0)                            return Result<string>.Failure("Cart is empty.");
+        if (string.IsNullOrWhiteSpace(dto.FullAddress))      return Result<string>.Failure("Delivery address is required.");
+        if (string.IsNullOrWhiteSpace(dto.DeliveryPhone))    return Result<string>.Failure("Delivery phone is required.");
         if (string.IsNullOrWhiteSpace(dto.DeliveryTimeSlot)) return Result<string>.Failure("Delivery time slot is required.");
-        if (dto.DeliveryDate == default)                   return Result<string>.Failure("Delivery date is required.");
+        if (dto.DeliveryDate == default)                     return Result<string>.Failure("Delivery date is required.");
 
-        var rules      = (await priceRules.GetAllAsync()).ToDictionary(r => r.RuleKey, r => r);
-        var subTotal   = dto.Items.Sum(i => i.TotalPrice);
-        var deliveryFee = GetRuleValue(rules, "delivery_fee");
+        var rules        = (await priceRules.GetAllAsync()).ToDictionary(r => r.RuleKey, r => r);
+        var subTotal     = dto.Items.Sum(i => i.TotalPrice);
+        var deliveryFee  = GetRuleValue(rules, "delivery_fee");
         var serviceFeePct = GetRuleValue(rules, "service_fee_percent");
-        var minOrder   = GetRuleValue(rules, "min_order_amount");
-        var freeAbove  = GetRuleValue(rules, "free_delivery_above");
+        var minOrder     = GetRuleValue(rules, "min_order_amount");
+        var freeAbove    = GetRuleValue(rules, "free_delivery_above");
 
         if (minOrder > 0 && subTotal < minOrder)
             return Result<string>.Failure($"Minimum order amount is Rs. {minOrder}.");
@@ -136,7 +125,7 @@ public class OrderService(
             TotalAmount       = totalAmount,
             PaymentMethod     = dto.PaymentMethod,
             PaymentStatus     = PaymentStatus.Pending,
-            DeliveryAddressId = dto.DeliveryAddressId,
+            DeliveryAddressId = dto.DeliveryAddressId > 0 ? dto.DeliveryAddressId : (int?)null,
             FullAddress       = dto.FullAddress.Trim(),
             City              = dto.City.Trim(),
             DeliveryPhone     = dto.DeliveryPhone.Trim(),
@@ -169,13 +158,8 @@ public class OrderService(
                 });
             }
 
-            await deliveries.CreateAsync(new Delivery
-            {
-                OrderId           = orderId,
-                Status            = 1, // Scheduled
-                ScheduledDate     = dto.DeliveryDate,
-                ScheduledTimeSlot = dto.DeliveryTimeSlot
-            });
+            // Delivery record is NOT created at order placement.
+            // It is created when admin transitions the order to ReadyForDelivery(4).
 
             return Result<string>.Success(orderNumber);
         }
@@ -193,7 +177,19 @@ public class OrderService(
         var order = await orders.GetByIdAsync(id);
         if (order is null) return null;
         if (userId.HasValue && order.UserId != userId.Value) return null;
-        return MapDetail(order);
+        var dto    = MapDetail(order);
+        var rating = await ratings.GetByOrderAsync(id);
+        if (rating is not null)
+            dto.Rating = new OrderRatingResponseDto
+            {
+                Id                   = rating.Id,
+                DeliveryRating       = rating.DeliveryRating,
+                ProductQualityRating = rating.ProductQualityRating,
+                OverallRating        = rating.OverallRating,
+                Comment              = rating.Comment,
+                CreatedAt            = rating.CreatedAt
+            };
+        return dto;
     }
 
     public async Task<Result> CancelOrderAsync(int id, int userId, CancelOrderDto dto)
@@ -203,14 +199,11 @@ public class OrderService(
         var order = await orders.GetByIdAsync(id);
         if (order is null || order.UserId != userId) return Result.Failure("Order not found.");
 
+        // Customers may cancel only while Pending(1) or Confirmed(2) — before preparation begins
         if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Confirmed)
             return Result.Failure("Order cannot be cancelled at this stage.");
 
-        try
-        {
-            await orders.CancelAsync(id, userId, dto.CancelReason.Trim());
-            return Result.Success();
-        }
+        try { await orders.CancelAsync(id, userId, dto.CancelReason.Trim()); return Result.Success(); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -225,9 +218,27 @@ public class OrderService(
         var order = await orders.GetByIdAsync(id);
         if (order is null) return Result.Failure("Order not found.");
 
+        if ((dto.Status == OrderStatus.Cancelled || dto.Status == OrderStatus.Rejected)
+            && string.IsNullOrWhiteSpace(dto.Reason))
+            return Result.Failure("A reason is required when cancelling or rejecting an order.");
+
         try
         {
-            await orders.UpdateStatusAsync(id, dto.Status);
+            await orders.UpdateStatusAsync(id, dto.Status, dto.Reason?.Trim());
+
+            // When order is marked ReadyForDelivery, create the delivery record.
+            // Delivery module is responsible from this point forward.
+            if (dto.Status == OrderStatus.ReadyForDelivery && order.Delivery is null)
+            {
+                await deliveries.CreateAsync(new Delivery
+                {
+                    OrderId           = id,
+                    Status            = DeliveryStatus.AwaitingRider,
+                    ScheduledDate     = order.DeliveryDate,
+                    ScheduledTimeSlot = order.DeliveryTimeSlot
+                });
+            }
+
             return Result.Success();
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
@@ -238,15 +249,8 @@ public class OrderService(
     private static decimal GetRuleValue(Dictionary<string, PriceRule> rules, string key)
         => rules.TryGetValue(key, out var r) && r.IsActive ? r.Value : 0;
 
-    private static string DeliveryStatusLabel(byte s) => s switch
-    {
-        1 => "Scheduled",
-        2 => "Picked Up",
-        3 => "Out for Delivery",
-        4 => "Delivered",
-        5 => "Failed",
-        _ => "Unknown"
-    };
+    private static string DeliveryStatusLabel(byte s)
+        => DeliveryService.DeliveryStatusLabel(s);
 
     // ── Mappers ───────────────────────────────────────────────────────────────
 
@@ -279,7 +283,7 @@ public class OrderService(
         DeliveryTimeSlot = o.DeliveryTimeSlot,
         FullAddress      = o.FullAddress,
         City             = o.City,
-        ItemCount        = o.Items.Count,
+        ItemCount        = o.ItemCount > 0 ? o.ItemCount : o.Items.Count,
         CreatedAt        = o.CreatedAt
     };
 
@@ -319,14 +323,32 @@ public class OrderService(
         Delivery = o.Delivery is null ? null : new DeliveryStatusDto
         {
             Id                = o.Delivery.Id,
-            Status            = o.Delivery.Status,
-            StatusLabel       = DeliveryStatusLabel(o.Delivery.Status),
+            Status            = (byte)o.Delivery.Status,
+            StatusLabel       = DeliveryStatusLabel((byte)o.Delivery.Status),
             ScheduledDate     = o.Delivery.ScheduledDate,
             ScheduledTimeSlot = o.Delivery.ScheduledTimeSlot,
-            DeliveredAt       = o.Delivery.DeliveredAt,
             RiderName         = o.Delivery.RiderName,
             RiderPhone        = o.Delivery.RiderPhone,
-            TrackingNotes     = o.Delivery.TrackingNotes
+            AssignedAt        = o.Delivery.AssignedAt,
+            PickedUpAt        = o.Delivery.PickedUpAt,
+            DeliveredAt       = o.Delivery.DeliveredAt,
+            FailedAt          = o.Delivery.FailedAt,
+            AttemptCount      = o.Delivery.AttemptCount,
+            MaxAttempts       = o.Delivery.MaxAttempts,
+            TrackingNotes     = o.Delivery.TrackingNotes,
+            Attempts          = o.Delivery.Attempts.Select(a => new DeliveryAttemptDto
+            {
+                Id                  = a.Id,
+                AttemptNumber       = a.AttemptNumber,
+                AttemptedAt         = a.AttemptedAt,
+                WasSuccessful       = a.WasSuccessful,
+                FailureReason       = a.FailureReason,
+                FailureReasonLabel  = DeliveryService.FailureReasonLabelStatic(a.FailureReason),
+                FailureNotes        = a.FailureNotes,
+                NextAction          = a.NextAction,
+                RescheduledDate     = a.RescheduledDate?.ToString("yyyy-MM-dd"),
+                RescheduledTimeSlot = a.RescheduledTimeSlot
+            }).ToList()
         }
     };
 }

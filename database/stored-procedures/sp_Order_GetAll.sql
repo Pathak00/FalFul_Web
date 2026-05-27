@@ -7,10 +7,13 @@ BEGIN
     SELECT o.Id, o.UserId, o.OrderNumber, o.Status, o.SubTotal, o.DeliveryFee, o.ServiceFee,
            o.TotalAmount, o.PaymentMethod, o.PaymentStatus, o.DeliveryAddressId,
            o.DeliveryDate, o.DeliveryTimeSlot, o.Notes, o.CancelReason, o.CreatedAt, o.UpdatedAt,
-           a.FullAddress, a.City, a.PhoneNumber AS DeliveryPhone,
-           u.FullName AS CustomerName
+           COALESCE(a.FullAddress, o.FullAddress)   AS FullAddress,
+           COALESCE(a.City,        o.City)           AS City,
+           COALESCE(a.PhoneNumber, o.DeliveryPhone)  AS DeliveryPhone,
+           u.FullName AS CustomerName,
+           (SELECT COUNT(*) FROM OrderItems oi WHERE oi.OrderId = o.Id) AS ItemCount
     FROM   Orders o
-    INNER  JOIN Addresses a ON a.Id = o.DeliveryAddressId
+    LEFT   JOIN Addresses a ON a.Id = o.DeliveryAddressId
     INNER  JOIN Users u     ON u.Id = o.UserId
     WHERE  (@Status IS NULL OR o.Status = @Status)
       AND  (@UserId IS NULL OR o.UserId = @UserId)

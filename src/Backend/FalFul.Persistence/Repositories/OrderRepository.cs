@@ -1,4 +1,5 @@
 using Dapper;
+using FalFul.Application.DTOs.Order;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Entities;
 using FalFul.Domain.Enums;
@@ -31,6 +32,9 @@ public class OrderRepository(DapperContext context) : IOrderRepository
 
         order.Items    = (await multi.ReadAsync<OrderItem>()).ToList();
         order.Delivery = await multi.ReadSingleOrDefaultAsync<Delivery>();
+        var attempts   = (await multi.ReadAsync<DeliveryAttempt>()).ToList();
+        if (order.Delivery is not null)
+            order.Delivery.Attempts = attempts;
         return order;
     }
 
@@ -57,6 +61,11 @@ public class OrderRepository(DapperContext context) : IOrderRepository
                 order.TotalAmount,
                 PaymentMethod     = (byte)order.PaymentMethod,
                 order.DeliveryAddressId,
+                order.FullAddress,
+                order.City,
+                DeliveryPhone     = order.DeliveryPhone,
+                order.AddressLabel,
+                order.Landmark,
                 order.DeliveryDate,
                 order.DeliveryTimeSlot,
                 order.Notes
@@ -88,12 +97,12 @@ public class OrderRepository(DapperContext context) : IOrderRepository
             commandType: CommandType.StoredProcedure);
     }
 
-    public async Task UpdateStatusAsync(int id, OrderStatus status)
+    public async Task UpdateStatusAsync(int id, OrderStatus status, string? reason = null)
     {
         using var conn = context.CreateConnection();
         await conn.ExecuteAsync(
             "sp_Order_UpdateStatus",
-            new { Id = id, Status = (byte)status },
+            new { Id = id, Status = (byte)status, Reason = reason },
             commandType: CommandType.StoredProcedure);
     }
 
@@ -104,5 +113,22 @@ public class OrderRepository(DapperContext context) : IOrderRepository
             "sp_Order_Cancel",
             new { Id = id, UserId = userId, CancelReason = reason },
             commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<OrderReportDto> GetReportAsync(DateOnly? fromDate, DateOnly? toDate)
+    {
+        using var conn  = context.CreateConnection();
+        using var multi = await conn.QueryMultipleAsync(
+            "sp_Report_OrderSummary",
+            new { FromDate = fromDate, ToDate = toDate },
+            commandType: CommandType.StoredProcedure);
+
+        var summary  = await multi.ReadSingleAsync<OrderReportDto>();
+        var statuses = (await multi.ReadAsync<OrderStatusBreakdownDto>()).ToList();
+        var payments = (await multi.ReadAsync<PaymentMethodBreakdownDto>()).ToList();
+
+        summary.StatusBreakdown  = statuses;
+        summary.PaymentBreakdown = payments;
+        return summary;
     }
 }

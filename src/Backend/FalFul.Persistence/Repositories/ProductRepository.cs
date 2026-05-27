@@ -69,7 +69,10 @@ public class ProductRepository(DapperContext context) : IProductRepository
                 product.IsFeatured,
                 product.ImageUrl,
                 product.Tags,
-                product.DisplayOrder
+                product.DisplayOrder,
+                product.MinOrderGrams,
+                product.GramStep,
+                product.CutFruitPrice
             },
             commandType: CommandType.StoredProcedure);
     }
@@ -94,7 +97,10 @@ public class ProductRepository(DapperContext context) : IProductRepository
                 product.IsFeatured,
                 product.ImageUrl,
                 product.Tags,
-                product.DisplayOrder
+                product.DisplayOrder,
+                product.MinOrderGrams,
+                product.GramStep,
+                product.CutFruitPrice
             },
             commandType: CommandType.StoredProcedure);
     }

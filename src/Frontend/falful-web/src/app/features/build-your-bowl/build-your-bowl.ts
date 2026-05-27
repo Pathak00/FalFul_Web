@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ProductService } from '../../core/services/product.service';
 import { OrderService } from '../../core/services/order.service';
 import { CartService } from '../../core/services/cart.service';
@@ -10,7 +11,7 @@ import { PriceRule } from '../../core/models/order.models';
 
 interface BowlEntry {
   product: ProductSummary;
-  weight: number;
+  grams: number;
 }
 
 @Component({
@@ -21,7 +22,7 @@ interface BowlEntry {
     <div class="bowl-page">
       <div class="bowl-hero">
         <h1><i class="bi bi-scissors"></i> Build Your Fruit Bowl</h1>
-        <p>Choose your fruits, set the weight, and we'll create a custom fruit bowl just for you.</p>
+        <p>Choose your fruits, set the weight in grams, and we'll create a custom fruit bowl just for you.</p>
       </div>
 
       <div class="bowl-layout">
@@ -35,6 +36,11 @@ interface BowlEntry {
                 <div class="fruit-card skeleton"></div>
               }
             </div>
+          } @else if (available().length === 0) {
+            <div class="no-cut-fruits">
+              <i class="bi bi-scissors"></i>
+              <p>No cut-fruit products are configured yet.</p>
+            </div>
           } @else {
             <div class="fruit-grid">
               @for (p of available(); track p.id) {
@@ -45,7 +51,14 @@ interface BowlEntry {
                   </div>
                   <div class="fruit-info">
                     <span class="fruit-name">{{ p.name }}</span>
-                    <span class="fruit-price">Rs. {{ p.price }}/{{ p.unit }}</span>
+                    @if (p.cutFruitPrice && p.minOrderGrams) {
+                      <span class="fruit-price">Rs. {{ p.cutFruitPrice }}/{{ p.minOrderGrams }}g</span>
+                    } @else {
+                      <span class="fruit-price">Rs. {{ p.price }}/{{ p.unit }}</span>
+                    }
+                    <span class="fruit-min">
+                      Min {{ effectiveMin(p) }}g · step {{ p.gramStep ?? cutFruitGramStep() }}g
+                    </span>
                   </div>
                   <div class="fruit-check"><i class="bi bi-check-circle-fill"></i></div>
                 </div>
@@ -85,11 +98,17 @@ interface BowlEntry {
                 <div class="entry-row">
                   <span class="entry-name">{{ entry.product.name }}</span>
                   <div class="weight-control">
-                    <button (click)="adjustWeight(entry, -0.25)"><i class="bi bi-dash"></i></button>
-                    <span>{{ entry.weight | number:'1.2-2' }} {{ entry.product.unit }}</span>
-                    <button (click)="adjustWeight(entry, 0.25)"><i class="bi bi-plus"></i></button>
+                    <button (click)="decreaseGrams(entry)"
+                            [disabled]="entry.grams <= entryMin(entry)">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <div class="weight-display">
+                      <span class="weight-val">{{ entry.grams }}g</span>
+                      <span class="weight-min">min {{ entryMin(entry) }}g</span>
+                    </div>
+                    <button (click)="increaseGrams(entry)"><i class="bi bi-plus"></i></button>
                   </div>
-                  <span class="entry-price">Rs. {{ entry.product.price * entry.weight | number:'1.0-0' }}</span>
+                  <span class="entry-price">Rs. {{ entryPrice(entry) | number:'1.0-0' }}</span>
                   <button class="remove-entry" (click)="removeEntry(entry.product.id)">
                     <i class="bi bi-x"></i>
                   </button>
@@ -126,6 +145,39 @@ interface BowlEntry {
             </button>
           }
 
+          @if (addedSuccess()) {
+            <div class="added-success">
+              <i class="bi bi-check-circle-fill"></i> Bowl added to cart!
+            </div>
+          }
+
+          <!-- Bowls in Cart -->
+          @if (bowlsInCart().length > 0) {
+            <div class="bowls-in-cart">
+              <div class="bic-header">
+                <span>Bowls in Cart</span>
+                <span class="bic-count">{{ bowlsInCart().length }}</span>
+              </div>
+              <div class="bic-list">
+                @for (entry of bowlsInCart(); track entry.index) {
+                  <div class="bic-row">
+                    <div class="bic-info">
+                      <span class="bic-name">{{ entry.item.productName }}</span>
+                      <span class="bic-detail">{{ entry.item.quantity }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
+                    </div>
+                    <span class="bic-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                    <button class="bic-remove" (click)="cartSvc.removeItem(entry.index)" title="Remove">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+              <a routerLink="/checkout" class="btn-checkout">
+                <i class="bi bi-bag-check"></i> Go to Checkout
+              </a>
+            </div>
+          }
+
           <a routerLink="/products" class="btn-browse">
             <i class="bi bi-box-seam"></i> Browse Regular Products
           </a>
@@ -138,20 +190,35 @@ interface BowlEntry {
 export class BuildYourBowlComponent implements OnInit {
   private productSvc = inject(ProductService);
   private orderSvc   = inject(OrderService);
-  private cartSvc    = inject(CartService);
-  private router     = inject(Router);
+  readonly cartSvc   = inject(CartService);
 
   loading   = signal(true);
   available = signal<ProductSummary[]>([]);
   entries   = signal<BowlEntry[]>([]);
   container = signal<'bowl' | 'box'>('bowl');
+  addedSuccess = signal(false);
 
-  bowlFee     = signal(0);
-  boxFee      = signal(0);
-  serviceFeePct = signal(0);
+  bowlFee          = signal(0);
+  boxFee           = signal(0);
+  serviceFeePct    = signal(0);
+  cutFruitMinGrams = signal(100);
+  cutFruitGramStep = signal(50);
+
+  private addedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // When the global minimum changes, clamp any existing entries below the new floor.
+  private readonly clampEffect = effect(() => {
+    const globalMin = this.cutFruitMinGrams();
+    this.entries.update(list =>
+      list.map(e => {
+        const min = Math.max(e.product.minOrderGrams ?? 0, globalMin);
+        return e.grams < min ? { ...e, grams: min } : e;
+      })
+    );
+  }, { allowSignalWrites: true });
 
   fruitsSubtotal = computed(() =>
-    this.entries().reduce((s, e) => s + e.product.price * e.weight, 0)
+    this.entries().reduce((s, e) => s + this.entryPrice(e), 0)
   );
   containerFee = computed(() =>
     this.container() === 'bowl' ? this.bowlFee() : this.boxFee()
@@ -163,21 +230,66 @@ export class BuildYourBowlComponent implements OnInit {
     this.fruitsSubtotal() + this.containerFee() + this.serviceFeeAmt()
   );
 
+  bowlsInCart = computed(() =>
+    this.cartSvc.items()
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.itemType === 'BUILD_BOWL')
+  );
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  entryPrice(e: BowlEntry): number {
+    const min = e.product.minOrderGrams;
+    const cutPrice = e.product.cutFruitPrice;
+    if (cutPrice && min) return (e.grams / min) * cutPrice;
+    if (cutPrice)        return (e.grams / 1000) * cutPrice;
+    return (e.grams / 1000) * e.product.price;
+  }
+
+  entryStep(e: BowlEntry): number {
+    return e.product.gramStep ?? this.cutFruitGramStep();
+  }
+
+  entryMin(e: BowlEntry): number {
+    return Math.max(e.product.minOrderGrams ?? 0, this.cutFruitMinGrams());
+  }
+
+  effectiveMin(p: ProductSummary): number {
+    return Math.max(p.minOrderGrams ?? 0, this.cutFruitMinGrams());
+  }
+
+  private bowlSig(entries: BowlEntry[], cont: 'bowl' | 'box'): string {
+    const parts = [...entries]
+      .sort((a, b) => a.product.id - b.product.id)
+      .map(e => `${e.product.id}:${e.grams}`)
+      .join(',');
+    return `${cont}|${parts}`;
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+
   ngOnInit() {
-    this.productSvc.getPublicProducts(undefined, undefined, false).subscribe({
-      next: list => { this.available.set(list.filter(p => p.isAvailable)); this.loading.set(false); },
-      error: () => this.loading.set(false)
-    });
-    this.orderSvc.getPriceRules().subscribe({
-      next: rules => {
+    forkJoin({
+      products: this.productSvc.getPublicProducts(undefined, undefined, false),
+      rules:    this.orderSvc.getPriceRules(),
+    }).subscribe({
+      next: ({ products, rules }) => {
         const map: Record<string, PriceRule> = {};
         rules.forEach(r => { if (r.isActive) map[r.ruleKey] = r; });
-        this.bowlFee.set(map['bowl_container_fee']?.value ?? 0);
-        this.boxFee.set(map['box_container_fee']?.value ?? 0);
-        this.serviceFeePct.set(map['service_fee_percent']?.value ?? 0);
-      }
+        this.bowlFee.set(map['bowl_container_fee']?.value         ?? 0);
+        this.boxFee.set(map['box_container_fee']?.value           ?? 0);
+        this.serviceFeePct.set(map['service_fee_percent']?.value  ?? 0);
+        this.cutFruitMinGrams.set(map['cut_fruit_min_grams']?.value ?? 100);
+        this.cutFruitGramStep.set(map['cut_fruit_gram_step']?.value ?? 50);
+        // Only show products configured for cut-fruit (minOrderGrams > 0)
+        this.available.set(products.filter(p => p.isAvailable && !!p.minOrderGrams));
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
     });
   }
+
+  // ── Interaction ────────────────────────────────────────────────────────────
 
   isAdded(id: number): boolean {
     return this.entries().some(e => e.product.id === id);
@@ -187,14 +299,24 @@ export class BuildYourBowlComponent implements OnInit {
     if (this.isAdded(p.id)) {
       this.removeEntry(p.id);
     } else {
-      this.entries.update(list => [...list, { product: p, weight: 0.5 }]);
+      const initialGrams = this.effectiveMin(p);
+      this.entries.update(list => [...list, { product: p, grams: initialGrams }]);
     }
   }
 
-  adjustWeight(entry: BowlEntry, delta: number): void {
+  increaseGrams(entry: BowlEntry): void {
+    const step = this.entryStep(entry);
+    this.entries.update(list => list.map(e =>
+      e.product.id === entry.product.id ? { ...e, grams: e.grams + step } : e
+    ));
+  }
+
+  decreaseGrams(entry: BowlEntry): void {
+    const step = this.entryStep(entry);
+    const min  = this.entryMin(entry);
     this.entries.update(list => list.map(e =>
       e.product.id === entry.product.id
-        ? { ...e, weight: Math.max(0.25, Math.round((e.weight + delta) * 100) / 100) }
+        ? { ...e, grams: Math.max(min, e.grams - step) }
         : e
     ));
   }
@@ -204,28 +326,34 @@ export class BuildYourBowlComponent implements OnInit {
   }
 
   addToCart(): void {
+    const cont = this.container();
+    const currentEntries = this.entries();
+    const sig  = this.bowlSig(currentEntries, cont);
+
     const details = {
-      container: this.container(),
-      fruits: this.entries().map(e => ({
+      container: cont,
+      fruits: currentEntries.map(e => ({
         productId: e.product.id,
-        name: e.product.name,
-        weight: e.weight,
-        unit: e.product.unit,
-        price: e.product.price,
+        name:      e.product.name,
+        grams:     e.grams,
       }))
     };
 
     this.cartSvc.addItem({
-      productName: `Custom Fruit ${this.container() === 'bowl' ? 'Bowl' : 'Box'}`,
-      unitPrice:   this.bowlTotal(),
-      quantity:    1,
-      unit:        'Bowl',
-      totalPrice:  this.bowlTotal(),
-      isCustomBuild: true,
+      itemType:           'BUILD_BOWL',
+      productName:        `Custom Fruit ${cont === 'bowl' ? 'Bowl' : 'Box'}`,
+      unitPrice:          this.bowlTotal(),
+      quantity:           1,
+      unit:               cont === 'bowl' ? 'Bowl' : 'Box',
+      totalPrice:         this.bowlTotal(),
+      isCustomBuild:      true,
       customBuildDetails: JSON.stringify(details),
+      bowlSignature:      sig,
     });
 
     this.entries.set([]);
-    this.router.navigate(['/checkout']);
+    this.addedSuccess.set(true);
+    if (this.addedTimer) clearTimeout(this.addedTimer);
+    this.addedTimer = setTimeout(() => this.addedSuccess.set(false), 3000);
   }
 }

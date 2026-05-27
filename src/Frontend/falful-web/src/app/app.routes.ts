@@ -89,6 +89,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent)
       },
       {
+        path: 'deliveries',
+        loadComponent: () => import('./features/admin/deliveries/admin-deliveries').then(m => m.AdminDeliveriesComponent)
+      },
+      {
+        path: 'reports',
+        loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent)
+      },
+      {
         path: 'price-config',
         loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent)
       },

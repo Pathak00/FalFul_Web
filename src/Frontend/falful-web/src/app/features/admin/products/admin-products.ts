@@ -142,8 +142,8 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Price (Rs.) <span class="required">*</span></label>
-                <input type="number" [(ngModel)]="form.price" min="0" step="0.01" />
+                <label>Per KG Price (Rs.) <span class="required">*</span></label>
+                <input type="number" [(ngModel)]="form.price" min="0" step="0.01" placeholder="e.g. 250" />
               </div>
               <div class="form-group">
                 <label>Unit <span class="required">*</span></label>
@@ -187,6 +187,31 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
               <label>Tags <small style="color:#94a3b8">(comma-separated)</small></label>
               <input [(ngModel)]="form.tags" placeholder="mango,tropical,summer" />
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Min Order Grams <small style="color:#94a3b8">(cut fruits only)</small></label>
+                <input type="number" [(ngModel)]="form.minOrderGrams" min="0" step="50" placeholder="e.g. 300" />
+              </div>
+              <div class="form-group">
+                <label>Gram Step <small style="color:#94a3b8">(increment; blank = global default)</small></label>
+                <input type="number" [(ngModel)]="form.gramStep" min="0" step="50" placeholder="e.g. 150" />
+              </div>
+            </div>
+            @if (form.minOrderGrams && form.minOrderGrams > 0) {
+              <div class="form-group">
+                <label>
+                  Cut Fruit Base Price (Rs. at {{ form.minOrderGrams }}g)
+                  <small style="color:#94a3b8"> — used for cut portions &amp; Build Your Bowl</small>
+                </label>
+                <input type="number" [(ngModel)]="form.cutFruitPrice" min="0" step="0.01"
+                       placeholder="e.g. 120 for {{ form.minOrderGrams }}g" />
+                @if (form.cutFruitPrice && form.minOrderGrams) {
+                  <small style="color:#16a34a;display:block;margin-top:.25rem">
+                    ≈ Rs. {{ (form.cutFruitPrice / form.minOrderGrams * 100) | number:'1.0-1' }} per 100g
+                  </small>
+                }
+              </div>
+            }
             <div class="form-row" style="gap:1.5rem">
               <label class="checkbox-label">
                 <input type="checkbox" [(ngModel)]="form.isAvailable" />
@@ -303,7 +328,8 @@ export class AdminProductsComponent implements OnInit {
       description: p.description, shortDescription: p.shortDescription,
       price: p.price, unit: p.unit, stock: p.stock,
       isAvailable: p.isAvailable, isFeatured: p.isFeatured,
-      imageUrl: p.imageUrl, tags: p.tags, displayOrder: p.displayOrder
+      imageUrl: p.imageUrl, tags: p.tags, displayOrder: p.displayOrder,
+      minOrderGrams: p.minOrderGrams, gramStep: p.gramStep, cutFruitPrice: p.cutFruitPrice
     };
     this.formError.set('');
     this.showForm.set(true);
@@ -352,7 +378,7 @@ export class AdminProductsComponent implements OnInit {
     return {
       categoryId: 0, name: '', slug: '', description: '', shortDescription: '',
       price: 0, unit: 'KG', stock: 0, isAvailable: true, isFeatured: false,
-      imageUrl: '', tags: '', displayOrder: 0
+      imageUrl: '', tags: '', displayOrder: 0, minOrderGrams: undefined, gramStep: undefined, cutFruitPrice: undefined
     };
   }
 }

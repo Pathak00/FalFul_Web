@@ -140,6 +140,26 @@
   }
 }
 
+
+/* ─── Build Your Bowl Notice ─── */
+.byb-notice {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: .6rem .875rem;
+  font-size: .8rem;
+  color: #16a34a;
+  text-decoration: none;
+  transition: background .15s;
+
+  &:hover { background: #dcfce7; }
+
+  i { flex-shrink: 0; }
+}
+
 /* ─── Order Row ─── */
 .detail-order-row {
   display: flex;

@@ -7,29 +7,48 @@ const CART_KEY = 'falful_cart';
 export class CartService {
   private _items = signal<CartItem[]>(this.loadCart());
 
-  readonly items    = this._items.asReadonly();
-  readonly itemCount = computed(() => this._items().length);
-  readonly subTotal  = computed(() =>
-    this._items().reduce((s, i) => s + i.totalPrice, 0)
-  );
+  readonly items      = this._items.asReadonly();
+  readonly itemCount  = computed(() => this._items().length);
+  readonly subTotal   = computed(() => this._items().reduce((s, i) => s + i.totalPrice, 0));
+
+  readonly productItems  = computed(() => this._items().filter(i => i.itemType === 'PRODUCT'));
+  readonly bowlItems     = computed(() => this._items().filter(i => i.itemType === 'BUILD_BOWL'));
 
   addItem(item: CartItem): void {
-    const existing = this._items().findIndex(
-      i => !i.isCustomBuild && i.productId === item.productId
-    );
-
-    if (existing >= 0 && !item.isCustomBuild) {
-      this._items.update(list => {
-        const updated = [...list];
-        updated[existing] = {
-          ...updated[existing],
-          quantity:   updated[existing].quantity   + item.quantity,
-          totalPrice: updated[existing].totalPrice + item.totalPrice,
-        };
-        return updated;
-      });
+    if (item.itemType === 'BUILD_BOWL') {
+      // Identical bowl signature → increment quantity; different composition → new entry
+      const idx = this._items().findIndex(
+        i => i.itemType === 'BUILD_BOWL' && i.bowlSignature === item.bowlSignature
+      );
+      if (idx >= 0) {
+        this._items.update(list => {
+          const updated = [...list];
+          const cur     = updated[idx];
+          const newQty  = cur.quantity + 1;
+          updated[idx]  = { ...cur, quantity: newQty, totalPrice: cur.unitPrice * newQty };
+          return updated;
+        });
+      } else {
+        this._items.update(list => [...list, item]);
+      }
     } else {
-      this._items.update(list => [...list, item]);
+      // PRODUCT — match by productId only within PRODUCT items
+      const idx = this._items().findIndex(
+        i => i.itemType === 'PRODUCT' && i.productId === item.productId
+      );
+      if (idx >= 0) {
+        this._items.update(list => {
+          const updated = [...list];
+          updated[idx]  = {
+            ...updated[idx],
+            quantity:   updated[idx].quantity   + item.quantity,
+            totalPrice: updated[idx].totalPrice + item.totalPrice,
+          };
+          return updated;
+        });
+      } else {
+        this._items.update(list => [...list, item]);
+      }
     }
     this.persist();
   }
@@ -62,7 +81,13 @@ export class CartService {
   private loadCart(): CartItem[] {
     try {
       const raw = localStorage.getItem(CART_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const items = JSON.parse(raw) as CartItem[];
+      // Migrate legacy items that predate itemType field
+      return items.map(item => ({
+        ...item,
+        itemType: item.itemType ?? (item.isCustomBuild ? 'BUILD_BOWL' : 'PRODUCT'),
+      }));
     } catch { return []; }
   }
 }

@@ -26,6 +26,9 @@ export interface ProductSummary {
   imageUrl?: string;
   tags?: string;
   displayOrder: number;
+  minOrderGrams?: number;
+  gramStep?: number;
+  cutFruitPrice?: number;
 }
 
 export interface Product extends ProductSummary {
@@ -61,6 +64,9 @@ export interface CreateProductRequest {
   imageUrl?: string;
   tags?: string;
   displayOrder: number;
+  minOrderGrams?: number;
+  gramStep?: number;
+  cutFruitPrice?: number;
 }
 
 export type UpdateProductRequest = CreateProductRequest;

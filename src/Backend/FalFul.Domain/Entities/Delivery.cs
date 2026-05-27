@@ -1,16 +1,38 @@
+using FalFul.Domain.Enums;
+
 namespace FalFul.Domain.Entities;
 
 public class Delivery
 {
-    public int      Id                { get; set; }
-    public int      OrderId           { get; set; }
-    public byte     Status            { get; set; }  // 1=Scheduled 2=PickedUp 3=OutForDelivery 4=Delivered 5=Failed
-    public DateOnly ScheduledDate     { get; set; }
-    public string   ScheduledTimeSlot { get; set; } = string.Empty;
-    public DateTime? DeliveredAt      { get; set; }
-    public string?  RiderName         { get; set; }
-    public string?  RiderPhone        { get; set; }
-    public string?  TrackingNotes     { get; set; }
-    public DateTime CreatedAt         { get; set; }
-    public DateTime? UpdatedAt        { get; set; }
+    public int            Id                { get; set; }
+    public int            OrderId           { get; set; }
+    public DeliveryStatus Status            { get; set; }
+    public DateOnly       ScheduledDate     { get; set; }
+    public string         ScheduledTimeSlot { get; set; } = string.Empty;
+    public string?        RiderName         { get; set; }
+    public string?        RiderPhone        { get; set; }
+    public DateTime?      AssignedAt        { get; set; }
+    public DateTime?      PickedUpAt        { get; set; }
+    public DateTime?      DeliveredAt       { get; set; }
+    public DateTime?      FailedAt          { get; set; }
+    public byte           AttemptCount      { get; set; }
+    public byte           MaxAttempts       { get; set; } = 3;
+    public string?        TrackingNotes     { get; set; }
+    public DateTime       CreatedAt         { get; set; }
+    public DateTime?      UpdatedAt         { get; set; }
+
+    // Populated by GetAll / GetById JOINs
+    public string  OrderNumber   { get; set; } = string.Empty;
+    public decimal TotalAmount   { get; set; }
+    public byte    PaymentMethod { get; set; }
+    public string  CustomerName  { get; set; } = string.Empty;
+    public int     UserId        { get; set; }
+    public string  FullAddress   { get; set; } = string.Empty;
+    public string  City          { get; set; } = string.Empty;
+    public string  DeliveryPhone { get; set; } = string.Empty;
+    public string? Landmark      { get; set; }
+    public string? OrderNotes    { get; set; }
+
+    public List<DeliveryAttempt> Attempts { get; set; } = [];
+    public List<DeliveryIssue>   Issues   { get; set; } = [];
 }

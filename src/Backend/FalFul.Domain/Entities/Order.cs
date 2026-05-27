@@ -15,7 +15,8 @@ public class Order
     public decimal       TotalAmount       { get; set; }
     public PaymentMethod PaymentMethod     { get; set; }
     public PaymentStatus PaymentStatus     { get; set; }
-    public int           DeliveryAddressId { get; set; }
+    public int?          DeliveryAddressId { get; set; }
+    public int           ItemCount         { get; set; }
     public string        FullAddress       { get; set; } = string.Empty;
     public string        City              { get; set; } = string.Empty;
     public string        DeliveryPhone     { get; set; } = string.Empty;

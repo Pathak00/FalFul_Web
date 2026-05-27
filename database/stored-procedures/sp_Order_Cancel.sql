@@ -9,7 +9,7 @@ BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
 
-    -- Only allow cancel if status is Pending(1) or Confirmed(2)
+    -- Allow cancel only while Pending(1) or Paid(2) – before preparation begins
     IF NOT EXISTS (SELECT 1 FROM Orders WHERE Id = @Id AND UserId = @UserId AND Status IN (1, 2))
     BEGIN
         RAISERROR('Order cannot be cancelled at this stage.', 16, 1);
@@ -17,8 +17,14 @@ BEGIN
     END
 
     UPDATE Orders
-    SET    Status = 6, CancelReason = @CancelReason, UpdatedAt = GETUTCDATE()
+    SET    Status       = 5,          -- Cancelled
+           CancelReason = @CancelReason,
+           UpdatedAt    = GETUTCDATE()
     WHERE  Id = @Id AND UserId = @UserId;
 
-    UPDATE Deliveries SET Status = 5, UpdatedAt = GETUTCDATE() WHERE OrderId = @Id;
+    UPDATE Deliveries
+    SET    Status    = 6,             -- Failed
+           FailedAt  = GETUTCDATE(),
+           UpdatedAt = GETUTCDATE()
+    WHERE  OrderId = @Id AND Status NOT IN (5, 7);
 END

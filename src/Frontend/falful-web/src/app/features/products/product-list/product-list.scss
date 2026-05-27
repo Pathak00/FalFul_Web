@@ -1,3 +1,42 @@
+/* ─── Build Your Bowl Banner ─── */
+.byb-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: .875rem 1.25rem;
+  margin: 1rem 2rem 0;
+
+  .byb-banner-text {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .9rem;
+    color: #166534;
+    font-weight: 600;
+    i { font-size: 1rem; }
+  }
+
+  .byb-banner-link {
+    background: #16a34a;
+    color: #fff;
+    padding: .4rem 1rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    transition: background .15s;
+    &:hover { background: #15803d; }
+  }
+}
+
 /* ─── Hero ─── */
 .products-hero {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);

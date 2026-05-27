@@ -7,7 +7,7 @@ BEGIN
     SET NOCOUNT ON;
     SELECT p.Id, p.CategoryId, c.Name AS CategoryName, p.Name, p.Slug,
            p.ShortDescription, p.Price, p.Unit, p.Stock,
-           p.IsAvailable, p.IsFeatured, p.ImageUrl, p.Tags, p.DisplayOrder
+           p.IsAvailable, p.IsFeatured, p.ImageUrl, p.Tags, p.DisplayOrder, p.MinOrderGrams, p.GramStep, p.CutFruitPrice
     FROM   Products p
     INNER  JOIN Categories c ON c.Id = p.CategoryId
     WHERE  p.IsDeleted    = 0

@@ -28,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<IPriceRuleRepository, PriceRuleRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
+        services.AddScoped<IDeliveryAttemptRepository, DeliveryAttemptRepository>();
+        services.AddScoped<IDeliveryIssueRepository, DeliveryIssueRepository>();
+        services.AddScoped<IOrderRatingRepository, OrderRatingRepository>();
         return services;
     }
 }

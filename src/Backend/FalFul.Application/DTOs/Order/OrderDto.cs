@@ -53,15 +53,21 @@ public class OrderItemDto
 
 public class DeliveryStatusDto
 {
-    public int      Id                { get; set; }
-    public byte     Status            { get; set; }
-    public string   StatusLabel       { get; set; } = string.Empty;
-    public DateOnly ScheduledDate     { get; set; }
-    public string   ScheduledTimeSlot { get; set; } = string.Empty;
-    public DateTime? DeliveredAt      { get; set; }
-    public string?  RiderName         { get; set; }
-    public string?  RiderPhone        { get; set; }
-    public string?  TrackingNotes     { get; set; }
+    public int       Id                { get; set; }
+    public byte      Status            { get; set; }
+    public string    StatusLabel       { get; set; } = string.Empty;
+    public DateOnly  ScheduledDate     { get; set; }
+    public string    ScheduledTimeSlot { get; set; } = string.Empty;
+    public string?   RiderName         { get; set; }
+    public string?   RiderPhone        { get; set; }
+    public DateTime? AssignedAt        { get; set; }
+    public DateTime? PickedUpAt        { get; set; }
+    public DateTime? DeliveredAt       { get; set; }
+    public DateTime? FailedAt          { get; set; }
+    public byte      AttemptCount      { get; set; }
+    public byte      MaxAttempts       { get; set; }
+    public string?   TrackingNotes     { get; set; }
+    public List<DeliveryAttemptDto> Attempts { get; set; } = [];
 }
 
 public class OrderSummaryDto
@@ -94,15 +100,17 @@ public class OrderDetailDto : OrderSummaryDto
     public string?  CancelReason  { get; set; }
     public DateTime? UpdatedAt    { get; set; }
 
-    public List<OrderItemDto>  Items    { get; set; } = [];
-    public DeliveryStatusDto?  Delivery { get; set; }
+    public List<OrderItemDto>     Items    { get; set; } = [];
+    public DeliveryStatusDto?     Delivery { get; set; }
+    public OrderRatingResponseDto? Rating  { get; set; }
 }
 
 // ── Admin update ─────────────────────────────────────────────────────────────
 
 public class UpdateOrderStatusDto
 {
-    public OrderStatus Status { get; set; }
+    public OrderStatus Status  { get; set; }
+    public string?     Reason  { get; set; }  // Required for Cancelled(5) and Rejected(6)
 }
 
 public class CancelOrderDto

@@ -54,6 +54,14 @@ import { AuthService } from '../../../core/services/auth.service';
             <i class="bi bi-bag-check nav-icon"></i> Orders
             <span class="nav-hint">All orders</span>
           </a>
+          <a routerLink="/admin/deliveries" routerLinkActive="active" class="nav-item">
+            <i class="bi bi-bicycle nav-icon"></i> Deliveries
+            <span class="nav-hint">Track & manage</span>
+          </a>
+          <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
+            <i class="bi bi-bar-chart-line nav-icon"></i> Reports
+            <span class="nav-hint">Analytics</span>
+          </a>
           <a routerLink="/admin/price-config" routerLinkActive="active" class="nav-item">
             <i class="bi bi-sliders nav-icon"></i> Price Config
             <span class="nav-hint">Fees & rules</span>

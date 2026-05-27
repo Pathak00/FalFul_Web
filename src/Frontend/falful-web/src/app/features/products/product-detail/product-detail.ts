@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
 import { Product } from '../../../core/models/product.models';
@@ -46,9 +46,7 @@ import { Product } from '../../../core/models/product.models';
               @if (product()!.imageUrl) {
                 <img [src]="product()!.imageUrl" [alt]="product()!.name" />
               } @else {
-                <div class="image-placeholder">
-                  <i class="bi bi-image"></i>
-                </div>
+                <div class="image-placeholder"><i class="bi bi-image"></i></div>
               }
             </div>
             @if (product()!.isFeatured) {
@@ -65,14 +63,25 @@ import { Product } from '../../../core/models/product.models';
               <p class="detail-short-desc">{{ product()!.shortDescription }}</p>
             }
 
+            <!-- Per KG pricing (always) -->
             <div class="detail-price-row">
               <span class="detail-price">Rs. {{ product()!.price | number:'1.0-0' }}</span>
               <span class="detail-unit">per {{ product()!.unit }}</span>
             </div>
 
+            <!-- Cut fruit notice — directs to BYB -->
+            @if (product()!.cutFruitPrice && product()!.minOrderGrams) {
+              <a routerLink="/build-your-bowl" class="byb-notice">
+                <i class="bi bi-scissors"></i>
+                Also available as cut fruit — from Rs. {{ product()!.cutFruitPrice | number:'1.0-0' }}
+                for {{ product()!.minOrderGrams }}g · <strong>Build Your Bowl →</strong>
+              </a>
+            }
+
             <div class="detail-avail" [class.unavailable]="!product()!.isAvailable">
               @if (product()!.isAvailable) {
-                <i class="bi bi-check-circle-fill"></i> In Stock ({{ product()!.stock | number:'1.0-1' }} {{ product()!.unit }} available)
+                <i class="bi bi-check-circle-fill"></i>
+                In Stock ({{ product()!.stock | number:'1.0-1' }} {{ product()!.unit }} available)
               } @else {
                 <i class="bi bi-x-circle-fill"></i> Out of Stock
               }
@@ -81,15 +90,18 @@ import { Product } from '../../../core/models/product.models';
             <!-- Quantity + Add to Cart -->
             <div class="detail-order-row">
               <div class="qty-control">
-                <button (click)="decQty()"><i class="bi bi-dash"></i></button>
+                <button (click)="decQty()" [disabled]="qty <= 1">
+                  <i class="bi bi-dash"></i>
+                </button>
                 <span class="qty-val">{{ qty }}</span>
                 <button (click)="incQty()"><i class="bi bi-plus"></i></button>
               </div>
+
               <button class="btn-add-cart" [disabled]="!product()!.isAvailable" (click)="addToCart()">
-                <i class="bi bi-cart-plus"></i>
-                Add to Cart
+                <i class="bi bi-cart-plus"></i> Add to Cart
               </button>
             </div>
+
             @if (addedMsg()) {
               <p class="added-note"><i class="bi bi-check-circle-fill"></i> Added to cart!</p>
             }
@@ -133,6 +145,7 @@ export class ProductDetailComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug')!;
       this.loading.set(true);
+      this.qty = 1;
       this.svc.getProductBySlug(slug).subscribe({
         next: p  => { this.product.set(p); this.loading.set(false); },
         error: () => { this.product.set(null); this.loading.set(false); }
@@ -141,12 +154,14 @@ export class ProductDetailComponent implements OnInit {
   }
 
   incQty() { if (this.qty < 99) this.qty++; }
-  decQty() { if (this.qty > 1)  this.qty--; }
+
+  decQty() { if (this.qty > 1) this.qty--; }
 
   addToCart(): void {
     const p = this.product();
     if (!p || !p.isAvailable) return;
     this.cart.addItem({
+      itemType:    'PRODUCT',
       productId:   p.id,
       productName: p.name,
       productSlug: p.slug,

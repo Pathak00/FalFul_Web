@@ -9,7 +9,7 @@ namespace FalFul.API.Controllers;
 [ApiController]
 [Route("api/orders")]
 [Authorize]
-public class OrdersController(IOrderService orderService) : ControllerBase
+public class OrdersController(IOrderService orderService, IDeliveryService deliveryService) : ControllerBase
 {
     [HttpGet("price-rules")]
     [AllowAnonymous]
@@ -41,6 +41,17 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     public async Task<IActionResult> Cancel(int id, [FromBody] CancelOrderDto dto)
     {
         var result = await orderService.CancelOrderAsync(id, GetUserId(), dto);
+        return result.IsSuccess ? Ok() : BadRequest(new { message = result.Error });
+    }
+
+    [HttpGet("{id:int}/rating")]
+    public async Task<IActionResult> GetRating(int id) =>
+        Ok(await deliveryService.GetRatingAsync(id));
+
+    [HttpPost("{id:int}/rating")]
+    public async Task<IActionResult> SubmitRating(int id, [FromBody] SubmitRatingDto dto)
+    {
+        var result = await deliveryService.SubmitRatingAsync(id, GetUserId(), dto);
         return result.IsSuccess ? Ok() : BadRequest(new { message = result.Error });
     }
 

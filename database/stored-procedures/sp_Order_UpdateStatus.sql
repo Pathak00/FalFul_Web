@@ -1,9 +1,9 @@
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Order_UpdateStatus
-    @Id           INT,
-    @Status       TINYINT,
-    @CancelReason NVARCHAR(300) = NULL
+    @Id     INT,
+    @Status TINYINT,
+    @Reason NVARCHAR(300) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -11,15 +11,18 @@ BEGIN
 
     UPDATE Orders
     SET    Status       = @Status,
-           CancelReason = CASE WHEN @Status = 6 THEN @CancelReason ELSE CancelReason END,
+           -- Store reason for both Cancelled(5) and Rejected(6)
+           CancelReason = CASE WHEN @Status IN (5, 6) THEN @Reason ELSE CancelReason END,
            UpdatedAt    = GETUTCDATE()
     WHERE  Id = @Id;
 
-    -- Sync delivery status when order status changes
-    IF @Status = 4  -- OutForDelivery
-        UPDATE Deliveries SET Status = 3, UpdatedAt = GETUTCDATE() WHERE OrderId = @Id;
-    ELSE IF @Status = 5  -- Delivered
-        UPDATE Deliveries SET Status = 4, DeliveredAt = GETUTCDATE(), UpdatedAt = GETUTCDATE() WHERE OrderId = @Id;
-    ELSE IF @Status = 6  -- Cancelled
-        UPDATE Deliveries SET Status = 5, UpdatedAt = GETUTCDATE() WHERE OrderId = @Id;
+    -- Cancelled(5) or Rejected(6): cascade to any active delivery
+    -- Orders module does NOT manage logistics; this only marks the delivery as failed
+    -- so it is removed from the active delivery queue.
+    IF @Status IN (5, 6)
+        UPDATE Deliveries
+        SET    Status    = 6,           -- DeliveryFailed
+               FailedAt  = ISNULL(FailedAt, GETUTCDATE()),
+               UpdatedAt = GETUTCDATE()
+        WHERE  OrderId = @Id AND Status NOT IN (5, 9);  -- skip Delivered(5), Returned(9)
 END
