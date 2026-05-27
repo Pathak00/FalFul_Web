@@ -1,6 +1,8 @@
+using Dapper;
 using FalFul.Application.Interfaces;
 using FalFul.Persistence.Context;
 using FalFul.Persistence.Repositories;
+using FalFul.Persistence.TypeHandlers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FalFul.Persistence;
@@ -9,6 +11,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services)
     {
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+
         services.AddSingleton<DapperContext>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
