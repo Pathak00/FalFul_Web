@@ -200,6 +200,12 @@
   &:disabled { opacity: .5; cursor: not-allowed; }
 }
 
+.added-note {
+  font-size: .8rem; color: #16a34a; display: flex; align-items: center; gap: .35rem;
+  margin: -.25rem 0 0; font-weight: 600;
+  i { font-size: .9rem; }
+}
+
 .coming-soon-note {
   font-size: .75rem;
   color: #94a3b8;

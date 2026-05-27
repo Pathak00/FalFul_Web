@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MenuItem } from '../../../core/models/cms.models';
 import { AuthService } from '../../../core/services/auth.service';
+import { CartService } from '../../../core/services/cart.service';
 import { CmsService } from '../../../core/services/cms.service';
 
 @Component({
@@ -64,6 +65,12 @@ import { CmsService } from '../../../core/services/cms.service';
       </ul>
 
       <div class="nav-actions">
+        <button class="cart-btn" (click)="cartOpen.emit()">
+          <i class="bi bi-cart3"></i>
+          @if (cart.itemCount() > 0) {
+            <span class="cart-badge">{{ cart.itemCount() }}</span>
+          }
+        </button>
         @if (isAuthenticated()) {
           <span class="user-greeting">
             <i class="bi bi-person-circle"></i> {{ user()?.fullName }}
@@ -87,6 +94,8 @@ import { CmsService } from '../../../core/services/cms.service';
 export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
   private cmsService  = inject(CmsService);
+  readonly cart        = inject(CartService);
+  readonly cartOpen    = output<void>();
 
   readonly isAuthenticated = this.authService.isAuthenticated;
   readonly isAdmin = this.authService.isAdmin;

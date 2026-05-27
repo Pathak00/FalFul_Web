@@ -29,6 +29,25 @@ export const routes: Routes = [
       {
         path: 'products/:slug',
         loadComponent: () => import('./features/products/product-detail/product-detail').then(m => m.ProductDetailComponent)
+      },
+      {
+        path: 'build-your-bowl',
+        loadComponent: () => import('./features/build-your-bowl/build-your-bowl').then(m => m.BuildYourBowlComponent)
+      },
+      {
+        path: 'checkout',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/checkout/checkout').then(m => m.CheckoutComponent)
+      },
+      {
+        path: 'orders',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/orders/order-list/order-list').then(m => m.OrderListComponent)
+      },
+      {
+        path: 'orders/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/orders/order-detail/order-detail').then(m => m.OrderDetailComponent)
       }
     ]
   },
@@ -64,6 +83,14 @@ export const routes: Routes = [
       {
         path: 'products',
         loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent)
+      },
+      {
+        path: 'orders',
+        loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent)
+      },
+      {
+        path: 'price-config',
+        loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent)
       },
       {
         path: '',

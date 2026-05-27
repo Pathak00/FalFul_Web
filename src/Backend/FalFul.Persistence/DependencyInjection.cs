@@ -20,6 +20,10 @@ public static class DependencyInjection
         services.AddScoped<IMenuRepository, MenuRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IAddressRepository, AddressRepository>();
+        services.AddScoped<IPriceRuleRepository, PriceRuleRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IDeliveryRepository, DeliveryRepository>();
         return services;
     }
 }

@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
+import { CartService } from '../../../core/services/cart.service';
 import { Product } from '../../../core/models/product.models';
 
 @Component({
@@ -77,22 +78,21 @@ import { Product } from '../../../core/models/product.models';
               }
             </div>
 
-            <!-- Quantity + Order (Phase 5) -->
+            <!-- Quantity + Add to Cart -->
             <div class="detail-order-row">
               <div class="qty-control">
                 <button (click)="decQty()"><i class="bi bi-dash"></i></button>
                 <span class="qty-val">{{ qty }}</span>
                 <button (click)="incQty()"><i class="bi bi-plus"></i></button>
               </div>
-              <button class="btn-add-cart" [disabled]="!product()!.isAvailable">
+              <button class="btn-add-cart" [disabled]="!product()!.isAvailable" (click)="addToCart()">
                 <i class="bi bi-cart-plus"></i>
                 Add to Cart
               </button>
             </div>
-            <p class="coming-soon-note">
-              <i class="bi bi-info-circle"></i>
-              Cart & ordering coming in Phase 5.
-            </p>
+            @if (addedMsg()) {
+              <p class="added-note"><i class="bi bi-check-circle-fill"></i> Added to cart!</p>
+            }
 
             @if (product()!.description) {
               <div class="detail-description">
@@ -119,15 +119,15 @@ import { Product } from '../../../core/models/product.models';
   `
 })
 export class ProductDetailComponent implements OnInit {
-  product = signal<Product | null>(null);
-  loading = signal(true);
-  qty = 1;
+  private svc   = inject(ProductService);
+  private cart  = inject(CartService);
+  private route = inject(ActivatedRoute);
 
-  constructor(
-    private svc: ProductService,
-    private route: ActivatedRoute,
-    private router: Router
-  ) {}
+  product  = signal<Product | null>(null);
+  loading  = signal(true);
+  addedMsg = signal(false);
+  qty      = 1;
+  private msgTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -142,6 +142,25 @@ export class ProductDetailComponent implements OnInit {
 
   incQty() { if (this.qty < 99) this.qty++; }
   decQty() { if (this.qty > 1)  this.qty--; }
+
+  addToCart(): void {
+    const p = this.product();
+    if (!p || !p.isAvailable) return;
+    this.cart.addItem({
+      productId:   p.id,
+      productName: p.name,
+      productSlug: p.slug,
+      imageUrl:    p.imageUrl,
+      unitPrice:   p.price,
+      quantity:    this.qty,
+      unit:        p.unit,
+      totalPrice:  p.price * this.qty,
+      isCustomBuild: false,
+    });
+    this.addedMsg.set(true);
+    if (this.msgTimer) clearTimeout(this.msgTimer);
+    this.msgTimer = setTimeout(() => this.addedMsg.set(false), 2000);
+  }
 
   tagList(): string[] {
     return (this.product()?.tags ?? '').split(',').map(t => t.trim()).filter(Boolean);

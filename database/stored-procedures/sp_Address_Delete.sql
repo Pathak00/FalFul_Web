@@ -1,0 +1,11 @@
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE OR ALTER PROCEDURE sp_Address_Delete
+    @Id     INT,
+    @UserId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
+    DELETE FROM Addresses WHERE Id = @Id AND UserId = @UserId;
+END

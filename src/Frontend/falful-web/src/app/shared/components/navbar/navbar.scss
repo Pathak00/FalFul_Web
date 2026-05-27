@@ -192,3 +192,29 @@
 
   &:hover { border-color: #e53935; color: #e53935; }
 }
+
+.cart-btn {
+  position: relative;
+  background: none;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+
+  &:hover { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+
+  .cart-badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: #16a34a; color: #fff;
+    font-size: .6rem; font-weight: 800;
+    min-width: 18px; height: 18px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+  }
+}
