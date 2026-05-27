@@ -328,6 +328,52 @@
   &.active { background: #16a34a; border-color: #16a34a; color: #fff; }
 }
 
+/* ─── Image Picker ─── */
+.image-picker {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .15s, background .15s;
+
+  &:hover { border-color: #16a34a; background: #f0fdf4; }
+
+  .img-preview {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .img-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: .35rem;
+    text-align: center; pointer-events: none;
+    i    { font-size: 2rem; color: #cbd5e1; }
+    span { font-size: .875rem; font-weight: 500; color: #64748b; }
+    small{ font-size: .72rem; color: #9ca3af; }
+  }
+
+  .img-uploading {
+    display: flex; align-items: center; gap: .5rem;
+    color: #16a34a; font-size: .875rem; font-weight: 600;
+  }
+
+  .img-remove {
+    position: absolute; top: .4rem; right: .4rem;
+    width: 26px; height: 26px;
+    background: rgba(0,0,0,.5); color: #fff;
+    border: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: .8rem; line-height: 1;
+    &:hover { background: rgba(220,38,38,.85); }
+  }
+}
+
 .spin { animation: spin .7s linear infinite; display: inline-block; }
 
 @keyframes spin { to { transform: rotate(360deg); } }

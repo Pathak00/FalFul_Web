@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Banner } from '../../../core/models/cms.models';
 import { CmsService } from '../../../core/services/cms.service';
+import { UploadService } from '../../../core/services/upload.service';
 
 @Component({
   selector: 'app-admin-banners',
@@ -115,9 +116,27 @@ import { CmsService } from '../../../core/services/cms.service';
               </div>
             </div>
             <div class="form-group">
-              <label>Image URL</label>
-              <input [(ngModel)]="form.imageUrl" placeholder="https://example.com/banner-image.jpg" />
-              <span class="field-hint">Full URL to the banner background image. Leave blank for a text-only banner.</span>
+              <label>Banner Image</label>
+              <div class="image-picker" (click)="imgInput.click()">
+                @if (uploading()) {
+                  <div class="img-uploading"><i class="bi bi-arrow-repeat spin"></i> Uploading…</div>
+                } @else if (form.imageUrl) {
+                  <img [src]="form.imageUrl" class="img-preview" [alt]="form.title" />
+                  <button type="button" class="img-remove" (click)="$event.stopPropagation(); form.imageUrl = ''">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                } @else {
+                  <div class="img-placeholder">
+                    <i class="bi bi-cloud-upload"></i>
+                    <span>Click to upload banner image</span>
+                    <small>JPG, PNG, WEBP · max 5 MB · Leave blank for text-only banner</small>
+                  </div>
+                }
+              </div>
+              <input #imgInput type="file" accept="image/*" style="display:none" (change)="onImagePicked($event)" />
+              @if (uploadError()) {
+                <span style="font-size:.75rem;color:#dc2626">{{ uploadError() }}</span>
+              }
             </div>
           </div>
 
@@ -199,14 +218,31 @@ import { CmsService } from '../../../core/services/cms.service';
 })
 export class AdminBannersComponent implements OnInit {
   private cms = inject(CmsService);
+  private uploadSvc = inject(UploadService);
 
-  banners = signal<Banner[]>([]);
-  loading = signal(true);
-  showForm = signal(false);
-  editing = signal(false);
-  saving = signal(false);
-  error = signal('');
+  banners      = signal<Banner[]>([]);
+  loading      = signal(true);
+  showForm     = signal(false);
+  editing      = signal(false);
+  saving       = signal(false);
+  error        = signal('');
+  uploading    = signal(false);
+  uploadError  = signal('');
   deleteTarget = signal<Banner | null>(null);
+
+  onImagePicked(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploading.set(true);
+    this.uploadError.set('');
+    this.uploadSvc.upload(file).subscribe({
+      next: url  => { this.form.imageUrl = url; this.uploading.set(false); },
+      error: (e: { error?: { message?: string } }) => {
+        this.uploadError.set(e?.error?.message || 'Upload failed.');
+        this.uploading.set(false);
+      }
+    });
+  }
 
   form = this.emptyForm();
 
@@ -265,7 +301,7 @@ export class AdminBannersComponent implements OnInit {
     this.cms.deleteBanner(this.deleteTarget()!.id).subscribe({ next: () => { this.deleteTarget.set(null); this.load(); } });
   }
 
-  closeForm() { this.showForm.set(false); }
+  closeForm() { this.showForm.set(false); this.uploadError.set(''); }
 
   private emptyForm() {
     return { id: undefined as number | undefined, title: '', subtitle: '', buttonText: '', buttonLink: '', imageUrl: '', position: 'home', isActive: true, displayOrder: 0, startDate: '', endDate: '' };
