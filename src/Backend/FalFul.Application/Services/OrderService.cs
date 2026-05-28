@@ -199,9 +199,9 @@ public class OrderService(
         var order = await orders.GetByIdAsync(id);
         if (order is null || order.UserId != userId) return Result.Failure("Order not found.");
 
-        // Customers may cancel only while Pending(1) or Confirmed(2) — before preparation begins
-        if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Confirmed)
-            return Result.Failure("Order cannot be cancelled at this stage.");
+        // Customers may cancel only while Pending(1) — before admin confirmation
+        if (order.Status != OrderStatus.Pending)
+            return Result.Failure("Order cannot be cancelled at this stage. Cancellation is only allowed before admin confirmation.");
 
         try { await orders.CancelAsync(id, userId, dto.CancelReason.Trim()); return Result.Success(); }
         catch (Exception ex) { return Result.Failure(ex.Message); }

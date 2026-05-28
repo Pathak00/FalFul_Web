@@ -1,0 +1,12 @@
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE OR ALTER PROCEDURE sp_Role_SetDefault
+    @RoleId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET QUOTED_IDENTIFIER ON;
+
+    UPDATE Roles SET IsDefault = 0;
+    UPDATE Roles SET IsDefault = 1 WHERE Id = @RoleId;
+END

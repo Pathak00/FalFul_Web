@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, output, signal } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { MenuItem } from '../../../core/models/cms.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
-import { CmsService } from '../../../core/services/cms.service';
+import { HomeRouteService } from '../../../core/services/home-route.service';
+import { PermissionService } from '../../../core/services/permission.service';
+import { MenuNode, MenuStore } from '../../../core/stores/menu.store';
 
 @Component({
   selector: 'app-navbar',
@@ -19,8 +20,8 @@ import { CmsService } from '../../../core/services/cms.service';
       </div>
 
       <ul class="nav-links">
-        @for (item of topLevel(); track item.id) {
-          @if (hasChildren(item.id)) {
+        @for (item of menuStore.topLevel(); track item.id) {
+          @if (item.children.length > 0) {
             <!-- Dropdown item -->
             <li class="nav-has-dropdown" (mouseenter)="openDropdown(item.id)" (mouseleave)="closeDropdown()">
               <a [href]="item.url || '#'" (click)="item.url ? null : $event.preventDefault()" class="nav-link-btn" routerLinkActive="active">
@@ -30,23 +31,22 @@ import { CmsService } from '../../../core/services/cms.service';
                 } {{ item.label }}
                 <i class="bi bi-chevron-down dropdown-caret"></i>
               </a>
-              @if (activeDropdown() === item.id) {
-                <ul class="dropdown-menu">
-                  @for (child of childrenOf(item.id); track child.id) {
-                    <li>
-                      <a [routerLink]="child.url" routerLinkActive="active"
-                         [target]="child.openInNewTab ? '_blank' : '_self'"
-                         class="dropdown-item">
-                        @if (child.icon) {
-                          @if (child.icon.startsWith('bi-')) { <i class="bi {{ child.icon }} d-icon"></i> }
-                          @else { <span class="d-icon">{{ child.icon }}</span> }
-                        }
-                        {{ child.label }}
-                      </a>
-                    </li>
-                  }
-                </ul>
-              }
+              <ul class="dropdown-menu" [class.open]="activeDropdown() === item.id"
+                  (mouseenter)="openDropdown(item.id)" (mouseleave)="closeDropdown()">
+                @for (child of item.children; track child.id) {
+                  <li>
+                    <a [routerLink]="child.url" routerLinkActive="active"
+                       [target]="child.openInNewTab ? '_blank' : '_self'"
+                       class="dropdown-item">
+                      @if (child.icon) {
+                        @if (child.icon.startsWith('bi-')) { <i class="bi {{ child.icon }} d-icon"></i> }
+                        @else { <span class="d-icon">{{ child.icon }}</span> }
+                      }
+                      {{ child.label }}
+                    </a>
+                  </li>
+                }
+              </ul>
             </li>
           } @else {
             <!-- Plain link -->
@@ -65,16 +65,21 @@ import { CmsService } from '../../../core/services/cms.service';
       </ul>
 
       <div class="nav-actions">
-        <button class="cart-btn" (click)="cartOpen.emit()">
-          <i class="bi bi-cart3"></i>
-          @if (cart.itemCount() > 0) {
-            <span class="cart-badge">{{ cart.itemCount() }}</span>
-          }
-        </button>
+        @if (perms.canShop()) {
+          <button class="cart-btn" (click)="cartOpen.emit()">
+            <i class="bi bi-cart3"></i>
+            @if (cart.itemCount() > 0) {
+              <span class="cart-badge">{{ cart.itemCount() }}</span>
+            }
+          </button>
+        }
         @if (isAuthenticated()) {
           <span class="user-greeting">
             <i class="bi bi-person-circle"></i> {{ user()?.fullName }}
           </span>
+          <a class="btn-dashboard" routerLink="/home">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
           <button class="btn-logout" (click)="logout()">
             <i class="bi bi-box-arrow-right"></i> Logout
           </button>
@@ -91,31 +96,17 @@ import { CmsService } from '../../../core/services/cms.service';
   `,
   styleUrl: './navbar.scss'
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent {
   private authService = inject(AuthService);
-  private cmsService  = inject(CmsService);
   readonly cart        = inject(CartService);
+  readonly menuStore   = inject(MenuStore);
+  readonly perms       = inject(PermissionService);
   readonly cartOpen    = output<void>();
 
   readonly isAuthenticated = this.authService.isAuthenticated;
-  readonly isAdmin = this.authService.isAdmin;
   readonly user = this.authService.currentUser;
 
-  private menuItems = signal<MenuItem[]>([]);
   activeDropdown = signal<number | null>(null);
-
-  topLevel   = () => this.menuItems().filter(i => !i.parentId);
-  childrenOf = (id: number) => this.menuItems().filter(i => i.parentId === id);
-  hasChildren = (id: number) => this.menuItems().some(i => i.parentId === id);
-
-  ngOnInit() { this.loadMenu(); }
-
-  private loadMenu() {
-    this.cmsService.getVisibleMenuItems().subscribe({
-      next: items => this.menuItems.set(items),
-      error: () => {}
-    });
-  }
 
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -125,7 +116,7 @@ export class NavbarComponent implements OnInit {
   }
 
   closeDropdown() {
-    this.closeTimer = setTimeout(() => { this.activeDropdown.set(null); this.closeTimer = null; }, 120);
+    this.closeTimer = setTimeout(() => { this.activeDropdown.set(null); this.closeTimer = null; }, 150);
   }
 
   logout() { this.authService.logout(); }

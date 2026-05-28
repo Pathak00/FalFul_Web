@@ -139,3 +139,7 @@ textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 
 }
 
 @keyframes spin { to { transform: rotate(360deg) } }
+
+.co-cancel-policy { font-size: .72rem; color: #9ca3af; margin: .625rem 0 0; line-height: 1.4; display: flex; gap: .3rem; align-items: flex-start;
+  i { flex-shrink: 0; margin-top: .1rem; }
+}

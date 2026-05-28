@@ -7,7 +7,7 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/admin/deliveries")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "Perm:deliveries")]
 public class AdminDeliveriesController(IDeliveryService svc) : ControllerBase
 {
     [HttpGet]

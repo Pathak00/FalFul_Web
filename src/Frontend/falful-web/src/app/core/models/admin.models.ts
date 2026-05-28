@@ -4,6 +4,7 @@ export interface AdminUser {
   email?: string;
   phoneNumber?: string;
   userType: string;
+  roleName?: string;
   isActive: boolean;
   createdAt: string;
   lastLoginAt?: string;
@@ -40,5 +41,5 @@ export interface AdminCreateUserRequest {
   email?: string;
   phoneNumber?: string;
   password: string;
-  userType: number; // 1=Individual 2=Organization 3=Admin
+  roleId?: number;
 }

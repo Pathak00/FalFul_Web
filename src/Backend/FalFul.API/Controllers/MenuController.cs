@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using FalFul.Application.DTOs.CMS;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +15,7 @@ public class MenuController : ControllerBase
     public MenuController(ICmsService cms) => _cms = cms;
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:menus")]
     public async Task<IActionResult> GetAll() =>
         Ok(await _cms.GetAllMenuItemsAsync());
 
@@ -23,22 +23,17 @@ public class MenuController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetVisible()
     {
-        int? userType = null;
+        int? userId = null;
         if (User.Identity?.IsAuthenticated == true)
         {
-            userType = User.FindFirstValue(ClaimTypes.Role) switch
-            {
-                "Admin"        => 3,
-                "Organization" => 2,
-                "Individual"   => 1,
-                _              => null
-            };
+            var sub = User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
+            if (sub != null) userId = int.Parse(sub);
         }
-        return Ok(await _cms.GetVisibleMenuItemsAsync(userType));
+        return Ok(await _cms.GetVisibleMenuItemsAsync(userId));
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:menus")]
     public async Task<IActionResult> Create([FromBody] CreateMenuItemDto dto)
     {
         var result = await _cms.CreateMenuItemAsync(dto, GetUserId());
@@ -46,7 +41,7 @@ public class MenuController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:menus")]
     public async Task<IActionResult> Update([FromBody] UpdateMenuItemDto dto)
     {
         var result = await _cms.UpdateMenuItemAsync(dto, GetUserId());
@@ -54,7 +49,7 @@ public class MenuController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:menus")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _cms.DeleteMenuItemAsync(id, GetUserId());

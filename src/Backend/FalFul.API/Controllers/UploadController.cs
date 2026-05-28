@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/upload")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class UploadController(IWebHostEnvironment env) : ControllerBase
 {
     private static readonly HashSet<string> AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];

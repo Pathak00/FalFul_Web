@@ -1,6 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Perm } from '../../../core/constants/permissions';
 import { AuthService } from '../../../core/services/auth.service';
+import { PermissionService } from '../../../core/services/permission.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -13,7 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <a routerLink="/" class="brand-logo">
             <i class="bi bi-basket2-fill"></i> FalFul
           </a>
-          <span class="admin-badge">Admin</span>
+          <span class="admin-badge">{{ user()?.role ?? 'Admin' }}</span>
         </div>
 
         <nav class="sidebar-nav">
@@ -21,61 +23,103 @@ import { AuthService } from '../../../core/services/auth.service';
             <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
           </a>
 
-          <p class="nav-section-label">Content Management</p>
-          <a routerLink="/admin/menus" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-list-nested nav-icon"></i> Menus
-            <span class="nav-hint">Navigation</span>
-          </a>
-          <a routerLink="/admin/pages" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Pages
-            <span class="nav-hint">Custom pages</span>
-          </a>
-          <a routerLink="/admin/banners" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-image nav-icon"></i> Banners
-            <span class="nav-hint">Promotions</span>
-          </a>
-          <a routerLink="/admin/sections" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-layout-text-window-reverse nav-icon"></i> Homepage
-            <span class="nav-hint">Section content</span>
-          </a>
+          @if (perms.canAny(Perm.Menus, Perm.Pages, Perm.Banners, Perm.Sections)) {
+            <p class="nav-section-label">Content Management</p>
+            @if (perms.can(Perm.Menus)) {
+              <a routerLink="/admin/menus" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-list-nested nav-icon"></i> Menus
+                <span class="nav-hint">Navigation</span>
+              </a>
+            }
+            @if (perms.can(Perm.Pages)) {
+              <a routerLink="/admin/pages" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-file-earmark-text nav-icon"></i> Pages
+                <span class="nav-hint">Custom pages</span>
+              </a>
+            }
+            @if (perms.can(Perm.Banners)) {
+              <a routerLink="/admin/banners" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-image nav-icon"></i> Banners
+                <span class="nav-hint">Promotions</span>
+              </a>
+            }
+            @if (perms.can(Perm.Sections)) {
+              <a routerLink="/admin/sections" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-layout-text-window-reverse nav-icon"></i> Homepage
+                <span class="nav-hint">Section content</span>
+              </a>
+            }
+          }
 
-          <p class="nav-section-label">Product Catalog</p>
-          <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-tags nav-icon"></i> Categories
-            <span class="nav-hint">Fruit categories</span>
-          </a>
-          <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-box-seam nav-icon"></i> Products
-            <span class="nav-hint">Fruit catalog</span>
-          </a>
+          @if (perms.canAny(Perm.Categories, Perm.Products)) {
+            <p class="nav-section-label">Product Catalog</p>
+            @if (perms.can(Perm.Categories)) {
+              <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-tags nav-icon"></i> Categories
+                <span class="nav-hint">Fruit categories</span>
+              </a>
+            }
+            @if (perms.can(Perm.Products)) {
+              <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-box-seam nav-icon"></i> Products
+                <span class="nav-hint">Fruit catalog</span>
+              </a>
+            }
+          }
 
-          <p class="nav-section-label">Orders & Pricing</p>
-          <a routerLink="/admin/orders" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-bag-check nav-icon"></i> Orders
-            <span class="nav-hint">All orders</span>
-          </a>
-          <a routerLink="/admin/deliveries" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-bicycle nav-icon"></i> Deliveries
-            <span class="nav-hint">Track & manage</span>
-          </a>
-          <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-bar-chart-line nav-icon"></i> Reports
-            <span class="nav-hint">Analytics</span>
-          </a>
-          <a routerLink="/admin/price-config" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-sliders nav-icon"></i> Price Config
-            <span class="nav-hint">Fees & rules</span>
-          </a>
+          @if (perms.canAny(Perm.Orders, Perm.Deliveries, Perm.Reports, Perm.PriceConfig, Perm.Settings)) {
+            <p class="nav-section-label">Orders & Pricing</p>
+          }
+          @if (perms.can(Perm.Orders)) {
+            <a routerLink="/admin/orders" routerLinkActive="active" class="nav-item">
+              <i class="bi bi-bag-check nav-icon"></i> Orders
+              <span class="nav-hint">All orders</span>
+            </a>
+          }
+          @if (perms.can(Perm.Deliveries)) {
+            <a routerLink="/admin/deliveries" routerLinkActive="active" class="nav-item">
+              <i class="bi bi-bicycle nav-icon"></i> Deliveries
+              <span class="nav-hint">Track & manage</span>
+            </a>
+          }
+          @if (perms.can(Perm.Reports)) {
+            <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
+              <i class="bi bi-bar-chart-line nav-icon"></i> Reports
+              <span class="nav-hint">Analytics</span>
+            </a>
+          }
+          @if (perms.can(Perm.PriceConfig)) {
+            <a routerLink="/admin/price-config" routerLinkActive="active" class="nav-item">
+              <i class="bi bi-sliders nav-icon"></i> Price Config
+              <span class="nav-hint">Fees & rules</span>
+            </a>
+          }
+          @if (perms.can(Perm.Settings)) {
+            <a routerLink="/admin/settings" routerLinkActive="active" class="nav-item">
+              <i class="bi bi-gear nav-icon"></i> Settings
+              <span class="nav-hint">App configuration</span>
+            </a>
+          }
 
-          <p class="nav-section-label">User Management</p>
-          <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-people nav-icon"></i> Users
-            <span class="nav-hint">All accounts</span>
-          </a>
+          @if (perms.canAny(Perm.Users, Perm.System)) {
+            <p class="nav-section-label">User Management</p>
+            @if (perms.can(Perm.Users)) {
+              <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-people nav-icon"></i> Users
+                <span class="nav-hint">All accounts</span>
+              </a>
+            }
+            @if (perms.can(Perm.System)) {
+              <a routerLink="/admin/roles" routerLinkActive="active" class="nav-item">
+                <i class="bi bi-shield-lock nav-icon"></i> Roles
+                <span class="nav-hint">Permissions</span>
+              </a>
+            }
+          }
 
           <p class="nav-section-label" style="margin-top:auto">Account</p>
-          <a routerLink="/dashboard" class="nav-item">
-            <i class="bi bi-arrow-left-circle nav-icon"></i> Back to Site
+          <a routerLink="/" class="nav-item">
+            <i class="bi bi-globe nav-icon"></i> View Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
             <i class="bi bi-box-arrow-right nav-icon"></i> Logout
@@ -168,6 +212,8 @@ import { AuthService } from '../../../core/services/auth.service';
 export class AdminLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  readonly perms = inject(PermissionService);
+  readonly Perm = Perm;
   readonly user = this.authService.currentUser;
   readonly initial = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'A';
 

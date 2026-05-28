@@ -99,8 +99,8 @@ export class OrderService {
     return this.api.put<void>(`/api/admin/deliveries/${id}/assign`, { riderName, riderPhone });
   }
 
-  updateDeliveryStatus(id: number, status: number, trackingNotes?: string): Observable<void> {
-    return this.api.put<void>(`/api/admin/deliveries/${id}/status`, { status, trackingNotes });
+  updateDeliveryStatus(id: number, status: number, trackingNotes?: string, scheduledDate?: string, scheduledTimeSlot?: string): Observable<void> {
+    return this.api.put<void>(`/api/admin/deliveries/${id}/status`, { status, trackingNotes, scheduledDate, scheduledTimeSlot });
   }
 
   logDeliveryAttempt(id: number, dto: object): Observable<void> {
@@ -113,6 +113,20 @@ export class OrderService {
 
   resolveDeliveryIssue(issueId: number, resolutionNotes?: string): Observable<void> {
     return this.api.put<void>(`/api/admin/deliveries/issues/${issueId}/resolve`, { resolutionNotes });
+  }
+
+  // ── Settings (public) ─────────────────────────────────────────────────────────
+  getSetting(key: string): Observable<{ key: string; value: string }> {
+    return this.api.get<{ key: string; value: string }>(`/api/settings/${key}`);
+  }
+
+  // ── Admin Settings ────────────────────────────────────────────────────────────
+  getAllAdminSettings(): Observable<{ key: string; value: string; updatedAt: string }[]> {
+    return this.api.get<{ key: string; value: string; updatedAt: string }[]>('/api/admin/settings');
+  }
+
+  updateAdminSetting(key: string, value: string): Observable<void> {
+    return this.api.put<void>(`/api/admin/settings/${key}`, { value });
   }
 
   // ── Admin Reports ─────────────────────────────────────────────────────────────

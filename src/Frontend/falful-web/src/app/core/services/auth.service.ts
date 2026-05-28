@@ -19,7 +19,6 @@ export class AuthService {
   private _currentUser = signal<UserInfo | null>(this.loadUser());
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => !!this._currentUser());
-  readonly isAdmin = computed(() => this._currentUser()?.userType === 'Admin');
 
   constructor(private api: ApiService, private router: Router) {}
 

@@ -52,12 +52,12 @@ public class DeliveryRepository(DapperContext context) : IDeliveryRepository
             commandType: CommandType.StoredProcedure);
     }
 
-    public async Task UpdateStatusAsync(int id, byte status, string? trackingNotes = null)
+    public async Task UpdateStatusAsync(int id, byte status, string? trackingNotes = null, DateOnly? scheduledDate = null, string? scheduledTimeSlot = null)
     {
         using var conn = context.CreateConnection();
         await conn.ExecuteAsync(
             "sp_Delivery_UpdateStatus",
-            new { Id = id, Status = status, TrackingNotes = trackingNotes },
+            new { Id = id, Status = status, TrackingNotes = trackingNotes, ScheduledDate = scheduledDate, ScheduledTimeSlot = scheduledTimeSlot },
             commandType: CommandType.StoredProcedure);
     }
 
@@ -76,5 +76,14 @@ public class DeliveryRepository(DapperContext context) : IDeliveryRepository
         summary.FailureBreakdown = failures;
         summary.StatusBreakdown  = statuses;
         return summary;
+    }
+
+    public async Task<IEnumerable<DeliverySummaryDto>> GetRiderDeliveriesAsync(int riderUserId)
+    {
+        using var conn = context.CreateConnection();
+        return await conn.QueryAsync<DeliverySummaryDto>(
+            "sp_Rider_GetDeliveries",
+            new { RiderUserId = riderUserId },
+            commandType: CommandType.StoredProcedure);
     }
 }

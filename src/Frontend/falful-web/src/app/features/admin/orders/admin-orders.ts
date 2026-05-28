@@ -4,6 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
 import { OrderSummary, OrderDetail, ORDER_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
 
+interface BowlDetails {
+  container: string;
+  totalGrams?: number;
+  containerFee?: number;
+  fruits: { productId: number; name: string; grams: number; price?: number }[];
+}
+
 const STATUS_OPTS = [
   { value: 0, label: 'All'                },
   { value: 1, label: 'Pending'            },
@@ -189,11 +196,53 @@ const NEXT_STATUS: Record<number, { value: number; label: string; needsReason: b
               <tbody>
                 @for (item of detail()!.items; track item.id) {
                   <tr>
-                    <td>{{ item.productName }} @if (item.isCustomBuild) { <span class="custom-tag">Custom</span> }</td>
+                    <td>{{ item.productName }} @if (item.isCustomBuild) { <span class="custom-tag">Custom Bowl</span> }</td>
                     <td>{{ item.quantity | number:'1.0-2' }} {{ item.unit }}</td>
                     <td>Rs. {{ item.unitPrice | number:'1.0-0' }}</td>
                     <td>Rs. {{ item.totalPrice | number:'1.0-0' }}</td>
                   </tr>
+                  @if (item.isCustomBuild && item.customBuildDetails) {
+                    @let bowl = parseBowlDetails(item.customBuildDetails);
+                    @if (bowl) {
+                      <tr>
+                        <td colspan="4" style="padding:.25rem .75rem .75rem;background:#faf5ff">
+                          <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:.35rem">
+                            <i class="bi bi-scissors"></i>
+                            {{ bowl.container === 'bowl' ? 'Bowl' : 'Box' }} Composition
+                            — {{ bowlTotalGrams(bowl) }}g total
+                          </div>
+                          <table style="width:100%;font-size:.75rem;border-collapse:collapse">
+                            <thead>
+                              <tr style="color:#a78bfa">
+                                <th style="text-align:left;font-weight:600;padding-bottom:.2rem">Fruit</th>
+                                <th style="text-align:center;font-weight:600;padding-bottom:.2rem">Weight</th>
+                                <th style="text-align:right;font-weight:600;padding-bottom:.2rem">Price</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (fruit of bowl.fruits; track fruit.productId) {
+                                <tr style="border-top:1px solid #f3e8ff">
+                                  <td style="padding:.2rem 0;color:#374151">{{ fruit.name }}</td>
+                                  <td style="text-align:center;color:#9ca3af">{{ fruit.grams }}g</td>
+                                  <td style="text-align:right;font-weight:600;color:#374151">
+                                    @if (fruit.price != null) { Rs. {{ fruit.price | number:'1.0-0' }} }
+                                    @else { — }
+                                  </td>
+                                </tr>
+                              }
+                              @if (bowl.containerFee != null && bowl.containerFee > 0) {
+                                <tr style="border-top:1px solid #f3e8ff">
+                                  <td style="padding:.2rem 0;color:#6b7280;font-style:italic">Container fee</td>
+                                  <td style="text-align:center;color:#9ca3af">—</td>
+                                  <td style="text-align:right;font-weight:600;color:#374151">Rs. {{ bowl.containerFee | number:'1.0-0' }}</td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    }
+                  }
                 }
               </tbody>
             </table>
@@ -287,6 +336,16 @@ export class AdminOrdersComponent implements OnInit {
 
   private doUpdate(orderId: number, statusValue: number) {
     this.svc.updateOrderStatus(orderId, statusValue).subscribe({ next: () => this.load() });
+  }
+
+  parseBowlDetails(json?: string): BowlDetails | null {
+    if (!json) return null;
+    try { return JSON.parse(json) as BowlDetails; }
+    catch { return null; }
+  }
+
+  bowlTotalGrams(bowl: BowlDetails): number {
+    return bowl.totalGrams ?? bowl.fruits.reduce((s, f) => s + f.grams, 0);
   }
 
   statusLabel(s: number): string { return ORDER_STATUSES[s]?.label ?? 'Unknown'; }

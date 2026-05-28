@@ -31,6 +31,9 @@ public static class DependencyInjection
         services.AddScoped<IDeliveryAttemptRepository, DeliveryAttemptRepository>();
         services.AddScoped<IDeliveryIssueRepository, DeliveryIssueRepository>();
         services.AddScoped<IOrderRatingRepository, OrderRatingRepository>();
+        services.AddScoped<IAppSettingRepository, AppSettingRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
         return services;
     }
 }

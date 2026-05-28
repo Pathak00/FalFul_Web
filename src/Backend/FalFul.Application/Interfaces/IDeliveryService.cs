@@ -18,6 +18,9 @@ public interface IDeliveryService
     Task<DeliveryReportDto> GetDeliveryReportAsync(string? fromDate = null, string? toDate = null);
     Task<OrderReportDto>    GetOrderReportAsync(string? fromDate = null, string? toDate = null);
 
+    // Rider portal
+    Task<IEnumerable<DeliverySummaryDto>> GetRiderDeliveriesAsync(int riderUserId);
+
     // Customer rating
     Task<Result>               SubmitRatingAsync(int orderId, int userId, SubmitRatingDto dto);
     Task<OrderRatingResponseDto?> GetRatingAsync(int orderId);

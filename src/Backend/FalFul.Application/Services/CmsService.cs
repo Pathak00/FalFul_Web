@@ -28,9 +28,9 @@ public class CmsService : ICmsService
         return items.Select(MapMenuDto);
     }
 
-    public async Task<IEnumerable<MenuItemDto>> GetVisibleMenuItemsAsync(int? userType)
+    public async Task<IEnumerable<MenuItemDto>> GetVisibleMenuItemsAsync(int? userId)
     {
-        var items = await _menus.GetVisibleAsync(userType);
+        var items = await _menus.GetVisibleAsync(userId);
         return items.Select(MapMenuDto);
     }
 
@@ -40,6 +40,7 @@ public class CmsService : ICmsService
         {
             var item = new MenuItem { ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab };
             var id = await _menus.CreateAsync(item, adminId);
+            await _menus.SetRolesAsync(id, dto.RequiredRoleIds);
             return Result<int>.Success(id);
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
@@ -51,6 +52,7 @@ public class CmsService : ICmsService
         {
             var item = new MenuItem { Id = dto.Id, ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab };
             await _menus.UpdateAsync(item, adminId);
+            await _menus.SetRolesAsync(dto.Id, dto.RequiredRoleIds);
             return Result.Success();
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
@@ -65,7 +67,11 @@ public class CmsService : ICmsService
     private static MenuItemDto MapMenuDto(MenuItem m) => new()
     {
         Id = m.Id, ParentId = m.ParentId, Label = m.Label, Url = m.Url, Icon = m.Icon,
-        DisplayOrder = m.DisplayOrder, IsVisible = m.IsVisible, VisibleTo = m.VisibleTo, OpenInNewTab = m.OpenInNewTab
+        DisplayOrder = m.DisplayOrder, IsVisible = m.IsVisible, VisibleTo = m.VisibleTo,
+        RequiredRoleIds = string.IsNullOrEmpty(m.RequiredRoleIds)
+            ? []
+            : m.RequiredRoleIds.Split(',').Select(int.Parse).ToArray(),
+        OpenInNewTab = m.OpenInNewTab
     };
 
     /* ---- Pages ---- */

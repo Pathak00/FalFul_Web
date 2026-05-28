@@ -7,7 +7,7 @@ public interface ICmsService
 {
     /* Menu Items */
     Task<IEnumerable<MenuItemDto>> GetAllMenuItemsAsync();
-    Task<IEnumerable<MenuItemDto>> GetVisibleMenuItemsAsync(int? userType);
+    Task<IEnumerable<MenuItemDto>> GetVisibleMenuItemsAsync(int? userId);
     Task<Result<int>> CreateMenuItemAsync(CreateMenuItemDto dto, int? adminId);
     Task<Result> UpdateMenuItemAsync(UpdateMenuItemDto dto, int? adminId);
     Task<Result> DeleteMenuItemAsync(int id, int? adminId);

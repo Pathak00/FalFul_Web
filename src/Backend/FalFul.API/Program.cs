@@ -1,9 +1,11 @@
 using System.Text;
+using FalFul.API.Authorization;
 using FalFul.API.Middleware;
 using FalFul.Application;
 using FalFul.Infrastructure;
 using FalFul.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,11 @@ var jwtKey = builder.Configuration["Jwt:Key"]
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Keep raw JWT claim names (sub, email, jti) instead of mapping them to
+        // the long ClaimTypes URIs. Without this, User.FindFirstValue("sub") returns
+        // null because the middleware remaps sub → ClaimTypes.NameIdentifier.
+        options.MapInboundClaims = false;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -33,6 +40,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// PermissionPolicyProvider handles any [Authorize(Policy="Perm:<key>")] dynamically.
+// No manual policy registration needed — permission keys are resolved from DB at runtime.
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>

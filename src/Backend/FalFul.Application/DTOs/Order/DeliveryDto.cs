@@ -10,8 +10,10 @@ public class AssignRiderDto
 
 public class UpdateDeliveryStatusDto
 {
-    public byte    Status        { get; set; }
-    public string? TrackingNotes { get; set; }
+    public byte    Status            { get; set; }
+    public string? TrackingNotes     { get; set; }
+    public string? ScheduledDate     { get; set; }  // ISO date yyyy-MM-dd; for admin reschedule
+    public string? ScheduledTimeSlot { get; set; }
 }
 
 public class LogDeliveryAttemptDto

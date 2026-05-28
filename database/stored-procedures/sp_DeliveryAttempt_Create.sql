@@ -15,10 +15,10 @@ BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
 
-    -- NextAction values:
-    --   1 = Reschedule         → DeliveryStatus 8 (Rescheduled)
-    --   2 = Return to Warehouse → DeliveryStatus 9 (Returned)
-    --   3 = Retry Same Day     → DeliveryStatus 6 (DeliveryFailed)
+    -- NextAction values (explicit admin decision — takes precedence over auto-return):
+    --   1 = Reschedule           → DeliveryStatus 8 (Rescheduled)
+    --   2 = Return to Warehouse  → DeliveryStatus 9 (Returned)
+    --   3 = Retry Today          → DeliveryStatus 6 (DeliveryFailed)
     --   4 = Customer Unavailable → DeliveryStatus 7 (CustomerUnavailable)
 
     DECLARE @AttemptNumber TINYINT;
@@ -37,6 +37,7 @@ BEGIN
 
     IF @WasSuccessful = 1
     BEGIN
+        -- Success path
         UPDATE Deliveries
         SET    Status       = 5,          -- Delivered
                AttemptCount = @AttemptNumber,
@@ -44,7 +45,7 @@ BEGIN
                UpdatedAt    = GETUTCDATE()
         WHERE  Id = @DeliveryId;
     END
-    ELSE IF @AttemptNumber >= @MaxAttempts OR @NextAction = 2  -- Return to Warehouse
+    ELSE IF @NextAction = 2               -- Explicit: Return to Warehouse
     BEGIN
         UPDATE Deliveries
         SET    Status       = 9,          -- Returned
@@ -53,10 +54,10 @@ BEGIN
                UpdatedAt    = GETUTCDATE()
         WHERE  Id = @DeliveryId;
     END
-    ELSE IF @NextAction = 1               -- Reschedule
+    ELSE IF @NextAction = 1               -- Explicit: Reschedule (overrides max-attempt auto-return)
     BEGIN
         UPDATE Deliveries
-        SET    Status             = 8,    -- Rescheduled (awaiting new rider assignment)
+        SET    Status             = 8,    -- Rescheduled
                AttemptCount      = @AttemptNumber,
                ScheduledDate     = ISNULL(@RescheduledDate, ScheduledDate),
                ScheduledTimeSlot = ISNULL(@RescheduledTimeSlot, ScheduledTimeSlot),
@@ -64,7 +65,7 @@ BEGIN
                UpdatedAt         = GETUTCDATE()
         WHERE  Id = @DeliveryId;
     END
-    ELSE IF @NextAction = 4               -- Customer Unavailable
+    ELSE IF @NextAction = 4               -- Explicit: Customer Unavailable
     BEGIN
         UPDATE Deliveries
         SET    Status       = 7,          -- CustomerUnavailable
@@ -73,10 +74,19 @@ BEGIN
                UpdatedAt    = GETUTCDATE()
         WHERE  Id = @DeliveryId;
     END
-    ELSE                                  -- Retry same day
+    ELSE IF @AttemptNumber >= @MaxAttempts -- Auto-return: max attempts reached, no explicit action
     BEGIN
         UPDATE Deliveries
-        SET    Status       = 6,          -- DeliveryFailed (will attempt again)
+        SET    Status       = 9,          -- Returned
+               AttemptCount = @AttemptNumber,
+               FailedAt     = GETUTCDATE(),
+               UpdatedAt    = GETUTCDATE()
+        WHERE  Id = @DeliveryId;
+    END
+    ELSE                                  -- Default: Retry (NextAction=3 or no action given)
+    BEGIN
+        UPDATE Deliveries
+        SET    Status       = 6,          -- DeliveryFailed (retry pending)
                AttemptCount = @AttemptNumber,
                FailedAt     = GETUTCDATE(),
                UpdatedAt    = GETUTCDATE()

@@ -1,4 +1,4 @@
-using FalFul.Application.Interfaces;
+﻿using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +6,7 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/admin/reports")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "Perm:reports")]
 public class AdminReportsController(IDeliveryService svc) : ControllerBase
 {
     [HttpGet("deliveries")]

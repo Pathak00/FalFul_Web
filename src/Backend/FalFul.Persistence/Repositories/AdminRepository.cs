@@ -18,4 +18,12 @@ public class AdminRepository : IAdminRepository
             "sp_Admin_GetStats",
             commandType: System.Data.CommandType.StoredProcedure);
     }
+
+    public async Task<IEnumerable<AdminUserDto>> GetUsersAsync()
+    {
+        using var conn = _context.CreateConnection();
+        return await conn.QueryAsync<AdminUserDto>(
+            "sp_User_GetAll",
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
 }

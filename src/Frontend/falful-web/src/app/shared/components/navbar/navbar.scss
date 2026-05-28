@@ -67,6 +67,7 @@
 }
 
 .dropdown-menu {
+  display: none;
   position: absolute;
   top: calc(100% + 2px);
   left: 50%;
@@ -80,7 +81,11 @@
   padding: .5rem;
   margin: 0;
   z-index: 200;
-  animation: dropdownIn .15s ease;
+
+  &.open {
+    display: block;
+    animation: dropdownIn .15s ease;
+  }
 
   /* invisible hover bridge so mouse can reach the menu */
   &::before {
@@ -170,6 +175,23 @@
   font-weight: 600;
   padding: 0.5rem 1.25rem;
   border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex; align-items: center; gap: .35rem;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(45, 147, 72, 0.35);
+  }
+}
+
+.btn-dashboard {
+  text-decoration: none;
+  background: linear-gradient(135deg, #2d9348, #48c774);
+  color: white;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: .875rem;
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex; align-items: center; gap: .35rem;
 

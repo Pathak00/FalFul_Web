@@ -6,9 +6,12 @@ CREATE OR ALTER PROCEDURE sp_MenuItem_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT Id, ParentId, Label, Url, Icon, DisplayOrder, IsVisible, VisibleTo, OpenInNewTab
-    FROM MenuItems
-    WHERE IsDeleted = 0
-    ORDER BY ISNULL(ParentId, Id), ParentId, DisplayOrder;
+    SELECT m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab,
+           ISNULL(STRING_AGG(CAST(mr.RoleId AS NVARCHAR), ','), '') AS RequiredRoleIds
+    FROM MenuItems m
+    LEFT JOIN MenuItemRoles mr ON mr.MenuItemId = m.Id
+    WHERE m.IsDeleted = 0
+    GROUP BY m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab
+    ORDER BY ISNULL(m.ParentId, m.Id), m.ParentId, m.DisplayOrder;
 END
 GO

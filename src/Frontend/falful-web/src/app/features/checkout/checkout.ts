@@ -176,6 +176,10 @@ import {
               @if (placing()) { <span class="spinner"></span> Processing... }
               @else { <i class="bi bi-bag-check"></i> Place Order }
             </button>
+
+            @if (cancelPolicy()) {
+              <p class="co-cancel-policy"><i class="bi bi-info-circle"></i> {{ cancelPolicy() }}</p>
+            }
           </div>
         </div>
       }
@@ -197,6 +201,7 @@ export class CheckoutComponent implements OnInit {
   useManual         = signal(false);
   placing           = signal(false);
   error             = signal('');
+  cancelPolicy      = signal<string>('');
 
   deliveryFee    = signal(0);
   serviceFeePct  = signal(0);
@@ -238,6 +243,11 @@ export class CheckoutComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.orderSvc.getSetting('cancellation_policy_text').subscribe({
+      next: s => this.cancelPolicy.set(s.value),
+      error: () => {}
+    });
+
     this.orderSvc.getPriceRules().subscribe({
       next: rules => {
         const map: Record<string, PriceRule> = {};

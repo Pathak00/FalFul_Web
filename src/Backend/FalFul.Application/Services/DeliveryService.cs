@@ -40,7 +40,15 @@ public class DeliveryService(
     {
         if (await deliveries.GetByIdAsync(id) is null) return Result.Failure("Delivery not found.");
 
-        try { await deliveries.UpdateStatusAsync(id, dto.Status, dto.TrackingNotes?.Trim()); return Result.Success(); }
+        DateOnly? scheduledDate = null;
+        if (!string.IsNullOrEmpty(dto.ScheduledDate) && DateOnly.TryParse(dto.ScheduledDate, out var d))
+            scheduledDate = d;
+
+        try
+        {
+            await deliveries.UpdateStatusAsync(id, dto.Status, dto.TrackingNotes?.Trim(), scheduledDate, dto.ScheduledTimeSlot?.Trim());
+            return Result.Success();
+        }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -97,6 +105,9 @@ public class DeliveryService(
 
     public async Task<OrderReportDto> GetOrderReportAsync(string? fromDate = null, string? toDate = null)
         => await orders.GetReportAsync(ParseDate(fromDate), ParseDate(toDate));
+
+    public async Task<IEnumerable<DeliverySummaryDto>> GetRiderDeliveriesAsync(int riderUserId)
+        => await deliveries.GetRiderDeliveriesAsync(riderUserId);
 
     public async Task<Result> SubmitRatingAsync(int orderId, int userId, SubmitRatingDto dto)
     {

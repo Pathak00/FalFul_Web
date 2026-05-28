@@ -15,19 +15,23 @@ public class JwtService : IJwtService
 
     public JwtService(IConfiguration config) => _config = config;
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(User user, string role, IEnumerable<string> permissions)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Role, user.UserType.ToString()),
+            new Claim(ClaimTypes.Role, role),
+            new Claim("user_type", ((int)user.UserType).ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        foreach (var perm in permissions)
+            claims.Add(new Claim("permission", perm));
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],

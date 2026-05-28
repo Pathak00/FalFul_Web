@@ -11,29 +11,18 @@ public class AdminService : IAdminService
     private readonly IUserRepository _users;
     private readonly IAdminRepository _admin;
     private readonly IPasswordHasher _hasher;
+    private readonly IRoleRepository _roles;
 
-    public AdminService(IUserRepository users, IAdminRepository admin, IPasswordHasher hasher)
+    public AdminService(IUserRepository users, IAdminRepository admin, IPasswordHasher hasher, IRoleRepository roles)
     {
         _users = users;
         _admin = admin;
         _hasher = hasher;
+        _roles = roles;
     }
 
-    public async Task<IEnumerable<AdminUserDto>> GetAllUsersAsync()
-    {
-        var users = await _users.GetAllAsync();
-        return users.Select(u => new AdminUserDto
-        {
-            Id = u.Id,
-            FullName = u.FullName,
-            Email = u.Email,
-            PhoneNumber = u.PhoneNumber,
-            UserType = u.UserType.ToString(),
-            IsActive = u.IsActive,
-            CreatedAt = u.CreatedAt,
-            LastLoginAt = u.LastLoginAt
-        });
-    }
+    public async Task<IEnumerable<AdminUserDto>> GetAllUsersAsync() =>
+        await _admin.GetUsersAsync();
 
     public async Task<AdminStatsDto> GetStatsAsync() =>
         await _admin.GetStatsAsync();
@@ -59,11 +48,22 @@ public class AdminService : IAdminService
                 Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email,
                 PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? null : dto.PhoneNumber,
                 PasswordHash = _hasher.Hash(dto.Password),
-                UserType = (UserType)dto.UserType,
+                UserType = UserType.Individual,
                 IsActive = true
             };
 
             var id = await _users.CreateAsync(user);
+
+            // Assign specified role; fall back to default role if none provided
+            var roleId = dto.RoleId;
+            if (roleId == null)
+            {
+                var defaultRole = await _roles.GetDefaultAsync();
+                roleId = defaultRole?.Id;
+            }
+            if (roleId != null)
+                await _roles.AssignRoleAsync(id, roleId.Value, adminId);
+
             return Result<int>.Success(id);
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }

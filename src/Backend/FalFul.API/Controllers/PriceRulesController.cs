@@ -1,4 +1,4 @@
-using FalFul.Application.DTOs.Order;
+﻿using FalFul.Application.DTOs.Order;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,7 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/admin/price-rules")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "Perm:price_config")]
 public class PriceRulesController(IOrderService orderService) : ControllerBase
 {
     [HttpGet]

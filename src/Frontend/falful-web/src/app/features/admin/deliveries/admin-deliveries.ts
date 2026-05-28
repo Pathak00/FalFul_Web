@@ -28,6 +28,15 @@ const NEXT_ACTIONS = [
   { value: 4, label: 'Customer Unavailable' },
 ];
 
+// Direct admin status transitions (no attempt log required)
+const TRANSITIONS: Record<number, { status: number; label: string }[]> = {
+  2: [ { status: 3, label: 'Mark Picked Up' },          { status: 1, label: 'Reset to Awaiting Rider' } ],
+  3: [ { status: 4, label: 'Mark Out for Delivery' } ],
+  6: [ { status: 8, label: 'Reschedule' },               { status: 9, label: 'Return to Warehouse' } ],
+  7: [ { status: 4, label: 'Resume Delivery' },          { status: 8, label: 'Reschedule' }, { status: 9, label: 'Return to Warehouse' } ],
+  8: [ { status: 1, label: 'Reset to Awaiting Rider' }, { status: 9, label: 'Return to Warehouse' } ],
+};
+
 const NEXT_ACTION_MAP: Record<number, string> = {
   1: 'Reschedule', 2: 'Return to Warehouse', 3: 'Retry Next Attempt', 4: 'Customer Unavailable',
 };
@@ -117,10 +126,17 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
                         <i class="bi bi-eye"></i>
                       </button>
                       @if (canAssign(d.status)) {
-                        <button class="tbl-btn tbl-btn-action" (click)="openAssign(d.id)">Assign</button>
+                        <button class="tbl-btn tbl-btn-action" (click)="openAssign(d.id, d.status)">
+                          {{ d.status === 1 ? 'Assign' : 'Reassign' }}
+                        </button>
+                      }
+                      @if (availableTransitions(d.status).length > 0) {
+                        <button class="tbl-btn tbl-btn-transition" (click)="openTransition(d.id, d.status)">
+                          <i class="bi bi-arrow-right-circle"></i> Move
+                        </button>
                       }
                       @if (canLogAttempt(d.status)) {
-                        <button class="tbl-btn tbl-btn-action" (click)="openAttempt(d.id)">Log Attempt</button>
+                        <button class="tbl-btn tbl-btn-attempt" (click)="openAttempt(d.id)">Log Attempt</button>
                       }
                       @if (canReportIssue(d.status)) {
                         <button class="tbl-btn" style="color:#ef4444;border-color:#fca5a5;background:#fff5f5"
@@ -141,7 +157,7 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
       <div class="modal-overlay" (click)="assignModal.set(null)">
         <div class="modal-box" style="width:440px" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h3>Assign Rider</h3>
+            <h3>{{ isReassign() ? 'Reassign Rider' : 'Assign Rider' }}</h3>
             <button class="modal-close" (click)="assignModal.set(null)"><i class="bi bi-x-lg"></i></button>
           </div>
           <div class="form-group">
@@ -226,7 +242,9 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
 
           <div class="modal-footer">
             <button class="btn-secondary btn-sm" (click)="attemptModal.set(null)">Cancel</button>
-            <button class="btn-primary btn-sm" [disabled]="saving()" (click)="submitAttempt()">
+            <button class="btn-primary btn-sm"
+                    [disabled]="saving() || (!attemptForm.wasSuccessful && !attemptForm.nextAction)"
+                    (click)="submitAttempt()">
               @if (saving()) { <i class="bi bi-arrow-clockwise spin"></i> } Log Attempt
             </button>
           </div>
@@ -259,6 +277,64 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
             <button class="btn-primary btn-sm" [disabled]="saving() || !issueForm.description"
                     (click)="submitIssue()">
               @if (saving()) { <i class="bi bi-arrow-clockwise spin"></i> } Submit Issue
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ─── Transition Modal ─── -->
+    @if (transitionModal() !== null) {
+      <div class="modal-overlay" (click)="transitionModal.set(null)">
+        <div class="modal-box" style="width:460px" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Move Delivery Status</h3>
+            <button class="modal-close" (click)="transitionModal.set(null)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="modal-from-badge" style="margin-bottom:.875rem">
+            <span style="font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.05em">From</span>
+            <span class="status-badge"
+                  [style.background]="statusBg(transitionModal()!.from)"
+                  [style.color]="statusColor(transitionModal()!.from)"
+                  style="margin-left:.5rem">
+              <i class="bi {{ statusIcon(transitionModal()!.from) }}" style="margin-right:.2rem"></i>
+              {{ statusLabel(transitionModal()!.from) }}
+            </span>
+          </div>
+          <div class="form-group">
+            <label>Move to <span class="required">*</span></label>
+            <select [(ngModel)]="transitionForm.status">
+              <option [ngValue]="0">Select new status…</option>
+              @for (t of availableTransitions(transitionModal()!.from); track t.status) {
+                <option [ngValue]="t.status">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+          @if (transitionForm.status === 8) {
+            <div class="form-row">
+              <div class="form-group">
+                <label>Reschedule Date</label>
+                <input type="date" [(ngModel)]="transitionForm.scheduledDate">
+              </div>
+              <div class="form-group">
+                <label>Time Slot</label>
+                <select [(ngModel)]="transitionForm.scheduledTimeSlot">
+                  <option value="">Select slot…</option>
+                  @for (s of timeSlots; track s) {
+                    <option [value]="s">{{ s }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+          <div class="form-group">
+            <label>Tracking Notes <span class="field-hint">(optional)</span></label>
+            <textarea [(ngModel)]="transitionForm.trackingNotes" rows="2" placeholder="Notes for this status change…"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary btn-sm" (click)="transitionModal.set(null)">Cancel</button>
+            <button class="btn-primary btn-sm" [disabled]="saving() || !transitionForm.status" (click)="submitTransition()">
+              @if (saving()) { <i class="bi bi-arrow-clockwise spin"></i> } Confirm
             </button>
           </div>
         </div>
@@ -418,18 +494,21 @@ export class AdminDeliveriesComponent implements OnInit {
   fromDate      = '';
   toDate        = '';
 
-  detail        = signal<DeliveryDetail | null>(null);
-  assignModal   = signal<number | null>(null);
-  attemptModal  = signal<number | null>(null);
-  issueModal    = signal<number | null>(null);
+  detail           = signal<DeliveryDetail | null>(null);
+  assignModal      = signal<number | null>(null);
+  isReassign       = signal(false);
+  attemptModal     = signal<number | null>(null);
+  issueModal       = signal<number | null>(null);
+  transitionModal  = signal<{ id: number; from: number } | null>(null);
 
   resolvingIssueId = signal<number | null>(null);
   resolveNotes     = '';
   saving           = signal(false);
 
-  assignForm  = { riderName: '', riderPhone: '' };
-  attemptForm = { wasSuccessful: true, failureReason: 0, failureNotes: '', nextAction: 0, rescheduledDate: '', rescheduledTimeSlot: '' };
-  issueForm   = { issueType: 1, description: '' };
+  assignForm     = { riderName: '', riderPhone: '' };
+  attemptForm    = { wasSuccessful: true, failureReason: 0, failureNotes: '', nextAction: 0, rescheduledDate: '', rescheduledTimeSlot: '' };
+  issueForm      = { issueType: 1, description: '' };
+  transitionForm = { status: 0, trackingNotes: '', scheduledDate: '', scheduledTimeSlot: '' };
 
   readonly statusOpts     = STATUS_OPTS;
   readonly timeSlots      = DELIVERY_TIME_SLOTS;
@@ -460,7 +539,8 @@ export class AdminDeliveriesComponent implements OnInit {
   closeDetail() { this.detail.set(null); this.resolvingIssueId.set(null); }
 
   // ── Assign ───────────────────────────────────────────────────────────────────
-  openAssign(id: number) {
+  openAssign(id: number, status: number) {
+    this.isReassign.set(status !== 1);
     this.assignForm = { riderName: '', riderPhone: '' };
     this.assignModal.set(id);
   }
@@ -541,6 +621,27 @@ export class AdminDeliveriesComponent implements OnInit {
     });
   }
 
+  // ── Transition ────────────────────────────────────────────────────────────────
+  availableTransitions(from: number) { return TRANSITIONS[from] ?? []; }
+
+  openTransition(id: number, from: number) {
+    this.transitionForm = { status: 0, trackingNotes: '', scheduledDate: '', scheduledTimeSlot: '' };
+    this.transitionModal.set({ id, from });
+  }
+
+  submitTransition() {
+    const m = this.transitionModal();
+    if (!m || !this.transitionForm.status) return;
+    this.saving.set(true);
+    const isReschedule      = this.transitionForm.status === 8;
+    const scheduledDate     = isReschedule ? this.transitionForm.scheduledDate || undefined : undefined;
+    const scheduledTimeSlot = isReschedule ? this.transitionForm.scheduledTimeSlot || undefined : undefined;
+    this.svc.updateDeliveryStatus(m.id, this.transitionForm.status, this.transitionForm.trackingNotes || undefined, scheduledDate, scheduledTimeSlot).subscribe({
+      next: () => { this.transitionModal.set(null); this.saving.set(false); this.load(); },
+      error: () => this.saving.set(false),
+    });
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────────
   statusLabel(s: number)   { return DELIVERY_STATUSES[s]?.label ?? 'Unknown'; }
   statusColor(s: number)   { return DELIVERY_STATUSES[s]?.color ?? '#6b7280'; }
@@ -550,8 +651,8 @@ export class AdminDeliveriesComponent implements OnInit {
   nextActionMap(n?: number){ return n ? (NEXT_ACTION_MAP[n] ?? 'Unknown') : '—'; }
   paymentLabel(n: number)  { return PAYMENT_METHODS[n] ?? 'Unknown'; }
 
-  // AwaitingRider(1) or Rescheduled(8): rider needs to be assigned
-  canAssign(s: number)     { return s === 1 || s === 8; }
+  // AwaitingRider(1), RiderAssigned(2), DeliveryFailed(6), CustomerUnavailable(7), Rescheduled(8)
+  canAssign(s: number)     { return [1, 2, 6, 7, 8].includes(s); }
   // Active/failed states where a delivery attempt can be logged
   canLogAttempt(s: number) { return [2, 3, 4, 6, 7].includes(s); }
   // Terminal states Delivered(5) and Returned(9) no longer accept issues

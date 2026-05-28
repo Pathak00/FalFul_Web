@@ -7,7 +7,7 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/admin/orders")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "Perm:orders")]
 public class AdminOrdersController(IOrderService orderService) : ControllerBase
 {
     [HttpGet]
