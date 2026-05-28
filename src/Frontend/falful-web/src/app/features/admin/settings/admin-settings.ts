@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
+import { NepalDatePipe } from '../../../core/pipes/nepal-date.pipe';
 
 interface Setting {
   key:       string;
@@ -9,18 +10,70 @@ interface Setting {
   updatedAt: string;
 }
 
-const SETTING_LABELS: Record<string, { label: string; description: string; multiline: boolean }> = {
+const SETTING_LABELS: Record<string, { label: string; description: string; multiline: boolean; category?: string }> = {
+  // ── Policies ──────────────────────────────────────────────────────────────
   cancellation_policy_text: {
     label:       'Cancellation Policy Text',
     description: 'Shown to customers near the cancel button and on the checkout page.',
     multiline:   true,
+    category:    'Policies',
+  },
+  // ── Scheduling ────────────────────────────────────────────────────────────
+  order_lead_time_hours: {
+    label:       'Order Lead Time (hours)',
+    description: 'Minimum hours between when an order is placed and the first available delivery slot for regular orders.',
+    multiline:   false,
+    category:    'Scheduling',
+  },
+  cut_fruit_lead_time_hours: {
+    label:       'Cut-Fruit Lead Time (hours)',
+    description: 'Minimum hours for cut-fruit (Build Your Bowl) orders. Can be shorter than regular orders for nearby delivery.',
+    multiline:   false,
+    category:    'Scheduling',
+  },
+  delivery_slot_start_hour: {
+    label:       'Delivery Window Start (24h hour)',
+    description: 'Hour when delivery slots begin each day. E.g. 9 = 9:00 AM Nepal Time.',
+    multiline:   false,
+    category:    'Scheduling',
+  },
+  delivery_slot_end_hour: {
+    label:       'Delivery Window End (24h hour)',
+    description: 'Hour when delivery slots end each day. E.g. 21 = 9:00 PM Nepal Time.',
+    multiline:   false,
+    category:    'Scheduling',
+  },
+  slot_interval_minutes: {
+    label:       'Slot Interval (minutes)',
+    description: 'Duration of each time slot in minutes. E.g. 180 = 3-hour slots (9–12, 12–3, 3–6, 6–9).',
+    multiline:   false,
+    category:    'Scheduling',
+  },
+  // ── Delivery Radius ───────────────────────────────────────────────────────
+  store_latitude: {
+    label:       'Store Latitude',
+    description: 'GPS latitude of the store/business location. Used to calculate customer distance for cut-fruit radius validation.',
+    multiline:   false,
+    category:    'Delivery Radius',
+  },
+  store_longitude: {
+    label:       'Store Longitude',
+    description: 'GPS longitude of the store/business location.',
+    multiline:   false,
+    category:    'Delivery Radius',
+  },
+  cut_fruit_delivery_radius_km: {
+    label:       'Cut-Fruit Delivery Radius (km)',
+    description: 'Maximum distance in km from the store for cut-fruit delivery. Set to 0 to disable radius validation.',
+    multiline:   false,
+    category:    'Delivery Radius',
   },
 };
 
 @Component({
   selector: 'app-admin-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NepalDatePipe],
   styleUrl: '../admin-shared.scss',
   template: `
     <div class="admin-page" style="max-width:800px">
@@ -47,7 +100,7 @@ const SETTING_LABELS: Record<string, { label: string; description: string; multi
                 <div class="sc-label-group">
                   <span class="sc-label">{{ settingMeta(s.key).label }}</span>
                   <span class="sc-description">{{ settingMeta(s.key).description }}</span>
-                  <span class="sc-updated">Last updated: {{ s.updatedAt | date:'dd MMM yyyy, h:mm a' }}</span>
+                  <span class="sc-updated">Last updated: {{ s.updatedAt | nepalDate }} NPT</span>
                 </div>
                 @if (editingKey() !== s.key) {
                   <button class="btn-edit btn-sm" (click)="startEdit(s)">

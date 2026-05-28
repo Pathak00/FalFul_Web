@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
 import {
   DeliverySummary, DeliveryDetail,
-  DELIVERY_STATUSES, DELIVERY_FAILURE_REASONS, DELIVERY_ISSUE_TYPES, DELIVERY_TIME_SLOTS,
+  DELIVERY_STATUSES, DELIVERY_FAILURE_REASONS, DELIVERY_ISSUE_TYPES,
   PAYMENT_METHODS,
 } from '../../../core/models/order.models';
 
@@ -231,7 +231,7 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
                   <label>Time Slot</label>
                   <select [(ngModel)]="attemptForm.rescheduledTimeSlot">
                     <option value="">Select slot…</option>
-                    @for (s of timeSlots; track s) {
+                    @for (s of timeSlots(); track s) {
                       <option [value]="s">{{ s }}</option>
                     }
                   </select>
@@ -320,7 +320,7 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
                 <label>Time Slot</label>
                 <select [(ngModel)]="transitionForm.scheduledTimeSlot">
                   <option value="">Select slot…</option>
-                  @for (s of timeSlots; track s) {
+                  @for (s of timeSlots(); track s) {
                     <option [value]="s">{{ s }}</option>
                   }
                 </select>
@@ -511,12 +511,32 @@ export class AdminDeliveriesComponent implements OnInit {
   transitionForm = { status: 0, trackingNotes: '', scheduledDate: '', scheduledTimeSlot: '' };
 
   readonly statusOpts     = STATUS_OPTS;
-  readonly timeSlots      = DELIVERY_TIME_SLOTS;
+  readonly timeSlots      = signal<string[]>(['9:00 AM – 12:00 PM', '12:00 PM – 3:00 PM', '3:00 PM – 6:00 PM', '6:00 PM – 9:00 PM']);
   readonly failureReasons = FAILURE_REASONS_LIST;
   readonly issueTypes     = ISSUE_TYPES_LIST;
   readonly nextActions    = NEXT_ACTIONS;
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.svc.getCheckoutConfig().subscribe({
+      next: cfg => {
+        const slots: string[] = [];
+        let cur = cfg.slotStartHour * 60;
+        const fmt = (m: number) => {
+          const h = Math.floor(m / 60), mn = m % 60, ap = h < 12 ? 'AM' : 'PM';
+          const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+          return mn === 0 ? `${h12}:00 ${ap}` : `${h12}:${String(mn).padStart(2,'0')} ${ap}`;
+        };
+        while (cur + cfg.slotIntervalMinutes <= cfg.slotEndHour * 60) {
+          const end = cur + cfg.slotIntervalMinutes;
+          slots.push(`${fmt(cur)} – ${fmt(end)}`);
+          cur = end;
+        }
+        this.timeSlots.set(slots);
+      },
+      error: () => {}
+    });
+  }
 
   load() {
     this.loading.set(true);

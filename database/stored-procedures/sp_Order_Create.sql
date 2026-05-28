@@ -15,7 +15,9 @@ CREATE OR ALTER PROCEDURE sp_Order_Create
     @Landmark          NVARCHAR(200) = NULL,
     @DeliveryDate      DATE,
     @DeliveryTimeSlot  NVARCHAR(30),
-    @Notes             NVARCHAR(500) = NULL
+    @Notes             NVARCHAR(500) = NULL,
+    @DeliveryLatitude  FLOAT         = NULL,
+    @DeliveryLongitude FLOAT         = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -27,11 +29,13 @@ BEGIN
     INSERT INTO Orders (UserId, OrderNumber, Status, SubTotal, DeliveryFee, ServiceFee,
                         TotalAmount, PaymentMethod, PaymentStatus, DeliveryAddressId,
                         FullAddress, City, DeliveryPhone, AddressLabel, Landmark,
-                        DeliveryDate, DeliveryTimeSlot, Notes)
+                        DeliveryDate, DeliveryTimeSlot, Notes,
+                        DeliveryLatitude, DeliveryLongitude)
     VALUES (@UserId, 'TEMP', 1, @SubTotal, @DeliveryFee, @ServiceFee,
             @TotalAmount, @PaymentMethod, 1, @DeliveryAddressId,
             @FullAddress, @City, @DeliveryPhone, @AddressLabel, @Landmark,
-            @DeliveryDate, @DeliveryTimeSlot, @Notes);
+            @DeliveryDate, @DeliveryTimeSlot, @Notes,
+            @DeliveryLatitude, @DeliveryLongitude);
 
     SET @NewId = SCOPE_IDENTITY();
     SET @OrderNumber = 'FF-' + CAST(YEAR(GETUTCDATE()) AS NVARCHAR) + '-' + RIGHT('000000' + CAST(@NewId AS NVARCHAR), 6);

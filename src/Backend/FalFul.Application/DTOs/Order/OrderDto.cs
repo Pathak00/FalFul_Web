@@ -30,6 +30,8 @@ public class PlaceOrderDto
     public string                   DeliveryTimeSlot  { get; set; } = string.Empty;
     public PaymentMethod            PaymentMethod     { get; set; }
     public string?                  Notes             { get; set; }
+    public double?                  DeliveryLatitude  { get; set; }
+    public double?                  DeliveryLongitude { get; set; }
     public List<PlaceOrderItemDto>  Items             { get; set; } = [];
 }
 

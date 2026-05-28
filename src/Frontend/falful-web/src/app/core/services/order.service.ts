@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  Address, CreateAddressRequest, PriceRule,
+  Address, CheckoutConfig, CreateAddressRequest, PriceRule,
   OrderSummary, OrderDetail, PlaceOrderRequest,
   DeliverySummary, DeliveryDetail, DeliveryReport, OrderReport, OrderRating,
 } from '../models/order.models';
@@ -118,6 +118,10 @@ export class OrderService {
   // ── Settings (public) ─────────────────────────────────────────────────────────
   getSetting(key: string): Observable<{ key: string; value: string }> {
     return this.api.get<{ key: string; value: string }>(`/api/settings/${key}`);
+  }
+
+  getCheckoutConfig(): Observable<CheckoutConfig> {
+    return this.api.get<CheckoutConfig>('/api/settings/checkout-config');
   }
 
   // ── Admin Settings ────────────────────────────────────────────────────────────

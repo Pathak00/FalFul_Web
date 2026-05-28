@@ -26,6 +26,8 @@ public class Order
     public string        DeliveryTimeSlot  { get; set; } = string.Empty;
     public string?       Notes             { get; set; }
     public string?       CancelReason      { get; set; }
+    public double?       DeliveryLatitude  { get; set; }
+    public double?       DeliveryLongitude { get; set; }
     public DateTime      CreatedAt         { get; set; }
     public DateTime?     UpdatedAt         { get; set; }
 

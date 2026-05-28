@@ -6,9 +6,60 @@ import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
-  Address, PriceRule, PlaceOrderRequest,
-  DELIVERY_TIME_SLOTS, PAYMENT_METHODS
+  Address, CheckoutConfig, PriceRule, PlaceOrderRequest, PAYMENT_METHODS
 } from '../../core/models/order.models';
+
+// ── Nepal time helpers ────────────────────────────────────────────────────────
+
+const NEPAL_OFFSET_MS = (5 * 60 + 45) * 60 * 1000; // UTC+05:45
+
+function nepalNow(): Date {
+  const utcMs = Date.now() + new Date().getTimezoneOffset() * 60_000;
+  return new Date(utcMs + NEPAL_OFFSET_MS);
+}
+
+function nepalDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// ── Slot helpers ──────────────────────────────────────────────────────────────
+
+interface TimeSlot {
+  label: string;
+  startMinutes: number; // minutes from midnight
+}
+
+function formatSlotHour(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${h12}:00 ${ampm}` : `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+function generateAllSlots(startHour: number, endHour: number, intervalMinutes: number): TimeSlot[] {
+  const slots: TimeSlot[] = [];
+  let cur = startHour * 60;
+  while (cur + intervalMinutes <= endHour * 60) {
+    const end = cur + intervalMinutes;
+    slots.push({ label: `${formatSlotHour(cur)} – ${formatSlotHour(end)}`, startMinutes: cur });
+    cur = end;
+  }
+  return slots;
+}
+
+// ── Haversine ─────────────────────────────────────────────────────────────────
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const toRad = (d: number) => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-checkout',
@@ -31,6 +82,7 @@ import {
         <div class="co-layout">
           <!-- Left: Details -->
           <div class="co-form">
+
             <!-- Delivery Address -->
             <section class="co-section">
               <h3><i class="bi bi-geo-alt"></i> Delivery Address</h3>
@@ -88,25 +140,107 @@ import {
               }
             </section>
 
-            <!-- Delivery Date & Time -->
+            <!-- Delivery Schedule -->
             <section class="co-section">
-              <h3><i class="bi bi-calendar-event"></i> Delivery Schedule</h3>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Delivery Date *</label>
-                  <input type="date" [(ngModel)]="form.deliveryDate" [min]="minDate" />
-                </div>
-                <div class="form-group">
-                  <label>Time Slot *</label>
-                  <select [(ngModel)]="form.deliveryTimeSlot">
-                    <option value="">Select time...</option>
-                    @for (slot of timeSlots; track slot) {
-                      <option [value]="slot">{{ slot }}</option>
+              <h3><i class="bi bi-calendar-event"></i> Delivery Schedule
+                <span class="tz-tag">Nepal Time</span>
+              </h3>
+
+              @if (configLoading()) {
+                <div class="slot-loading"><div class="spinner"></div> Loading available slots…</div>
+              } @else {
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Delivery Date *</label>
+                    <input type="date" [(ngModel)]="form.deliveryDate"
+                           [min]="minDate"
+                           (ngModelChange)="onDateChange()" />
+                  </div>
+                  <div class="form-group">
+                    <label>Time Slot *</label>
+                    @if (availableSlots().length === 0 && form.deliveryDate) {
+                      <div class="no-slots">
+                        <i class="bi bi-clock-history"></i>
+                        No slots available for today — please select a future date.
+                      </div>
+                    } @else {
+                      <select [(ngModel)]="form.deliveryTimeSlot">
+                        <option value="">Select time…</option>
+                        @for (slot of availableSlots(); track slot.label) {
+                          <option [value]="slot.label">{{ slot.label }}</option>
+                        }
+                      </select>
                     }
-                  </select>
+                  </div>
                 </div>
-              </div>
+
+                @if (hasCutFruits() && checkoutConfig()) {
+                  <div class="lead-time-note">
+                    <i class="bi bi-info-circle"></i>
+                    Cut-fruit orders require at least <strong>{{ checkoutConfig()!.cutFruitLeadTimeHours }}h</strong> lead time.
+                    Regular orders require <strong>{{ checkoutConfig()!.leadTimeHours }}h</strong>.
+                    Slots reflect current Nepal time.
+                  </div>
+                }
+              }
             </section>
+
+            <!-- Location (required for cut-fruit orders) -->
+            @if (hasCutFruits() && checkoutConfig() && checkoutConfig()!.cutFruitRadiusKm > 0) {
+              <section class="co-section co-section-location">
+                <h3><i class="bi bi-geo"></i> Delivery Location
+                  <span class="required-tag">Required for Cut Fruits</span>
+                </h3>
+                <p class="location-desc">
+                  Cut-fruit delivery is available within
+                  <strong>{{ checkoutConfig()!.cutFruitRadiusKm }} km</strong> of our store.
+                  We need your location to verify eligibility.
+                </p>
+
+                @if (locationStatus() === 'idle' || locationStatus() === 'denied' || locationStatus() === 'unsupported') {
+                  <button class="btn-locate" (click)="detectLocation()" [disabled]="locationStatus() === 'unsupported'">
+                    <i class="bi bi-crosshair2"></i>
+                    {{ locationStatus() === 'denied' ? 'Retry — allow location in browser' :
+                       locationStatus() === 'unsupported' ? 'Geolocation not supported' :
+                       'Detect My Location' }}
+                  </button>
+                  @if (locationStatus() === 'denied') {
+                    <p class="loc-error">Location access was denied. Please allow it in your browser settings and try again.</p>
+                  }
+                }
+
+                @if (locationStatus() === 'loading') {
+                  <div class="loc-loading"><div class="spinner"></div> Detecting location…</div>
+                }
+
+                @if (locationStatus() === 'granted' && distanceKm() !== null) {
+                  @if (isOutsideRadius()) {
+                    <div class="loc-outside">
+                      <i class="bi bi-x-circle-fill"></i>
+                      <div>
+                        <strong>Outside delivery area</strong>
+                        <p>
+                          Your location is approximately <strong>{{ distanceKm()! | number:'1.1-1' }} km</strong> away.
+                          Cut-fruit delivery is available within {{ checkoutConfig()!.cutFruitRadiusKm }} km only.
+                          You can remove cut-fruit items from your cart to continue.
+                        </p>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="loc-inside">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <div>
+                        <strong>Within delivery area</strong>
+                        <p>Your location ({{ distanceKm()! | number:'1.1-1' }} km away) is within our cut-fruit delivery zone.</p>
+                      </div>
+                    </div>
+                  }
+                  <button class="btn-relocate" (click)="resetLocation()">
+                    <i class="bi bi-arrow-clockwise"></i> Re-detect location
+                  </button>
+                }
+              </section>
+            }
 
             <!-- Payment -->
             <section class="co-section">
@@ -154,7 +288,7 @@ import {
               </div>
               <div class="st-row">
                 <span>Delivery Fee</span>
-                <span>Rs. {{ deliveryFee() | number:'1.0-0' }}</span>
+                <span>Rs. {{ effectiveDeliveryFee() | number:'1.0-0' }}</span>
               </div>
               @if (serviceFeePct() > 0) {
                 <div class="st-row">
@@ -172,10 +306,24 @@ import {
               <div class="co-error"><i class="bi bi-exclamation-circle"></i> {{ error() }}</div>
             }
 
-            <button class="btn-place-order" (click)="placeOrder()" [disabled]="placing()">
+            <button class="btn-place-order" (click)="placeOrder()" [disabled]="placing() || !canPlaceOrder()">
               @if (placing()) { <span class="spinner"></span> Processing... }
               @else { <i class="bi bi-bag-check"></i> Place Order }
             </button>
+
+            @if (!canPlaceOrder() && !placing()) {
+              @if (isOutsideRadius()) {
+                <p class="co-block-reason">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  Cut-fruit delivery is currently available only within our nearby delivery area.
+                </p>
+              } @else if (hasCutFruits() && locationStatus() !== 'granted' && checkoutConfig()!.cutFruitRadiusKm > 0) {
+                <p class="co-block-reason">
+                  <i class="bi bi-crosshair2"></i>
+                  Please verify your location to order cut fruits.
+                </p>
+              }
+            }
 
             @if (cancelPolicy()) {
               <p class="co-cancel-policy"><i class="bi bi-info-circle"></i> {{ cancelPolicy() }}</p>
@@ -201,20 +349,73 @@ export class CheckoutComponent implements OnInit {
   useManual         = signal(false);
   placing           = signal(false);
   error             = signal('');
-  cancelPolicy      = signal<string>('');
+  cancelPolicy      = signal('');
+  configLoading     = signal(true);
+  checkoutConfig    = signal<CheckoutConfig | null>(null);
 
-  deliveryFee    = signal(0);
-  serviceFeePct  = signal(0);
-  minOrderAmt    = signal(0);
-  freeAbove      = signal(0);
+  deliveryFee   = signal(0);
+  serviceFeePct = signal(0);
+  minOrderAmt   = signal(0);
+  freeAbove     = signal(0);
 
-  serviceFeeAmt = computed(() =>
+  // ── Geolocation ───────────────────────────────────────────────────────────
+  locationStatus = signal<'idle' | 'loading' | 'granted' | 'denied' | 'unsupported'>('idle');
+  userLatitude   = signal<number | null>(null);
+  userLongitude  = signal<number | null>(null);
+
+  // ── Derived ───────────────────────────────────────────────────────────────
+  readonly hasCutFruits = computed(() =>
+    this.cart.items().some(i => i.itemType === 'BUILD_BOWL')
+  );
+
+  readonly distanceKm = computed(() => {
+    const lat = this.userLatitude(), lng = this.userLongitude(), cfg = this.checkoutConfig();
+    if (lat == null || lng == null || !cfg) return null;
+    return haversineKm(lat, lng, cfg.storeLatitude, cfg.storeLongitude);
+  });
+
+  readonly isOutsideRadius = computed(() => {
+    const cfg = this.checkoutConfig(), dist = this.distanceKm();
+    if (!this.hasCutFruits() || !cfg || cfg.cutFruitRadiusKm <= 0) return false;
+    return dist != null && dist > cfg.cutFruitRadiusKm;
+  });
+
+  readonly canPlaceOrder = computed(() => {
+    const cfg = this.checkoutConfig();
+    if (!cfg) return false;
+    if (this.isOutsideRadius()) return false;
+    if (this.hasCutFruits() && cfg.cutFruitRadiusKm > 0 && this.locationStatus() !== 'granted') return false;
+    return true;
+  });
+
+  readonly allSlots = computed((): TimeSlot[] => {
+    const cfg = this.checkoutConfig();
+    if (!cfg) return [];
+    return generateAllSlots(cfg.slotStartHour, cfg.slotEndHour, cfg.slotIntervalMinutes);
+  });
+
+  readonly availableSlots = computed((): TimeSlot[] => {
+    const cfg = this.checkoutConfig();
+    const date = this.form.deliveryDate;
+    if (!cfg || !date) return this.allSlots();
+
+    const nepal    = nepalNow();
+    const todayStr = nepalDateString(nepal);
+    if (date !== todayStr) return this.allSlots();
+
+    const leadMins = (this.hasCutFruits() ? cfg.cutFruitLeadTimeHours : cfg.leadTimeHours) * 60;
+    const nowMins  = nepal.getHours() * 60 + nepal.getMinutes();
+    const earliest = nowMins + leadMins;
+    return this.allSlots().filter(s => s.startMinutes >= earliest);
+  });
+
+  readonly serviceFeeAmt = computed(() =>
     Math.round(this.cart.subTotal() * this.serviceFeePct() / 100 * 100) / 100
   );
-  effectiveDeliveryFee = computed(() =>
+  readonly effectiveDeliveryFee = computed(() =>
     this.freeAbove() > 0 && this.cart.subTotal() >= this.freeAbove() ? 0 : this.deliveryFee()
   );
-  totalAmount = computed(() =>
+  readonly totalAmount = computed(() =>
     this.cart.subTotal() + this.effectiveDeliveryFee() + this.serviceFeeAmt()
   );
 
@@ -229,7 +430,6 @@ export class CheckoutComponent implements OnInit {
     notes:            '',
   };
 
-  readonly timeSlots     = DELIVERY_TIME_SLOTS;
   readonly paymentMethods = [
     { value: 1, label: 'Cash on Delivery', icon: 'bi-cash-stack' },
     { value: 2, label: 'eSewa',            icon: 'bi-phone' },
@@ -237,15 +437,18 @@ export class CheckoutComponent implements OnInit {
   ];
 
   get minDate(): string {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return nepalDateString(nepalNow());
   }
 
   ngOnInit() {
     this.orderSvc.getSetting('cancellation_policy_text').subscribe({
       next: s => this.cancelPolicy.set(s.value),
       error: () => {}
+    });
+
+    this.orderSvc.getCheckoutConfig().subscribe({
+      next: cfg => { this.checkoutConfig.set(cfg); this.configLoading.set(false); },
+      error: ()  => this.configLoading.set(false)
     });
 
     this.orderSvc.getPriceRules().subscribe({
@@ -280,6 +483,34 @@ export class CheckoutComponent implements OnInit {
     this.useManual.set(false);
   }
 
+  onDateChange(): void {
+    // Reset slot selection when date changes; let the user pick a valid slot
+    const slots = this.availableSlots();
+    if (!slots.some(s => s.label === this.form.deliveryTimeSlot)) {
+      this.form.deliveryTimeSlot = '';
+    }
+  }
+
+  detectLocation(): void {
+    if (!navigator.geolocation) { this.locationStatus.set('unsupported'); return; }
+    this.locationStatus.set('loading');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        this.userLatitude.set(pos.coords.latitude);
+        this.userLongitude.set(pos.coords.longitude);
+        this.locationStatus.set('granted');
+      },
+      () => this.locationStatus.set('denied'),
+      { timeout: 10000, enableHighAccuracy: false }
+    );
+  }
+
+  resetLocation(): void {
+    this.locationStatus.set('idle');
+    this.userLatitude.set(null);
+    this.userLongitude.set(null);
+  }
+
   placeOrder(): void {
     this.error.set('');
     const sub = this.cart.subTotal();
@@ -288,11 +519,26 @@ export class CheckoutComponent implements OnInit {
       this.error.set(`Minimum order is Rs. ${this.minOrderAmt()}.`);
       return;
     }
-    if (!this.form.fullAddress.trim()) { this.error.set('Delivery address is required.'); return; }
-    if (!this.form.city.trim())        { this.error.set('City is required.'); return; }
-    if (!this.form.deliveryPhone.trim()) { this.error.set('Phone number is required.'); return; }
-    if (!this.form.deliveryDate)       { this.error.set('Delivery date is required.'); return; }
-    if (!this.form.deliveryTimeSlot)   { this.error.set('Delivery time slot is required.'); return; }
+    if (!this.form.fullAddress.trim())    { this.error.set('Delivery address is required.'); return; }
+    if (!this.form.city.trim())           { this.error.set('City is required.'); return; }
+    if (!this.form.deliveryPhone.trim())  { this.error.set('Phone number is required.'); return; }
+    if (!this.form.deliveryDate)          { this.error.set('Delivery date is required.'); return; }
+    if (!this.form.deliveryTimeSlot)      { this.error.set('Delivery time slot is required.'); return; }
+
+    const cfg = this.checkoutConfig();
+    if (this.hasCutFruits() && cfg && cfg.cutFruitRadiusKm > 0) {
+      if (this.locationStatus() !== 'granted') {
+        this.error.set('Please verify your delivery location for cut-fruit orders.');
+        return;
+      }
+      if (this.isOutsideRadius()) {
+        this.error.set(
+          `Cut-fruit delivery is only available within ${cfg.cutFruitRadiusKm} km of our store. ` +
+          `Your location is approximately ${this.distanceKm()?.toFixed(1)} km away.`
+        );
+        return;
+      }
+    }
 
     const dto: PlaceOrderRequest = {
       deliveryAddressId: this.selectedAddressId() ?? 0,
@@ -304,6 +550,8 @@ export class CheckoutComponent implements OnInit {
       deliveryTimeSlot:  this.form.deliveryTimeSlot,
       paymentMethod:     this.form.paymentMethod,
       notes:             this.form.notes || undefined,
+      deliveryLatitude:  this.userLatitude() ?? undefined,
+      deliveryLongitude: this.userLongitude() ?? undefined,
       items: this.cart.items().map(i => ({
         productId:          i.productId,
         productName:        i.productName,

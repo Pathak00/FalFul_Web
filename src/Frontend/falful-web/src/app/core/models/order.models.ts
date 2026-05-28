@@ -217,7 +217,20 @@ export interface PlaceOrderRequest {
   deliveryTimeSlot: string;
   paymentMethod: number;
   notes?: string;
+  deliveryLatitude?: number;
+  deliveryLongitude?: number;
   items: PlaceOrderItemRequest[];
+}
+
+export interface CheckoutConfig {
+  leadTimeHours: number;
+  cutFruitLeadTimeHours: number;
+  slotStartHour: number;
+  slotEndHour: number;
+  slotIntervalMinutes: number;
+  storeLatitude: number;
+  storeLongitude: number;
+  cutFruitRadiusKm: number;
 }
 
 export interface PlaceOrderItemRequest {
@@ -284,9 +297,4 @@ export const PAYMENT_METHODS: Record<number, string> = {
   3: 'Khalti',
 };
 
-export const DELIVERY_TIME_SLOTS = [
-  '9:00 AM – 12:00 PM',
-  '12:00 PM – 3:00 PM',
-  '3:00 PM – 6:00 PM',
-  '6:00 PM – 9:00 PM',
-];
+;

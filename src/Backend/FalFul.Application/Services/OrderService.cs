@@ -7,11 +7,12 @@ using FalFul.Domain.Enums;
 namespace FalFul.Application.Services;
 
 public class OrderService(
-    IAddressRepository   addresses,
-    IOrderRepository     orders,
-    IDeliveryRepository  deliveries,
-    IPriceRuleRepository priceRules,
-    IOrderRatingRepository ratings) : IOrderService
+    IAddressRepository     addresses,
+    IOrderRepository       orders,
+    IDeliveryRepository    deliveries,
+    IPriceRuleRepository   priceRules,
+    IOrderRatingRepository ratings,
+    IAppSettingService     settings) : IOrderService
 {
     // ── Addresses ─────────────────────────────────────────────────────────────
 
@@ -108,6 +109,27 @@ public class OrderService(
         if (minOrder > 0 && subTotal < minOrder)
             return Result<string>.Failure($"Minimum order amount is Rs. {minOrder}.");
 
+        // Cut-fruit radius validation
+        bool hasCutFruits = dto.Items.Any(i => i.IsCustomBuild);
+        if (hasCutFruits)
+        {
+            var radiusKm = ParseSetting(await settings.GetValueAsync("cut_fruit_delivery_radius_km"), 5.0);
+            if (radiusKm > 0)
+            {
+                if (!dto.DeliveryLatitude.HasValue || !dto.DeliveryLongitude.HasValue)
+                    return Result<string>.Failure("Your location is required for cut-fruit orders. Please allow location access at checkout.");
+
+                var storeLat = ParseSetting(await settings.GetValueAsync("store_latitude"),  27.7172);
+                var storeLng = ParseSetting(await settings.GetValueAsync("store_longitude"), 85.3240);
+                var distKm   = HaversineKm(dto.DeliveryLatitude.Value, dto.DeliveryLongitude.Value, storeLat, storeLng);
+
+                if (distKm > radiusKm)
+                    return Result<string>.Failure(
+                        $"Cut-fruit delivery is only available within {radiusKm:F0} km of our store. " +
+                        $"Your location is approximately {distKm:F1} km away.");
+            }
+        }
+
         if (freeAbove > 0 && subTotal >= freeAbove)
             deliveryFee = 0;
 
@@ -133,7 +155,9 @@ public class OrderService(
             Landmark          = dto.Landmark?.Trim(),
             DeliveryDate      = dto.DeliveryDate,
             DeliveryTimeSlot  = dto.DeliveryTimeSlot.Trim(),
-            Notes             = dto.Notes?.Trim()
+            Notes             = dto.Notes?.Trim(),
+            DeliveryLatitude  = dto.DeliveryLatitude,
+            DeliveryLongitude = dto.DeliveryLongitude
         };
 
         try
@@ -248,6 +272,21 @@ public class OrderService(
 
     private static decimal GetRuleValue(Dictionary<string, PriceRule> rules, string key)
         => rules.TryGetValue(key, out var r) && r.IsActive ? r.Value : 0;
+
+    private static double ParseSetting(string? value, double defaultVal)
+        => double.TryParse(value, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : defaultVal;
+
+    private static double HaversineKm(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double R = 6371;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a    = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+                 + Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180)
+                 * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+    }
 
     private static string DeliveryStatusLabel(byte s)
         => DeliveryService.DeliveryStatusLabel(s);
