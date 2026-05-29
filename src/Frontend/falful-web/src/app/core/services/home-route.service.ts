@@ -9,9 +9,12 @@ export class HomeRouteService {
   /** Reactive computed: re-evaluates whenever currentUser changes. */
   readonly route = computed(() => {
     const user = this.user();
-    if (!user || user.permissions.length === 0) return '/dashboard';
-    if (user.permissions.includes(Perm.System)) return '/admin';
-    if (user.permissions.some(p => p !== Perm.Deliveries)) return '/admin';
-    return '/rider/deliveries';
+    if (!user) return '/';
+    const perms = user.permissions;
+    if (perms.includes(Perm.System))     return '/admin';
+    if (perms.includes(Perm.Shop))       return '/products';
+    if (perms.includes(Perm.Deliveries)) return '/rider/deliveries';
+    if (perms.length > 0)                return '/admin';
+    return '/';
   });
 }

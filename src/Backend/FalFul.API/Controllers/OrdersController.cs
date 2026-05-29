@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using FalFul.Application.DTOs.Order;
 using FalFul.Application.Interfaces;
@@ -57,7 +58,7 @@ public class OrdersController(IOrderService orderService, IDeliveryService deliv
 
     private int GetUserId()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
         return int.Parse(sub!);
     }
 }

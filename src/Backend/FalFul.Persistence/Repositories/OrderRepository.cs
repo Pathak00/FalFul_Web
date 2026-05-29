@@ -68,7 +68,9 @@ public class OrderRepository(DapperContext context) : IOrderRepository
                 order.Landmark,
                 order.DeliveryDate,
                 order.DeliveryTimeSlot,
-                order.Notes
+                order.Notes,
+                order.DeliveryLatitude,
+                order.DeliveryLongitude
             },
             commandType: CommandType.StoredProcedure);
 
