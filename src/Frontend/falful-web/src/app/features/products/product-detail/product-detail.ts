@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
-import { PermissionService } from '../../../core/services/permission.service';
 import { Product } from '../../../core/models/product.models';
 
 @Component({
@@ -89,24 +88,22 @@ import { Product } from '../../../core/models/product.models';
             </div>
 
             <!-- Quantity + Add to Cart -->
-            @if (perms.canShop()) {
-              <div class="detail-order-row">
-                <div class="qty-control">
-                  <button (click)="decQty()" [disabled]="qty <= 1">
-                    <i class="bi bi-dash"></i>
-                  </button>
-                  <span class="qty-val">{{ qty }}</span>
-                  <button (click)="incQty()"><i class="bi bi-plus"></i></button>
-                </div>
-
-                <button class="btn-add-cart" [disabled]="!product()!.isAvailable" (click)="addToCart()">
-                  <i class="bi bi-cart-plus"></i> Add to Cart
+            <div class="detail-order-row">
+              <div class="qty-control">
+                <button (click)="decQty()" [disabled]="qty <= 1">
+                  <i class="bi bi-dash"></i>
                 </button>
+                <span class="qty-val">{{ qty }}</span>
+                <button (click)="incQty()"><i class="bi bi-plus"></i></button>
               </div>
 
-              @if (addedMsg()) {
-                <p class="added-note"><i class="bi bi-check-circle-fill"></i> Added to cart!</p>
-              }
+              <button class="btn-add-cart" [disabled]="!product()!.isAvailable" (click)="addToCart()">
+                <i class="bi bi-cart-plus"></i> Add to Cart
+              </button>
+            </div>
+
+            @if (addedMsg()) {
+              <p class="added-note"><i class="bi bi-check-circle-fill"></i> Added to cart!</p>
             }
 
             @if (product()!.description) {
@@ -137,7 +134,6 @@ export class ProductDetailComponent implements OnInit {
   private svc   = inject(ProductService);
   private cart  = inject(CartService);
   private route = inject(ActivatedRoute);
-  readonly perms = inject(PermissionService);
 
   product  = signal<Product | null>(null);
   loading  = signal(true);

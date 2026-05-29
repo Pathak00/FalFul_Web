@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
-import { PermissionService } from '../../../core/services/permission.service';
 import { Category, ProductSummary } from '../../../core/models/product.models';
 
 @Component({
@@ -123,11 +122,9 @@ import { Category, ProductSummary } from '../../../core/models/product.models';
                         <span class="price-amount">Rs. {{ p.price | number:'1.0-0' }}</span>
                         <span class="price-unit">/ {{ p.unit }}</span>
                       </div>
-                      @if (perms.canShop()) {
-                        <button class="add-btn" [disabled]="!p.isAvailable" (click)="$event.preventDefault()">
-                          <i class="bi bi-cart-plus"></i>
-                        </button>
-                      }
+                      <button class="add-btn" [disabled]="!p.isAvailable" (click)="$event.preventDefault()">
+                        <i class="bi bi-cart-plus"></i>
+                      </button>
                     </div>
                   </div>
                 </a>
@@ -140,7 +137,6 @@ import { Category, ProductSummary } from '../../../core/models/product.models';
   `
 })
 export class ProductListComponent implements OnInit {
-  readonly perms = inject(PermissionService);
   products       = signal<ProductSummary[]>([]);
   categories     = signal<Category[]>([]);
   loading        = signal(true);
