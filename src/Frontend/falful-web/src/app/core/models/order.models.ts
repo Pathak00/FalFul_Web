@@ -134,6 +134,8 @@ export interface OrderSummary {
   city: string;
   itemCount: number;
   createdAt: string;
+  deliveryStatus?: number;
+  deliveryStatusLabel?: string;
 }
 
 export interface OrderDetail extends OrderSummary {

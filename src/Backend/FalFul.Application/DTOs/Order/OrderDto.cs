@@ -88,8 +88,10 @@ public class OrderSummaryDto
     public string        DeliveryTimeSlot { get; set; } = string.Empty;
     public string        FullAddress      { get; set; } = string.Empty;
     public string        City             { get; set; } = string.Empty;
-    public int           ItemCount        { get; set; }
-    public DateTime      CreatedAt        { get; set; }
+    public int           ItemCount           { get; set; }
+    public DateTime      CreatedAt           { get; set; }
+    public byte?         DeliveryStatus      { get; set; }
+    public string?       DeliveryStatusLabel { get; set; }
 }
 
 public class OrderDetailDto : OrderSummaryDto

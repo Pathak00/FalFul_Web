@@ -31,6 +31,8 @@ public class Order
     public DateTime      CreatedAt         { get; set; }
     public DateTime?     UpdatedAt         { get; set; }
 
+    public byte?           DeliveryStatus { get; set; }
+
     public List<OrderItem> Items    { get; set; } = [];
     public Delivery?       Delivery { get; set; }
 }

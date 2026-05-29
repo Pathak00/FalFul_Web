@@ -308,22 +308,24 @@ public class OrderService(
 
     private static OrderSummaryDto MapSummary(Order o) => new()
     {
-        Id               = o.Id,
-        OrderNumber      = o.OrderNumber,
-        Status           = o.Status,
-        StatusLabel      = o.Status.ToString(),
-        SubTotal         = o.SubTotal,
-        DeliveryFee      = o.DeliveryFee,
-        ServiceFee       = o.ServiceFee,
-        TotalAmount      = o.TotalAmount,
-        PaymentMethod    = o.PaymentMethod,
-        PaymentStatus    = o.PaymentStatus,
-        DeliveryDate     = o.DeliveryDate,
-        DeliveryTimeSlot = o.DeliveryTimeSlot,
-        FullAddress      = o.FullAddress,
-        City             = o.City,
-        ItemCount        = o.ItemCount > 0 ? o.ItemCount : o.Items.Count,
-        CreatedAt        = o.CreatedAt
+        Id                  = o.Id,
+        OrderNumber         = o.OrderNumber,
+        Status              = o.Status,
+        StatusLabel         = o.Status.ToString(),
+        SubTotal            = o.SubTotal,
+        DeliveryFee         = o.DeliveryFee,
+        ServiceFee          = o.ServiceFee,
+        TotalAmount         = o.TotalAmount,
+        PaymentMethod       = o.PaymentMethod,
+        PaymentStatus       = o.PaymentStatus,
+        DeliveryDate        = o.DeliveryDate,
+        DeliveryTimeSlot    = o.DeliveryTimeSlot,
+        FullAddress         = o.FullAddress,
+        City                = o.City,
+        ItemCount           = o.ItemCount > 0 ? o.ItemCount : o.Items.Count,
+        CreatedAt           = o.CreatedAt,
+        DeliveryStatus      = o.DeliveryStatus,
+        DeliveryStatusLabel = o.DeliveryStatus.HasValue ? DeliveryStatusLabel(o.DeliveryStatus.Value) : null
     };
 
     private static OrderDetailDto MapDetail(Order o) => new()

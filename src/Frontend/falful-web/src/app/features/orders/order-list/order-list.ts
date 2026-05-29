@@ -2,7 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
-import { OrderSummary, ORDER_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
+import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../../core/models/order.models';
 
 @Component({
   selector: 'app-order-list',
@@ -45,8 +45,8 @@ import { OrderSummary, ORDER_STATUSES, PAYMENT_METHODS } from '../../../core/mod
               </div>
               <div class="oc-right">
                 <span class="oc-amount">Rs. {{ order.totalAmount | number:'1.0-0' }}</span>
-                <span class="oc-status" [style.background]="statusBg(order.status)" [style.color]="statusColor(order.status)">
-                  {{ statusLabel(order.status) }}
+                <span class="oc-status" [style.background]="effectiveStatusBg(order)" [style.color]="effectiveStatusColor(order)">
+                  {{ effectiveStatusLabel(order) }}
                 </span>
               </div>
               <i class="bi bi-chevron-right oc-arrow"></i>
@@ -74,7 +74,23 @@ export class OrderListComponent implements OnInit {
     });
   }
 
-  statusLabel(s: number): string { return ORDER_STATUSES[s]?.label ?? 'Unknown'; }
-  statusColor(s: number): string { return ORDER_STATUSES[s]?.color ?? '#6b7280'; }
-  statusBg(s: number): string    { return (ORDER_STATUSES[s]?.color ?? '#6b7280') + '1a'; }
+  private useDeliveryStatus(order: OrderSummary): boolean {
+    return order.status === 4 && order.deliveryStatus != null;
+  }
+
+  effectiveStatusLabel(order: OrderSummary): string {
+    return this.useDeliveryStatus(order)
+      ? (DELIVERY_STATUSES[order.deliveryStatus!]?.label ?? order.deliveryStatusLabel ?? 'Unknown')
+      : (ORDER_STATUSES[order.status]?.label ?? 'Unknown');
+  }
+
+  effectiveStatusColor(order: OrderSummary): string {
+    return this.useDeliveryStatus(order)
+      ? (DELIVERY_STATUSES[order.deliveryStatus!]?.color ?? '#6b7280')
+      : (ORDER_STATUSES[order.status]?.color ?? '#6b7280');
+  }
+
+  effectiveStatusBg(order: OrderSummary): string {
+    return this.effectiveStatusColor(order) + '1a';
+  }
 }

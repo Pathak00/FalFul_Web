@@ -11,10 +11,12 @@ BEGIN
            COALESCE(a.City,        o.City)           AS City,
            COALESCE(a.PhoneNumber, o.DeliveryPhone)  AS DeliveryPhone,
            u.FullName AS CustomerName,
-           (SELECT COUNT(*) FROM OrderItems oi WHERE oi.OrderId = o.Id) AS ItemCount
+           (SELECT COUNT(*) FROM OrderItems oi WHERE oi.OrderId = o.Id) AS ItemCount,
+           d.Status AS DeliveryStatus
     FROM   Orders o
-    LEFT   JOIN Addresses a ON a.Id = o.DeliveryAddressId
-    INNER  JOIN Users u     ON u.Id = o.UserId
+    LEFT   JOIN Addresses a  ON a.Id      = o.DeliveryAddressId
+    INNER  JOIN Users u      ON u.Id      = o.UserId
+    LEFT   JOIN Deliveries d ON d.OrderId = o.Id
     WHERE  (@Status IS NULL OR o.Status = @Status)
       AND  (@UserId IS NULL OR o.UserId = @UserId)
     ORDER  BY o.CreatedAt DESC;
