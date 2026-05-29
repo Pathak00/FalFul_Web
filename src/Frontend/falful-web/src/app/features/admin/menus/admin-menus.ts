@@ -2,15 +2,16 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MenuItem } from '../../../core/models/cms.models';
+import { AdminService } from '../../../core/services/admin.service';
 import { CmsService } from '../../../core/services/cms.service';
 
-const VISIBLE_TO_OPTIONS = [
-  { value: 0, label: 'Everyone',           desc: 'All visitors, including guests not logged in' },
-  { value: 1, label: 'Logged-in users',    desc: 'Any authenticated user (Individual, Org, or Admin)' },
-  { value: 2, label: 'Guests only',        desc: 'Only visitors who are NOT logged in (e.g. Login, Register links)' },
-  { value: 3, label: 'Admins only',        desc: 'Only users with Admin role' },
-  { value: 4, label: 'Organizations only', desc: 'Only users with Organisation role' },
-  { value: 5, label: 'Individuals only',   desc: 'Only users with Individual role' },
+interface RoleOption { id: number; name: string; }
+
+const BASE_OPTIONS = [
+  { value: 0, label: 'Everyone',        desc: 'All visitors, including guests not logged in' },
+  { value: 1, label: 'Logged-in users', desc: 'Any authenticated user regardless of role' },
+  { value: 2, label: 'Guests only',     desc: 'Only visitors who are NOT logged in (e.g. Login, Register links)' },
+  { value: 3, label: 'Specific roles',  desc: 'Only users whose role is one of the selected roles below' },
 ];
 
 @Component({
@@ -33,7 +34,6 @@ const VISIBLE_TO_OPTIONS = [
       } @else {
         <div class="menu-tree">
           @for (item of topLevel(); track item.id) {
-            <!-- Top-level row -->
             <div class="menu-row menu-row-top" [class.row-hidden]="!item.isVisible">
               <div class="menu-row-left">
                 @if (item.icon) {
@@ -44,18 +44,17 @@ const VISIBLE_TO_OPTIONS = [
                   <strong>{{ item.label }}</strong>
                   @if (item.url) { <span class="menu-url">{{ item.url }}</span> }
                 </div>
-                <span class="badge badge-blue">{{ visibleToLabel(item.visibleTo) }}</span>
+                <span class="badge badge-blue">{{ visibilityLabel(item) }}</span>
                 @if (!item.isVisible) { <span class="badge badge-gray">Hidden</span> }
                 <span class="order-badge">#{{ item.displayOrder }}</span>
               </div>
               <div class="menu-row-actions">
-                <button class="btn-sm btn-success-soft" (click)="openCreate(item.id)" title="Add sub-item under this">+ Sub-item</button>
+                <button class="btn-sm btn-success-soft" (click)="openCreate(item.id)">+ Sub-item</button>
                 <button class="btn-sm btn-edit" (click)="openEdit(item)">Edit</button>
                 <button class="btn-sm btn-danger" (click)="deleteTarget.set(item)">Delete</button>
               </div>
             </div>
 
-            <!-- Children -->
             @for (child of childrenOf(item.id); track child.id) {
               <div class="menu-row menu-row-child" [class.row-hidden]="!child.isVisible">
                 <div class="menu-row-left">
@@ -68,7 +67,7 @@ const VISIBLE_TO_OPTIONS = [
                     <strong>{{ child.label }}</strong>
                     @if (child.url) { <span class="menu-url">{{ child.url }}</span> }
                   </div>
-                  <span class="badge badge-blue">{{ visibleToLabel(child.visibleTo) }}</span>
+                  <span class="badge badge-blue">{{ visibilityLabel(child) }}</span>
                   @if (!child.isVisible) { <span class="badge badge-gray">Hidden</span> }
                   <span class="order-badge">#{{ child.displayOrder }}</span>
                 </div>
@@ -89,13 +88,6 @@ const VISIBLE_TO_OPTIONS = [
           }
         </div>
       }
-
-      <div class="legend">
-        <strong>Visible To legend:</strong>
-        @for (opt of visibleToOptions; track opt.value) {
-          <span class="legend-item"><span class="badge badge-blue">{{ opt.label }}</span> {{ opt.desc }}</span>
-        }
-      </div>
     </div>
 
     <!-- Create / Edit Modal -->
@@ -115,18 +107,15 @@ const VISIBLE_TO_OPTIONS = [
               <div class="form-group">
                 <label>Label <span class="required">*</span></label>
                 <input [(ngModel)]="form.label" placeholder="e.g. Products, About Us, My Orders" />
-                <span class="field-hint">The text shown in the navigation bar.</span>
               </div>
               <div class="form-group">
                 <label>Icon</label>
-                <input [(ngModel)]="form.icon" placeholder="e.g. bi-house-fill, bi-cart, bi-person" />
-                <span class="field-hint">Bootstrap Icon class name (without the leading "bi "). Browse at icons.getbootstrap.com. Leave blank for no icon.</span>
+                <input [(ngModel)]="form.icon" placeholder="e.g. bi-house-fill, bi-cart" />
               </div>
             </div>
             <div class="form-group">
               <label>Link URL</label>
-              <input [(ngModel)]="form.url" placeholder="e.g. /products, /dashboard, https://..." />
-              <span class="field-hint">Where this link navigates. Leave blank for a section header with no link.</span>
+              <input [(ngModel)]="form.url" placeholder="e.g. /products, /dashboard" />
             </div>
           </div>
 
@@ -136,27 +125,47 @@ const VISIBLE_TO_OPTIONS = [
               <select [(ngModel)]="form.parentId">
                 <option [ngValue]="undefined">— Top-level item —</option>
                 @for (item of topLevel(); track item.id) {
-                  <option [ngValue]="item.id">{{ item.icon ?? '' }} {{ item.label }}</option>
+                  <option [ngValue]="item.id">{{ item.label }}</option>
                 }
               </select>
-              <span class="field-hint">Choose a parent to nest this item as a dropdown inside another link.</span>
             </div>
 
             <div class="form-group">
-              <label>Visible To — Who can see this link?</label>
+              <label>Visible To</label>
               <select [(ngModel)]="form.visibleTo">
-                @for (opt of visibleToOptions; track opt.value) {
+                @for (opt of baseOptions; track opt.value) {
                   <option [value]="opt.value">{{ opt.label }} — {{ opt.desc }}</option>
                 }
               </select>
-              <span class="field-hint">Controls which users see this menu item based on their login status and role.</span>
             </div>
+
+            <!-- Role checkboxes shown only when Specific roles is selected -->
+            @if (+form.visibleTo === 3) {
+              <div class="role-picker">
+                <p class="role-picker-label">Select which roles can see this item:</p>
+                @if (roles().length === 0) {
+                  <p class="text-muted" style="font-size:.8rem">No roles found. Create roles first in Roles &amp; Permissions.</p>
+                }
+                <div class="role-checks">
+                  @for (role of roles(); track role.id) {
+                    <label class="role-check-row">
+                      <input type="checkbox"
+                             [checked]="form.requiredRoleIds.includes(role.id)"
+                             (change)="toggleRole(role.id)" />
+                      <span>{{ role.name }}</span>
+                    </label>
+                  }
+                </div>
+                @if (+form.visibleTo === 3 && form.requiredRoleIds.length === 0) {
+                  <p class="field-hint warn">Select at least one role, otherwise no one will see this item.</p>
+                }
+              </div>
+            }
 
             <div class="form-row">
               <div class="form-group">
                 <label>Display Order</label>
                 <input type="number" [(ngModel)]="form.displayOrder" min="0" />
-                <span class="field-hint">Lower number = shown first. Use 1, 2, 3…</span>
               </div>
             </div>
           </div>
@@ -177,7 +186,6 @@ const VISIBLE_TO_OPTIONS = [
               </div>
               <div>
                 <strong>{{ form.openInNewTab ? 'Opens in new tab' : 'Opens in same tab' }}</strong>
-                <span>Use "new tab" for external links.</span>
               </div>
             </label>
           </div>
@@ -201,11 +209,8 @@ const VISIBLE_TO_OPTIONS = [
           <div class="confirm-icon"><i class="bi bi-trash3"></i></div>
           <h2>Delete "{{ deleteTarget()!.label }}"?</h2>
           <p>
-            @if (!deleteTarget()!.parentId) {
-              This will also delete all sub-items nested under it.
-            } @else {
-              This sub-item will be removed from the navigation.
-            }
+            @if (!deleteTarget()!.parentId) { This will also delete all sub-items nested under it. }
+            @else { This sub-item will be removed from the navigation. }
           </p>
           <div class="modal-actions">
             <button class="btn-secondary" (click)="deleteTarget.set(null)">Cancel</button>
@@ -234,60 +239,92 @@ const VISIBLE_TO_OPTIONS = [
 
     .menu-row-top  { background: #fafafa; }
     .menu-row-child { background: #fff; padding-left: 2rem; }
-
     .menu-row-left { display: flex; align-items: center; gap: .625rem; flex: 1; min-width: 0; flex-wrap: wrap; }
     .menu-row-actions { display: flex; gap: .375rem; flex-shrink: 0; }
-
     .menu-icon { font-size: 1rem; width: 18px; text-align: center; color: #475569; flex-shrink: 0; }
-
     .menu-label-block {
       display: flex; flex-direction: column; gap: .125rem;
       strong { font-size: .875rem; color: #0f172a; }
     }
-
     .menu-url { font-size: .75rem; color: #94a3b8; font-family: monospace; }
     .order-badge { font-size: .7rem; color: #cbd5e1; font-weight: 600; }
     .child-indent { font-size: .9rem; color: #cbd5e1; flex-shrink: 0; }
-
     .btn-success-soft { background: #f0fdf4; color: #16a34a; &:hover { background: #dcfce7; } }
 
-    .legend {
-      display: flex; flex-wrap: wrap; gap: .625rem; align-items: center;
-      background: #f8fafc; border-radius: 8px; padding: .875rem 1rem;
-      font-size: .78rem; color: #64748b;
-      strong { color: #374151; margin-right: .5rem; }
+    .role-picker {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: .875rem 1rem; margin-top: .5rem;
     }
-    .legend-item { display: flex; align-items: center; gap: .375rem; }
+    .role-picker-label { font-size: .8rem; font-weight: 600; color: #374151; margin: 0 0 .625rem; }
+    .role-checks { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .role-check-row {
+      display: flex; align-items: center; gap: .4rem; cursor: pointer;
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: .3rem .65rem; font-size: .82rem; color: #374151;
+      transition: border-color .15s, background .15s;
+      input { width: 14px; height: 14px; accent-color: #16a34a; cursor: pointer; }
+      &:has(input:checked) { border-color: #16a34a; background: #f0fdf4; color: #15803d; font-weight: 600; }
+    }
+    .field-hint.warn { color: #b45309; margin-top: .375rem; }
   `]
 })
 export class AdminMenusComponent implements OnInit {
-  private cms = inject(CmsService);
+  private cms      = inject(CmsService);
+  private adminSvc = inject(AdminService);
 
-  allItems = signal<MenuItem[]>([]);
-  loading = signal(true);
-  showForm = signal(false);
-  editing = signal(false);
-  saving = signal(false);
-  error = signal('');
+  allItems    = signal<MenuItem[]>([]);
+  roles       = signal<RoleOption[]>([]);
+  loading     = signal(true);
+  showForm    = signal(false);
+  editing     = signal(false);
+  saving      = signal(false);
+  error       = signal('');
   deleteTarget = signal<MenuItem | null>(null);
 
-  visibleToOptions = VISIBLE_TO_OPTIONS;
+  baseOptions = BASE_OPTIONS;
 
-  form: { id?: number; parentId?: number; label: string; url: string; icon: string; displayOrder: number; isVisible: boolean; visibleTo: number; openInNewTab: boolean } = this.emptyForm();
+  form: {
+    id?: number; parentId?: number; label: string; url: string; icon: string;
+    displayOrder: number; isVisible: boolean; visibleTo: number; requiredRoleIds: number[]; openInNewTab: boolean;
+  } = this.emptyForm();
 
-  topLevel = () => this.allItems().filter(i => !i.parentId);
-  childrenOf = (pid: number) => this.allItems().filter(i => i.parentId === pid);
-  visibleToLabel = (v: number) => VISIBLE_TO_OPTIONS.find(o => o.value === v)?.label ?? String(v);
+  topLevel    = () => this.allItems().filter(i => !i.parentId);
+  childrenOf  = (pid: number) => this.allItems().filter(i => i.parentId === pid);
   parentLabel = () => this.allItems().find(i => i.id === this.form.parentId)?.label ?? '';
 
-  ngOnInit() { this.load(); }
-
-  load() {
-    this.loading.set(true);
-    this.cms.getAllMenuItems().subscribe({ next: items => { this.allItems.set(items); this.loading.set(false); }, error: () => this.loading.set(false) });
+  visibilityLabel(item: MenuItem): string {
+    if (item.visibleTo === 3) {
+      if (!item.requiredRoleIds?.length) return 'Specific roles (none)';
+      const names = item.requiredRoleIds
+        .map(id => this.roles().find(r => r.id === id)?.name ?? `#${id}`)
+        .join(', ');
+      return names;
+    }
+    return BASE_OPTIONS.find(o => o.value === item.visibleTo)?.label ?? String(item.visibleTo);
   }
 
-  openCreate(parentId?: number) {
+  toggleRole(roleId: number): void {
+    const ids = this.form.requiredRoleIds;
+    const idx = ids.indexOf(roleId);
+    this.form.requiredRoleIds = idx === -1 ? [...ids, roleId] : ids.filter(i => i !== roleId);
+  }
+
+  ngOnInit(): void {
+    this.adminSvc.getRoles().subscribe({
+      next: r => this.roles.set(r.map(x => ({ id: x.id, name: x.name })))
+    });
+    this.load();
+  }
+
+  load(): void {
+    this.loading.set(true);
+    this.cms.getAllMenuItems().subscribe({
+      next: items => { this.allItems.set(items); this.loading.set(false); },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  openCreate(parentId?: number): void {
     this.form = this.emptyForm();
     if (parentId) this.form.parentId = parentId;
     this.editing.set(false);
@@ -295,34 +332,57 @@ export class AdminMenusComponent implements OnInit {
     this.showForm.set(true);
   }
 
-  openEdit(item: MenuItem) {
-    this.form = { id: item.id, parentId: item.parentId, label: item.label, url: item.url ?? '', icon: item.icon ?? '', displayOrder: item.displayOrder, isVisible: item.isVisible, visibleTo: item.visibleTo, openInNewTab: item.openInNewTab };
+  openEdit(item: MenuItem): void {
+    this.form = {
+      id: item.id, parentId: item.parentId, label: item.label, url: item.url ?? '',
+      icon: item.icon ?? '', displayOrder: item.displayOrder, isVisible: item.isVisible,
+      visibleTo: item.visibleTo, requiredRoleIds: [...(item.requiredRoleIds ?? [])],
+      openInNewTab: item.openInNewTab
+    };
     this.editing.set(true);
     this.error.set('');
     this.showForm.set(true);
   }
 
-  save() {
+  save(): void {
     if (!this.form.label.trim()) { this.error.set('Label is required.'); return; }
     this.saving.set(true);
-    const dto = { parentId: this.form.parentId || undefined, label: this.form.label, url: this.form.url || undefined, icon: this.form.icon || undefined, displayOrder: this.form.displayOrder, isVisible: this.form.isVisible, visibleTo: +this.form.visibleTo, openInNewTab: this.form.openInNewTab };
+
+    const dto = {
+      parentId: this.form.parentId || undefined,
+      label: this.form.label,
+      url: this.form.url || undefined,
+      icon: this.form.icon || undefined,
+      displayOrder: this.form.displayOrder,
+      isVisible: this.form.isVisible,
+      visibleTo: +this.form.visibleTo,
+      requiredRoleIds: +this.form.visibleTo === 3 ? this.form.requiredRoleIds : [],
+      openInNewTab: this.form.openInNewTab
+    };
+
     const obs: Observable<unknown> = this.editing()
       ? this.cms.updateMenuItem({ ...dto, id: this.form.id! })
       : this.cms.createMenuItem(dto);
+
     obs.subscribe({
       next: () => { this.saving.set(false); this.closeForm(); this.load(); },
-      error: (e: any) => { this.saving.set(false); this.error.set(e.error?.message ?? 'Failed to save.'); }
+      error: (e: { error?: { message?: string } }) => {
+        this.saving.set(false);
+        this.error.set(e.error?.message ?? 'Failed to save.');
+      }
     });
   }
 
-  confirmDelete() {
+  confirmDelete(): void {
     if (!this.deleteTarget()) return;
-    this.cms.deleteMenuItem(this.deleteTarget()!.id).subscribe({ next: () => { this.deleteTarget.set(null); this.load(); } });
+    this.cms.deleteMenuItem(this.deleteTarget()!.id).subscribe({
+      next: () => { this.deleteTarget.set(null); this.load(); }
+    });
   }
 
-  closeForm() { this.showForm.set(false); }
+  closeForm(): void { this.showForm.set(false); }
 
   private emptyForm() {
-    return { label: '', url: '', icon: '', displayOrder: 0, isVisible: true, visibleTo: 0, openInNewTab: false };
+    return { label: '', url: '', icon: '', displayOrder: 0, isVisible: true, visibleTo: 0, requiredRoleIds: [] as number[], openInNewTab: false };
   }
 }

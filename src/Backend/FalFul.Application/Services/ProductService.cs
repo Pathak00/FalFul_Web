@@ -37,15 +37,8 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
             IsActive     = true
         };
 
-        try
-        {
-            var id = await categories.CreateAsync(entity);
-            return Result<int>.Success(id);
-        }
-        catch (Exception ex)
-        {
-            return Result<int>.Failure(ex.Message);
-        }
+        try { var id = await categories.CreateAsync(entity); return Result<int>.Success(id); }
+        catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
 
     public async Task<Result> UpdateCategoryAsync(int id, UpdateCategoryDto dto)
@@ -64,15 +57,8 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         existing.DisplayOrder = dto.DisplayOrder;
         existing.IsActive     = dto.IsActive;
 
-        try
-        {
-            await categories.UpdateAsync(existing);
-            return Result.Success();
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure(ex.Message);
-        }
+        try { await categories.UpdateAsync(existing); return Result.Success(); }
+        catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeleteCategoryAsync(int id)
@@ -80,15 +66,8 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         var existing = await categories.GetByIdAsync(id);
         if (existing is null) return Result.Failure("Category not found.");
 
-        try
-        {
-            await categories.DeleteAsync(id);
-            return Result.Success();
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure(ex.Message);
-        }
+        try { await categories.DeleteAsync(id); return Result.Success(); }
+        catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     // ── Products ─────────────────────────────────────────────────────────────
@@ -144,18 +123,14 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
             IsFeatured       = dto.IsFeatured,
             ImageUrl         = dto.ImageUrl?.Trim(),
             Tags             = dto.Tags?.Trim(),
-            DisplayOrder     = dto.DisplayOrder
+            DisplayOrder     = dto.DisplayOrder,
+            MinOrderGrams    = dto.MinOrderGrams > 0 ? dto.MinOrderGrams : null,
+            GramStep         = dto.GramStep > 0 ? dto.GramStep : null,
+            CutFruitPrice    = dto.CutFruitPrice > 0 ? dto.CutFruitPrice : null
         };
 
-        try
-        {
-            var id = await products.CreateAsync(entity);
-            return Result<int>.Success(id);
-        }
-        catch (Exception ex)
-        {
-            return Result<int>.Failure(ex.Message);
-        }
+        try { var id = await products.CreateAsync(entity); return Result<int>.Success(id); }
+        catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
 
     public async Task<Result> UpdateProductAsync(int id, UpdateProductDto dto)
@@ -181,16 +156,12 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         existing.ImageUrl         = dto.ImageUrl?.Trim();
         existing.Tags             = dto.Tags?.Trim();
         existing.DisplayOrder     = dto.DisplayOrder;
+        existing.MinOrderGrams    = dto.MinOrderGrams > 0 ? dto.MinOrderGrams : null;
+        existing.GramStep         = dto.GramStep > 0 ? dto.GramStep : null;
+        existing.CutFruitPrice    = dto.CutFruitPrice > 0 ? dto.CutFruitPrice : null;
 
-        try
-        {
-            await products.UpdateAsync(existing);
-            return Result.Success();
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure(ex.Message);
-        }
+        try { await products.UpdateAsync(existing); return Result.Success(); }
+        catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeleteProductAsync(int id)
@@ -227,6 +198,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         ShortDescription = p.ShortDescription, Price = p.Price, Unit = p.Unit,
         Stock = p.Stock, IsAvailable = p.IsAvailable, IsFeatured = p.IsFeatured,
         ImageUrl = p.ImageUrl, Tags = p.Tags, DisplayOrder = p.DisplayOrder,
+        MinOrderGrams = p.MinOrderGrams, GramStep = p.GramStep, CutFruitPrice = p.CutFruitPrice,
         CreatedAt = p.CreatedAt, UpdatedAt = p.UpdatedAt
     };
 
@@ -236,6 +208,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         Name = p.Name, Slug = p.Slug, ShortDescription = p.ShortDescription,
         Price = p.Price, Unit = p.Unit, Stock = p.Stock,
         IsAvailable = p.IsAvailable, IsFeatured = p.IsFeatured,
-        ImageUrl = p.ImageUrl, Tags = p.Tags, DisplayOrder = p.DisplayOrder
+        ImageUrl = p.ImageUrl, Tags = p.Tags, DisplayOrder = p.DisplayOrder,
+        MinOrderGrams = p.MinOrderGrams, GramStep = p.GramStep, CutFruitPrice = p.CutFruitPrice
     };
 }

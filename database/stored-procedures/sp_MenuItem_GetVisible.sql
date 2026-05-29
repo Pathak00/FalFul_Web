@@ -3,22 +3,28 @@ GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
 CREATE OR ALTER PROCEDURE sp_MenuItem_GetVisible
-    @UserType TINYINT = NULL  -- NULL = not logged in
+    @UserId INT = NULL  -- NULL = guest
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT Id, ParentId, Label, Url, Icon, DisplayOrder, VisibleTo, OpenInNewTab
-    FROM MenuItems
-    WHERE IsDeleted = 0
-      AND IsVisible = 1
+    SELECT m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab,
+           ISNULL(STRING_AGG(CAST(mr.RoleId AS NVARCHAR), ','), '') AS RequiredRoleIds
+    FROM MenuItems m
+    LEFT JOIN MenuItemRoles mr ON mr.MenuItemId = m.Id
+    WHERE m.IsDeleted = 0
+      AND m.IsVisible = 1
       AND (
-            VisibleTo = 0                                   -- Everyone
-         OR (@UserType IS     NULL AND VisibleTo = 2)       -- Guest only
-         OR (@UserType IS NOT NULL AND VisibleTo = 1)       -- Any logged-in
-         OR (@UserType = 3    AND VisibleTo = 3)            -- Admin
-         OR (@UserType = 2    AND VisibleTo = 4)            -- Organisation
-         OR (@UserType = 1    AND VisibleTo = 5)            -- Individual
+            m.VisibleTo = 0
+         OR (@UserId IS NULL     AND m.VisibleTo = 2)
+         OR (@UserId IS NOT NULL AND m.VisibleTo = 1)
+         OR (@UserId IS NOT NULL AND m.VisibleTo = 3
+             AND EXISTS (
+                 SELECT 1 FROM UserRoles ur
+                 JOIN MenuItemRoles mr2 ON mr2.RoleId = ur.RoleId
+                 WHERE ur.UserId = @UserId AND mr2.MenuItemId = m.Id
+             ))
       )
-    ORDER BY ISNULL(ParentId, Id), ParentId, DisplayOrder;
+    GROUP BY m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab
+    ORDER BY ISNULL(m.ParentId, m.Id), m.ParentId, m.DisplayOrder;
 END
 GO

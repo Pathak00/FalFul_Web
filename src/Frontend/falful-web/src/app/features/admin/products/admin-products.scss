@@ -1,3 +1,6 @@
+/* Products table needs extra width due to many columns */
+.data-table { min-width: 780px; }
+
 .product-img-preview {
   width: 40px; height: 40px; border-radius: 6px;
   object-fit: cover; border: 1px solid #e2e8f0;

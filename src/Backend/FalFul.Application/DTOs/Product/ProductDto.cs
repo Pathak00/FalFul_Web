@@ -17,6 +17,9 @@ public class ProductDto
     public string?  ImageUrl         { get; set; }
     public string?  Tags             { get; set; }
     public int      DisplayOrder     { get; set; }
+    public int?     MinOrderGrams    { get; set; }
+    public int?     GramStep         { get; set; }
+    public decimal? CutFruitPrice    { get; set; }
     public DateTime CreatedAt        { get; set; }
     public DateTime? UpdatedAt       { get; set; }
 }
@@ -37,6 +40,9 @@ public class ProductSummaryDto
     public string?  ImageUrl         { get; set; }
     public string?  Tags             { get; set; }
     public int      DisplayOrder     { get; set; }
+    public int?     MinOrderGrams    { get; set; }
+    public int?     GramStep         { get; set; }
+    public decimal? CutFruitPrice    { get; set; }
 }
 
 public class CreateProductDto
@@ -54,6 +60,9 @@ public class CreateProductDto
     public string?  ImageUrl         { get; set; }
     public string?  Tags             { get; set; }
     public int      DisplayOrder     { get; set; }
+    public int?     MinOrderGrams    { get; set; }
+    public int?     GramStep         { get; set; }
+    public decimal? CutFruitPrice    { get; set; }
 }
 
 public class UpdateProductDto
@@ -71,6 +80,9 @@ public class UpdateProductDto
     public string?  ImageUrl         { get; set; }
     public string?  Tags             { get; set; }
     public int      DisplayOrder     { get; set; }
+    public int?     MinOrderGrams    { get; set; }
+    public int?     GramStep         { get; set; }
+    public decimal? CutFruitPrice    { get; set; }
 }
 
 public class SetProductAvailabilityDto

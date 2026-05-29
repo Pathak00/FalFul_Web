@@ -14,6 +14,8 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IGoogleAuthService _googleAuth;
+    private readonly IRoleRepository _roleRepo;
+    private readonly IPermissionRepository _permRepo;
 
     public AuthService(
         IUserRepository userRepo,
@@ -21,7 +23,9 @@ public class AuthService : IAuthService
         IRefreshTokenRepository tokenRepo,
         IJwtService jwtService,
         IPasswordHasher passwordHasher,
-        IGoogleAuthService googleAuth)
+        IGoogleAuthService googleAuth,
+        IRoleRepository roleRepo,
+        IPermissionRepository permRepo)
     {
         _userRepo = userRepo;
         _orgRepo = orgRepo;
@@ -29,6 +33,8 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
         _passwordHasher = passwordHasher;
         _googleAuth = googleAuth;
+        _roleRepo = roleRepo;
+        _permRepo = permRepo;
     }
 
     public async Task<Result<AuthResponseDto>> RegisterUserAsync(RegisterUserDto dto)
@@ -49,6 +55,7 @@ public class AuthService : IAuthService
         };
 
         user.Id = await _userRepo.CreateAsync(user);
+        await AssignCustomerRoleAsync(user.Id);
         return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
     }
 
@@ -83,6 +90,7 @@ public class AuthService : IAuthService
         };
 
         await _orgRepo.CreateAsync(org);
+        await AssignCustomerRoleAsync(owner.Id);
         return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(owner));
     }
 
@@ -131,6 +139,11 @@ public class AuthService : IAuthService
             if (user == null || !user.IsActive)
                 return Result<AuthResponseDto>.Failure("Account is not active.");
 
+            // New Google users have no role yet — assign the default registration role.
+            var existingRole = await _roleRepo.GetUserRoleAsync(userId);
+            if (existingRole == null)
+                await AssignCustomerRoleAsync(userId);
+
             return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
         }
         catch (Exception ex)
@@ -145,9 +158,20 @@ public class AuthService : IAuthService
         return Result.Success();
     }
 
+    private async Task AssignCustomerRoleAsync(int userId)
+    {
+        var defaultRole = await _roleRepo.GetDefaultAsync();
+        if (defaultRole != null)
+            await _roleRepo.AssignRoleAsync(userId, defaultRole.Id);
+    }
+
     private async Task<AuthResponseDto> BuildAuthResponseAsync(User user)
     {
-        var accessToken = _jwtService.GenerateAccessToken(user);
+        var role = await _roleRepo.GetUserRoleAsync(user.Id);
+        var roleName = role?.Name ?? user.UserType.ToString();
+        var permissions = (await _permRepo.GetEffectivePermissionsAsync(user.Id)).ToList();
+
+        var accessToken = _jwtService.GenerateAccessToken(user, roleName, permissions);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
         await _tokenRepo.SaveAsync(new RefreshToken
@@ -169,7 +193,9 @@ public class AuthService : IAuthService
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 UserType = user.UserType.ToString(),
-                ProfileImageUrl = user.ProfileImageUrl
+                ProfileImageUrl = user.ProfileImageUrl,
+                Role = roleName,
+                Permissions = permissions
             }
         };
     }

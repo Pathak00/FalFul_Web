@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using FalFul.Application.DTOs.Admin;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +8,7 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "Perm:system")]
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _admin;

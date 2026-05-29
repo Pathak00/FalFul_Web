@@ -2,6 +2,8 @@
   background: #1a1a2e;
   color: #aaa;
   padding: 3rem 2rem 1.5rem;
+
+  @media (max-width: 480px) { padding: 2rem 1rem 1rem; }
 }
 
 .footer-content {
@@ -12,9 +14,8 @@
   gap: 2rem;
   margin-bottom: 2rem;
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-  }
+  @media (max-width: 768px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
 .footer-brand {

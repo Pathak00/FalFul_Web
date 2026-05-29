@@ -18,12 +18,12 @@ public class MenuRepository : IMenuRepository
             commandType: System.Data.CommandType.StoredProcedure);
     }
 
-    public async Task<IEnumerable<MenuItem>> GetVisibleAsync(int? userType)
+    public async Task<IEnumerable<MenuItem>> GetVisibleAsync(int? userId)
     {
         using var conn = _context.CreateConnection();
         return await conn.QueryAsync<MenuItem>(
             "sp_MenuItem_GetVisible",
-            new { UserType = userType },
+            new { UserId = userId },
             commandType: System.Data.CommandType.StoredProcedure);
     }
 
@@ -42,6 +42,15 @@ public class MenuRepository : IMenuRepository
         await conn.ExecuteAsync(
             "sp_MenuItem_Update",
             new { item.Id, item.ParentId, item.Label, item.Url, item.Icon, item.DisplayOrder, item.IsVisible, item.VisibleTo, item.OpenInNewTab, UpdatedBy = updatedBy },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
+    public async Task SetRolesAsync(int menuItemId, IEnumerable<int> roleIds)
+    {
+        using var conn = _context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_MenuItem_SetRoles",
+            new { MenuItemId = menuItemId, RoleIds = string.Join(",", roleIds) },
             commandType: System.Data.CommandType.StoredProcedure);
     }
 

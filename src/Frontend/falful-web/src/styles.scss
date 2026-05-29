@@ -361,3 +361,84 @@ h1, h2, h3, h4, h5, h6 {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================================
+   RESPONSIVE SYSTEM
+   ============================================================ */
+
+/* Fluid section padding */
+@media (max-width: 768px) {
+  :root {
+    --section-pad-y: var(--space-12);
+    --container-max: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  :root { --section-pad-y: var(--space-10); }
+}
+
+/* Prevent horizontal overflow globally */
+html, body { overflow-x: hidden; max-width: 100vw; }
+
+/* Touch-friendly tap targets */
+@media (max-width: 768px) {
+  button, a, [role="button"] { min-height: 40px; }
+}
+
+/* Responsive containers */
+.container {
+  @media (max-width: 768px) { padding: 0 var(--space-4); }
+  @media (max-width: 480px) { padding: 0 var(--space-3); }
+}
+
+/* ── Customer pages: main content area ──────────────────────────────────── */
+.main-content {
+  @media (max-width: 768px) { min-height: calc(100vh - 58px); }
+}
+
+/* ── Product list grid ───────────────────────────────────────────────────── */
+/* Products use CSS grid that already has responsive settings — ensure wrapping */
+@media (max-width: 480px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: .75rem !important; }
+  .product-card { font-size: .85rem; }
+}
+
+/* ── Checkout responsive ─────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .checkout-page { padding: 1rem .875rem; }
+  .co-section { padding: 1rem; }
+  .co-summary { position: static !important; top: auto !important; }
+  .payment-options { flex-direction: column; }
+  .payment-card { width: 100%; }
+}
+
+/* ── Cart sidebar ────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Cart sidebar should be full-width on very small screens */
+  app-cart-sidebar > * { width: 100vw !important; max-width: 100vw !important; }
+}
+
+/* ── Auth pages ──────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .auth-card, .login-card, .register-card { padding: 1.5rem 1rem !important; margin: .75rem !important; }
+}
+
+/* ── Orders list ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .orders-page, .od-page { padding: 1rem .875rem !important; }
+}
+
+/* ── Home hero ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  h1 { font-size: clamp(1.6rem, 8vw, 2.4rem) !important; }
+  h2 { font-size: clamp(1.3rem, 6vw, 1.8rem) !important; }
+}
+
+/* ── Utility classes ─────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.hide-mobile { @media (max-width: 768px) { display: none !important; } }
+.hide-desktop { @media (min-width: 769px) { display: none !important; } }

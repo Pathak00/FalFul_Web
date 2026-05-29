@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using FalFul.Application.DTOs.CMS;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -33,7 +33,7 @@ public class PagesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:pages")]
     public async Task<IActionResult> Create([FromBody] CreatePageDto dto)
     {
         var result = await _cms.CreatePageAsync(dto, GetUserId());
@@ -41,7 +41,7 @@ public class PagesController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:pages")]
     public async Task<IActionResult> Update([FromBody] UpdatePageDto dto)
     {
         var result = await _cms.UpdatePageAsync(dto, GetUserId());
@@ -49,7 +49,7 @@ public class PagesController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:pages")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _cms.DeletePageAsync(id, GetUserId());

@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using FalFul.Application.DTOs.CMS;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +15,7 @@ public class BannersController : ControllerBase
     public BannersController(ICmsService cms) => _cms = cms;
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:banners")]
     public async Task<IActionResult> GetAll() =>
         Ok(await _cms.GetAllBannersAsync());
 
@@ -24,7 +24,7 @@ public class BannersController : ControllerBase
         Ok(await _cms.GetActiveBannersAsync(position));
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:banners")]
     public async Task<IActionResult> Create([FromBody] CreateBannerDto dto)
     {
         var result = await _cms.CreateBannerAsync(dto, GetUserId());
@@ -32,7 +32,7 @@ public class BannersController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:banners")]
     public async Task<IActionResult> Update([FromBody] UpdateBannerDto dto)
     {
         var result = await _cms.UpdateBannerAsync(dto, GetUserId());
@@ -40,7 +40,7 @@ public class BannersController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:banners")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _cms.DeleteBannerAsync(id, GetUserId());

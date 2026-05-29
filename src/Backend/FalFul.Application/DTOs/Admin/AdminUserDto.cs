@@ -7,6 +7,8 @@ public class AdminUserDto
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     public string UserType { get; set; } = string.Empty;
+    public string? RoleName { get; set; }
+    public string PortalType { get; set; } = "customer"; // "customer" | "rider" | "admin"
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
@@ -48,5 +50,5 @@ public class CreateAdminUserDto
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     public string Password { get; set; } = string.Empty;
-    public int UserType { get; set; } = 1; // 1=Individual 2=Organization 3=Admin
+    public int? RoleId { get; set; }
 }

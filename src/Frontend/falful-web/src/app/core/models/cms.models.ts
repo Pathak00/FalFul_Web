@@ -75,8 +75,9 @@ export interface MenuItem {
   icon?: string;
   displayOrder: number;
   isVisible: boolean;
-  /** 0=Everyone 1=LoggedIn 2=GuestOnly 3=Admin 4=Org 5=Individual */
+  /** 0=Everyone 1=AnyLoggedIn 2=GuestOnly 3=SpecificRoles */
   visibleTo: number;
+  requiredRoleIds: number[];
   openInNewTab: boolean;
   children?: MenuItem[];
 }
@@ -89,6 +90,7 @@ export interface CreateMenuItemRequest {
   displayOrder: number;
   isVisible: boolean;
   visibleTo: number;
+  requiredRoleIds: number[];
   openInNewTab: boolean;
 }
 

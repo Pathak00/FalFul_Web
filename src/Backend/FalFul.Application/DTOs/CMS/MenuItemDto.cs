@@ -10,6 +10,7 @@ public class MenuItemDto
     public int DisplayOrder { get; set; }
     public bool IsVisible { get; set; }
     public int VisibleTo { get; set; }
+    public int[] RequiredRoleIds { get; set; } = [];
     public bool OpenInNewTab { get; set; }
 }
 
@@ -22,6 +23,7 @@ public class CreateMenuItemDto
     public int DisplayOrder { get; set; }
     public bool IsVisible { get; set; } = true;
     public int VisibleTo { get; set; }
+    public int[] RequiredRoleIds { get; set; } = [];
     public bool OpenInNewTab { get; set; }
 }
 

@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using FalFul.Application.DTOs.CMS;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +15,7 @@ public class HomepageSectionsController : ControllerBase
     public HomepageSectionsController(ICmsService cms) => _cms = cms;
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:sections")]
     public async Task<IActionResult> GetAll() =>
         Ok(await _cms.GetAllSectionsAsync());
 
@@ -24,7 +24,7 @@ public class HomepageSectionsController : ControllerBase
         Ok(await _cms.GetVisibleSectionsAsync());
 
     [HttpPost("upsert")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:sections")]
     public async Task<IActionResult> Upsert([FromBody] UpsertSectionDto dto)
     {
         var result = await _cms.UpsertSectionAsync(dto, GetUserId());

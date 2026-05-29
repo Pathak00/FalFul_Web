@@ -1,7 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
+import { UploadService } from '../../../core/services/upload.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../../core/models/product.models';
 
 @Component({
@@ -141,8 +143,8 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Price (Rs.) <span class="required">*</span></label>
-                <input type="number" [(ngModel)]="form.price" min="0" step="0.01" />
+                <label>Per KG Price (Rs.) <span class="required">*</span></label>
+                <input type="number" [(ngModel)]="form.price" min="0" step="0.01" placeholder="e.g. 250" />
               </div>
               <div class="form-group">
                 <label>Unit <span class="required">*</span></label>
@@ -160,13 +162,57 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
               </div>
             </div>
             <div class="form-group">
-              <label>Image URL</label>
-              <input [(ngModel)]="form.imageUrl" placeholder="https://..." />
+              <label>Product Image</label>
+              <div class="image-picker" (click)="imgInput.click()">
+                @if (uploading()) {
+                  <div class="img-uploading"><i class="bi bi-arrow-repeat spin"></i> Uploading…</div>
+                } @else if (form.imageUrl) {
+                  <img [src]="form.imageUrl" class="img-preview" [alt]="form.name" />
+                  <button type="button" class="img-remove" (click)="$event.stopPropagation(); form.imageUrl = ''">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                } @else {
+                  <div class="img-placeholder">
+                    <i class="bi bi-cloud-upload"></i>
+                    <span>Click to upload image</span>
+                    <small>JPG, PNG, WEBP · max 5 MB</small>
+                  </div>
+                }
+              </div>
+              <input #imgInput type="file" accept="image/*" style="display:none" (change)="onImagePicked($event)" />
+              @if (uploadError()) {
+                <span style="font-size:.75rem;color:#dc2626">{{ uploadError() }}</span>
+              }
             </div>
             <div class="form-group">
               <label>Tags <small style="color:#94a3b8">(comma-separated)</small></label>
               <input [(ngModel)]="form.tags" placeholder="mango,tropical,summer" />
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Min Order Grams <small style="color:#94a3b8">(cut fruits only)</small></label>
+                <input type="number" [(ngModel)]="form.minOrderGrams" min="0" step="50" placeholder="e.g. 300" />
+              </div>
+              <div class="form-group">
+                <label>Gram Step <small style="color:#94a3b8">(increment; blank = global default)</small></label>
+                <input type="number" [(ngModel)]="form.gramStep" min="0" step="50" placeholder="e.g. 150" />
+              </div>
+            </div>
+            @if (form.minOrderGrams && form.minOrderGrams > 0) {
+              <div class="form-group">
+                <label>
+                  Cut Fruit Base Price (Rs. at {{ form.minOrderGrams }}g)
+                  <small style="color:#94a3b8"> — used for cut portions &amp; Build Your Bowl</small>
+                </label>
+                <input type="number" [(ngModel)]="form.cutFruitPrice" min="0" step="0.01"
+                       placeholder="e.g. 120 for {{ form.minOrderGrams }}g" />
+                @if (form.cutFruitPrice && form.minOrderGrams) {
+                  <small style="color:#16a34a;display:block;margin-top:.25rem">
+                    ≈ Rs. {{ (form.cutFruitPrice / form.minOrderGrams * 100) | number:'1.0-1' }} per 100g
+                  </small>
+                }
+              </div>
+            }
             <div class="form-row" style="gap:1.5rem">
               <label class="checkbox-label">
                 <input type="checkbox" [(ngModel)]="form.isAvailable" />
@@ -215,6 +261,10 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
   `
 })
 export class AdminProductsComponent implements OnInit {
+  private svc    = inject(ProductService);
+  private upload = inject(UploadService);
+  private toast  = inject(ToastService);
+
   products     = signal<Product[]>([]);
   categories   = signal<Category[]>([]);
   loading      = signal(true);
@@ -232,7 +282,22 @@ export class AdminProductsComponent implements OnInit {
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private svc: ProductService) {}
+  uploading    = signal(false);
+  uploadError  = signal('');
+
+  onImagePicked(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploading.set(true);
+    this.uploadError.set('');
+    this.upload.upload(file).subscribe({
+      next: url  => { this.form.imageUrl = url; this.uploading.set(false); },
+      error: (e: { error?: { message?: string } }) => {
+        this.uploadError.set(e?.error?.message || 'Upload failed.');
+        this.uploading.set(false);
+      }
+    });
+  }
 
   ngOnInit() {
     this.svc.getAllCategories().subscribe(cats => this.categories.set(cats));
@@ -266,7 +331,8 @@ export class AdminProductsComponent implements OnInit {
       description: p.description, shortDescription: p.shortDescription,
       price: p.price, unit: p.unit, stock: p.stock,
       isAvailable: p.isAvailable, isFeatured: p.isFeatured,
-      imageUrl: p.imageUrl, tags: p.tags, displayOrder: p.displayOrder
+      imageUrl: p.imageUrl, tags: p.tags, displayOrder: p.displayOrder,
+      minOrderGrams: p.minOrderGrams, gramStep: p.gramStep, cutFruitPrice: p.cutFruitPrice
     };
     this.formError.set('');
     this.showForm.set(true);
@@ -307,7 +373,7 @@ export class AdminProductsComponent implements OnInit {
     this.saving.set(true);
     this.svc.deleteProduct(t.id).subscribe({
       next: () => { this.saving.set(false); this.deleteTarget.set(null); this.load(); },
-      error: (e: { error?: { message?: string } }) => { this.saving.set(false); alert(e?.error?.message || 'Delete failed.'); }
+      error: (e: { error?: { message?: string } }) => { this.saving.set(false); this.toast.error(e?.error?.message || 'Delete failed.'); }
     });
   }
 
@@ -315,7 +381,7 @@ export class AdminProductsComponent implements OnInit {
     return {
       categoryId: 0, name: '', slug: '', description: '', shortDescription: '',
       price: 0, unit: 'KG', stock: 0, isAvailable: true, isFeatured: false,
-      imageUrl: '', tags: '', displayOrder: 0
+      imageUrl: '', tags: '', displayOrder: 0, minOrderGrams: undefined, gramStep: undefined, cutFruitPrice: undefined
     };
   }
 }

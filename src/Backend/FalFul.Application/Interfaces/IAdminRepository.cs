@@ -5,4 +5,5 @@ namespace FalFul.Application.Interfaces;
 public interface IAdminRepository
 {
     Task<AdminStatsDto> GetStatsAsync();
+    Task<IEnumerable<AdminUserDto>> GetUsersAsync();
 }

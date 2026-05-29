@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -24,6 +24,19 @@ import { Category, ProductSummary } from '../../../core/models/product.models';
           </div>
         </div>
       </section>
+
+      <!-- BYB banner when cut-fruit products exist -->
+      @if (hasCutFruits()) {
+        <div class="byb-banner">
+          <div class="byb-banner-text">
+            <i class="bi bi-scissors"></i>
+            <span>Want custom cut fruit portions?</span>
+          </div>
+          <a routerLink="/build-your-bowl" class="byb-banner-link">
+            <i class="bi bi-basket2"></i> Build Your Fruit Bowl →
+          </a>
+        </div>
+      }
 
       <div class="products-layout">
         <!-- Sidebar: Categories -->
@@ -128,6 +141,7 @@ export class ProductListComponent implements OnInit {
   categories     = signal<Category[]>([]);
   loading        = signal(true);
   totalCount     = signal(0);
+  hasCutFruits   = signal(false);
   selectedCategory: number | undefined = undefined;
   searchTerm = '';
   featuredOnly = false;
@@ -158,8 +172,11 @@ export class ProductListComponent implements OnInit {
     this.loading.set(true);
     this.svc.getPublicProducts(this.selectedCategory, this.searchTerm || undefined, this.featuredOnly).subscribe({
       next: list => {
-        this.products.set(list);
-        if (!this.selectedCategory && !this.searchTerm) this.totalCount.set(list.length);
+        // Products with minOrderGrams belong exclusively to Build Your Bowl
+        const perKg = list.filter(p => !p.minOrderGrams);
+        this.hasCutFruits.set(perKg.length < list.length);
+        this.products.set(perKg);
+        if (!this.selectedCategory && !this.searchTerm) this.totalCount.set(perKg.length);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)

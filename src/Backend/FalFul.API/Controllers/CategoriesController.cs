@@ -1,4 +1,4 @@
-using FalFul.Application.DTOs.Product;
+﻿using FalFul.Application.DTOs.Product;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +15,12 @@ public class CategoriesController(IProductService products) : ControllerBase
         Ok(await products.GetActiveCategoriesAsync());
 
     [HttpGet("all")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:categories")]
     public async Task<IActionResult> GetAll() =>
         Ok(await products.GetAllCategoriesAsync());
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:categories")]
     public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
     {
         var result = await products.CreateCategoryAsync(dto);
@@ -28,7 +28,7 @@ public class CategoriesController(IProductService products) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:categories")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryDto dto)
     {
         var result = await products.UpdateCategoryAsync(id, dto);
@@ -36,7 +36,7 @@ public class CategoriesController(IProductService products) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:categories")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await products.DeleteCategoryAsync(id);

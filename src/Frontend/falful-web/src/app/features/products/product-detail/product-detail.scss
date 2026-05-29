@@ -2,6 +2,8 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem 2rem 3rem;
+
+  @media (max-width: 600px) { padding: 1rem .875rem 2rem; }
 }
 
 /* ─── Breadcrumb ─── */
@@ -140,6 +142,26 @@
   }
 }
 
+
+/* ─── Build Your Bowl Notice ─── */
+.byb-notice {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: .6rem .875rem;
+  font-size: .8rem;
+  color: #16a34a;
+  text-decoration: none;
+  transition: background .15s;
+
+  &:hover { background: #dcfce7; }
+
+  i { flex-shrink: 0; }
+}
+
 /* ─── Order Row ─── */
 .detail-order-row {
   display: flex;
@@ -198,6 +220,12 @@
   }
 
   &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.added-note {
+  font-size: .8rem; color: #16a34a; display: flex; align-items: center; gap: .35rem;
+  margin: -.25rem 0 0; font-weight: 600;
+  i { font-size: .9rem; }
 }
 
 .coming-soon-note {

@@ -22,7 +22,7 @@ import { AuthService } from '../../core/services/auth.service';
   `,
   styles: [`
     .dashboard { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
-    .dashboard-header h1 { font-size: 2rem; font-weight: 800; color: #1a1a2e; }
+    .dashboard-header h1 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; color: #1a1a2e; }
     .dashboard-header p { color: #888; margin-top: 0.25rem; }
     .coming-soon {
       margin-top: 3rem;
@@ -33,6 +33,10 @@ import { AuthService } from '../../core/services/auth.service';
       span { font-size: 3rem; }
       h2 { margin: 1rem 0 0.5rem; color: #1a1a2e; }
       p { color: #888; margin-bottom: 1.5rem; }
+    }
+    @media (max-width: 600px) {
+      .dashboard { padding: 1.5rem 1rem; }
+      .coming-soon { padding: 2rem 1rem; }
     }
     .btn {
       text-decoration: none;

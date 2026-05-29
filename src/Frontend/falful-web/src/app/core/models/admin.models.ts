@@ -1,9 +1,32 @@
+export interface AdminNavItem {
+  id: number;
+  label: string;
+  route: string;
+  icon?: string;
+  parentId?: number;
+  groupLabel?: string;
+  displayOrder: number;
+  isVisible: boolean;
+  requiredPermission?: string;
+  isSystem: boolean;
+}
+
+export interface UpdateAdminNavItemRequest {
+  label: string;
+  icon?: string;
+  groupLabel?: string;
+  displayOrder: number;
+  isVisible: boolean;
+}
+
 export interface AdminUser {
   id: number;
   fullName: string;
   email?: string;
   phoneNumber?: string;
   userType: string;
+  roleName?: string;
+  portalType: 'customer' | 'rider' | 'admin';
   isActive: boolean;
   createdAt: string;
   lastLoginAt?: string;
@@ -40,5 +63,5 @@ export interface AdminCreateUserRequest {
   email?: string;
   phoneNumber?: string;
   password: string;
-  userType: number; // 1=Individual 2=Organization 3=Admin
+  roleId?: number;
 }

@@ -16,4 +16,6 @@ public class UserInfoDto
     public string? PhoneNumber { get; set; }
     public string UserType { get; set; } = string.Empty;
     public string? ProfileImageUrl { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public List<string> Permissions { get; set; } = [];
 }

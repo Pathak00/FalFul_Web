@@ -32,6 +32,8 @@ export interface UserInfo {
   phoneNumber?: string;
   userType: string;
   profileImageUrl?: string;
+  role: string;
+  permissions: string[];
 }
 
 export interface AuthResponse {

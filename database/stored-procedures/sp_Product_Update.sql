@@ -14,7 +14,10 @@ CREATE OR ALTER PROCEDURE sp_Product_Update
     @IsFeatured       BIT            = 0,
     @ImageUrl         NVARCHAR(500)  = NULL,
     @Tags             NVARCHAR(500)  = NULL,
-    @DisplayOrder     INT            = 0
+    @DisplayOrder     INT            = 0,
+    @MinOrderGrams    INT            = NULL,
+    @GramStep         INT            = NULL,
+    @CutFruitPrice    DECIMAL(10,2)  = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -40,6 +43,9 @@ BEGIN
            ImageUrl         = @ImageUrl,
            Tags             = @Tags,
            DisplayOrder     = @DisplayOrder,
+           MinOrderGrams    = @MinOrderGrams,
+           GramStep         = @GramStep,
+           CutFruitPrice    = @CutFruitPrice,
            UpdatedAt        = GETUTCDATE()
     WHERE  Id = @Id AND IsDeleted = 0;
 END

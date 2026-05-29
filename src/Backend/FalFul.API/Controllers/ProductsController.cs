@@ -1,4 +1,4 @@
-using FalFul.Application.DTOs.Product;
+﻿using FalFul.Application.DTOs.Product;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,7 @@ namespace FalFul.API.Controllers;
 [Route("api/products")]
 public class ProductsController(IProductService productService) : ControllerBase
 {
-    // ── Public endpoints ─────────────────────────────────────────────────────
+    // â”€â”€ Public endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [HttpGet]
     [AllowAnonymous]
@@ -35,10 +35,10 @@ public class ProductsController(IProductService productService) : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
-    // ── Admin endpoints ───────────────────────────────────────────────────────
+    // â”€â”€ Admin endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [HttpGet("all")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> GetAll(
         [FromQuery] int? categoryId,
         [FromQuery] string? search)
@@ -48,7 +48,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpGet("admin/{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> GetById(int id)
     {
         var product = await productService.GetProductByIdAsync(id);
@@ -56,7 +56,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
     {
         var result = await productService.CreateProductAsync(dto);
@@ -64,7 +64,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductDto dto)
     {
         var result = await productService.UpdateProductAsync(id, dto);
@@ -72,7 +72,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await productService.DeleteProductAsync(id);
@@ -80,7 +80,7 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpPost("{id:int}/availability")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> SetAvailability(int id, [FromBody] SetProductAvailabilityDto dto)
     {
         var result = await productService.SetProductAvailabilityAsync(id, dto.IsAvailable);
