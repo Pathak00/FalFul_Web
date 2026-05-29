@@ -166,6 +166,10 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
               <div style="font-size:.8rem;color:#9ca3af;padding:.5rem 0">
                 <i class="bi bi-arrow-clockwise spin"></i> Loading riders…
               </div>
+            } @else if (ridersError()) {
+              <div style="font-size:.8rem;color:#ef4444;padding:.5rem 0">
+                <i class="bi bi-exclamation-triangle"></i> {{ ridersError() }}
+              </div>
             } @else if (riders().length === 0) {
               <div style="font-size:.8rem;color:#f59e0b;padding:.5rem 0">
                 <i class="bi bi-exclamation-triangle"></i>
@@ -519,6 +523,7 @@ export class AdminDeliveriesComponent implements OnInit {
 
   riders        = signal<RiderUser[]>([]);
   ridersLoading = signal(false);
+  ridersError   = signal('');
   ridersLoaded  = false;
 
   assignForm     = { riderId: 0 };
@@ -581,9 +586,14 @@ export class AdminDeliveriesComponent implements OnInit {
     this.assignModal.set(id);
     if (!this.ridersLoaded) {
       this.ridersLoading.set(true);
+      this.ridersError.set('');
       this.svc.getRiders().subscribe({
         next: list => { this.riders.set(list); this.ridersLoading.set(false); this.ridersLoaded = true; },
-        error: ()   => this.ridersLoading.set(false),
+        error: (err) => {
+          this.ridersLoading.set(false);
+          this.ridersLoaded = false;
+          this.ridersError.set(err?.error?.message ?? `Failed to load riders (${err?.status ?? 'network error'})`);
+        },
       });
     }
   }
