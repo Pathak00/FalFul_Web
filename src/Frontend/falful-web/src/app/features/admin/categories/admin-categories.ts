@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../../../core/models/product.models';
 
 @Component({
@@ -166,6 +167,9 @@ import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../../..
   `
 })
 export class AdminCategoriesComponent implements OnInit {
+  private svc   = inject(ProductService);
+  private toast = inject(ToastService);
+
   categories  = signal<Category[]>([]);
   loading     = signal(true);
   showForm    = signal(false);
@@ -176,8 +180,6 @@ export class AdminCategoriesComponent implements OnInit {
 
   form: CreateCategoryRequest = this.emptyForm();
   formActive = true;
-
-  constructor(private svc: ProductService) {}
 
   ngOnInit() { this.load(); }
 
@@ -235,7 +237,7 @@ export class AdminCategoriesComponent implements OnInit {
     this.saving.set(true);
     this.svc.deleteCategory(t.id).subscribe({
       next: () => { this.saving.set(false); this.deleteTarget.set(null); this.load(); },
-      error: (e: { error?: { message?: string } }) => { this.saving.set(false); alert(e?.error?.message || 'Delete failed.'); }
+      error: (e: { error?: { message?: string } }) => { this.saving.set(false); this.toast.error(e?.error?.message || 'Delete failed.'); }
     });
   }
 

@@ -6,7 +6,6 @@ import { forkJoin } from 'rxjs';
 import { ProductService } from '../../core/services/product.service';
 import { OrderService } from '../../core/services/order.service';
 import { CartService } from '../../core/services/cart.service';
-import { PermissionService } from '../../core/services/permission.service';
 import { ProductSummary } from '../../core/models/product.models';
 import { PriceRule } from '../../core/models/order.models';
 
@@ -140,45 +139,43 @@ interface BowlEntry {
             </div>
           </div>
 
-          @if (perms.canShop()) {
-            @if (entries().length > 0) {
-              <button class="btn-add-bowl" (click)="addToCart()" [disabled]="bowlTotal() <= 0">
-                <i class="bi bi-cart-plus"></i> Add Bowl to Cart
-              </button>
-            }
+          @if (entries().length > 0) {
+            <button class="btn-add-bowl" (click)="addToCart()" [disabled]="bowlTotal() <= 0">
+              <i class="bi bi-cart-plus"></i> Add Bowl to Cart
+            </button>
+          }
 
-            @if (addedSuccess()) {
-              <div class="added-success">
-                <i class="bi bi-check-circle-fill"></i> Bowl added to cart!
+          @if (addedSuccess()) {
+            <div class="added-success">
+              <i class="bi bi-check-circle-fill"></i> Bowl added to cart!
+            </div>
+          }
+
+          <!-- Bowls in Cart -->
+          @if (bowlsInCart().length > 0) {
+            <div class="bowls-in-cart">
+              <div class="bic-header">
+                <span>Bowls in Cart</span>
+                <span class="bic-count">{{ bowlsInCart().length }}</span>
               </div>
-            }
-
-            <!-- Bowls in Cart -->
-            @if (bowlsInCart().length > 0) {
-              <div class="bowls-in-cart">
-                <div class="bic-header">
-                  <span>Bowls in Cart</span>
-                  <span class="bic-count">{{ bowlsInCart().length }}</span>
-                </div>
-                <div class="bic-list">
-                  @for (entry of bowlsInCart(); track entry.index) {
-                    <div class="bic-row">
-                      <div class="bic-info">
-                        <span class="bic-name">{{ entry.item.productName }}</span>
-                        <span class="bic-detail">{{ entry.item.quantity }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
-                      </div>
-                      <span class="bic-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
-                      <button class="bic-remove" (click)="cartSvc.removeItem(entry.index)" title="Remove">
-                        <i class="bi bi-trash3"></i>
-                      </button>
+              <div class="bic-list">
+                @for (entry of bowlsInCart(); track entry.index) {
+                  <div class="bic-row">
+                    <div class="bic-info">
+                      <span class="bic-name">{{ entry.item.productName }}</span>
+                      <span class="bic-detail">{{ entry.item.quantity }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
                     </div>
-                  }
-                </div>
-                <a routerLink="/checkout" class="btn-checkout">
-                  <i class="bi bi-bag-check"></i> Go to Checkout
-                </a>
+                    <span class="bic-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                    <button class="bic-remove" (click)="cartSvc.removeItem(entry.index)" title="Remove">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                }
               </div>
-            }
+              <a routerLink="/checkout" class="btn-checkout">
+                <i class="bi bi-bag-check"></i> Go to Checkout
+              </a>
+            </div>
           }
 
           <a routerLink="/products" class="btn-browse">
@@ -194,7 +191,6 @@ export class BuildYourBowlComponent implements OnInit {
   private productSvc = inject(ProductService);
   private orderSvc   = inject(OrderService);
   readonly cartSvc   = inject(CartService);
-  readonly perms     = inject(PermissionService);
 
   loading   = signal(true);
   available = signal<ProductSummary[]>([]);

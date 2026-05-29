@@ -20,11 +20,20 @@ export class PermissionService {
     return (this.user()?.permissions.length ?? 0) > 0;
   }
 
-  /** True if the user can enter any admin route (has a permission other than deliveries-only). */
+  /** True if the user holds at least one admin-panel permission (excludes riders and customer-only perms). */
   canEnterAdmin(): boolean {
+    if (this.isRiderOnly()) return false;
     const perms = this.user()?.permissions ?? [];
-    if (perms.length === 0) return false;
-    return perms.some(p => p !== Perm.Deliveries);
+    return perms.some(p => p !== Perm.Deliveries && p !== Perm.Shop);
+  }
+
+  /** True when the user is a Rider — checked by role name first, then by permissions fallback. */
+  isRiderOnly(): boolean {
+    const user = this.user();
+    if (!user) return false;
+    if (user.role?.toLowerCase() === 'rider') return true;
+    const perms = user.permissions ?? [];
+    return perms.length > 0 && perms.every(p => p === Perm.Deliveries);
   }
 
   /** True if the user holds the 'shop' permission (assigned per role in /admin/roles). */

@@ -1,5 +1,13 @@
 .orders-page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
 
+@media (max-width: 600px) {
+  .orders-page { padding: 1rem .875rem; }
+  .order-card { padding: .875rem 1rem; gap: .75rem;
+    .oc-left .oc-number { font-size: .875rem; }
+    .oc-right .oc-amount { font-size: .9rem; }
+  }
+}
+
 .orders-header {
   margin-bottom: 1.5rem;
   h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: #111;

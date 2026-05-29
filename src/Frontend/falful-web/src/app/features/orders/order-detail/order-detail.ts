@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { OrderDetail, ORDER_STATUSES, DELIVERY_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
 
 interface BowlDetails {
@@ -351,7 +352,7 @@ const DELIVERY_STEPS = [
             </div>
 
             @if (canCancel()) {
-              <button class="btn-cancel" (click)="cancelOrder()" [disabled]="cancelling()">
+              <button class="btn-cancel" (click)="cancelModalOpen.set(true)" [disabled]="cancelling()">
                 @if (cancelling()) { Cancelling... }
                 @else { <i class="bi bi-x-circle"></i> Cancel Order }
               </button>
@@ -363,6 +364,30 @@ const DELIVERY_STEPS = [
         </div>
       }
     </div>
+
+    <!-- Cancel order modal -->
+    @if (cancelModalOpen()) {
+      <div class="modal-backdrop" (click)="cancelModalOpen.set(false)">
+        <div class="cancel-modal" (click)="$event.stopPropagation()">
+          <div class="cm-header">
+            <h3>Cancel Order</h3>
+            <button class="cm-close" (click)="cancelModalOpen.set(false)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="cm-body">
+            <p>Please tell us why you're cancelling this order.</p>
+            <textarea class="cm-textarea" [(ngModel)]="cancelReason" rows="3"
+                      placeholder="e.g. Changed my mind, ordered by mistake…"></textarea>
+          </div>
+          <div class="cm-footer">
+            <button class="cm-btn-ghost" (click)="cancelModalOpen.set(false)">Back</button>
+            <button class="cm-btn-danger" (click)="executeCancelOrder()" [disabled]="cancelling() || !cancelReason.trim()">
+              @if (cancelling()) { <i class="bi bi-arrow-repeat spin"></i> Cancelling… }
+              @else { Confirm Cancel }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .progress-section { margin-bottom: 1.5rem; }
@@ -420,12 +445,25 @@ const DELIVERY_STEPS = [
     .rating-display { display: flex; justify-content: space-between; align-items: center; }
     .stars-display { color: #f59e0b; font-size: 1rem; letter-spacing: .1em; }
     .cancel-policy-text { font-size: .72rem; color: #9ca3af; margin: .5rem 0 0; line-height: 1.4; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .cancel-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .cm-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; h3 { margin: 0; font-size: 1rem; font-weight: 700; } }
+    .cm-close { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: .9rem; padding: .25rem; border-radius: 4px; &:hover { background: #f1f5f9; } }
+    .cm-body { padding: 1.25rem; p { margin: 0 0 .75rem; font-size: .875rem; color: #374151; } }
+    .cm-textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: .625rem .75rem; font-size: .875rem; resize: vertical; box-sizing: border-box; &:focus { outline: none; border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.15); } }
+    .cm-footer { display: flex; gap: .75rem; justify-content: flex-end; padding: .875rem 1.25rem; border-top: 1px solid #f1f5f9; }
+    .cm-btn-ghost { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: .5rem 1.25rem; font-size: .875rem; cursor: pointer; font-weight: 600; &:hover { background: #f1f5f9; } }
+    .cm-btn-danger { background: #dc2626; color: #fff; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: .875rem; cursor: pointer; font-weight: 600; &:hover:not(:disabled) { background: #b91c1c; } &:disabled { opacity: .5; cursor: not-allowed; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin .7s linear infinite; }
   `],
   styleUrl: './order-detail.scss'
 })
 export class OrderDetailComponent implements OnInit {
   private svc   = inject(OrderService);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
 
   order            = signal<OrderDetail | null>(null);
   loading          = signal(true);
@@ -433,6 +471,8 @@ export class OrderDetailComponent implements OnInit {
   submittingRating = signal(false);
   ratingSubmitted  = signal(false);
   cancelPolicy     = signal<string>('');
+  cancelModalOpen  = signal(false);
+  cancelReason     = '';
 
   readonly orderSteps    = ORDER_STEPS;
   readonly deliverySteps = DELIVERY_STEPS;
@@ -460,18 +500,22 @@ export class OrderDetailComponent implements OnInit {
     return this.order()?.status === 1;
   }
 
-  cancelOrder(): void {
+  executeCancelOrder(): void {
     const id = this.order()?.id;
-    if (!id) return;
-    const reason = prompt('Please enter a reason for cancellation:');
-    if (!reason?.trim()) return;
+    if (!id || !this.cancelReason.trim()) return;
+    const reason = this.cancelReason.trim();
     this.cancelling.set(true);
-    this.svc.cancelOrder(id, reason.trim()).subscribe({
+    this.svc.cancelOrder(id, reason).subscribe({
       next: () => {
         this.order.update(o => o ? { ...o, status: 5, cancelReason: reason } : o);
         this.cancelling.set(false);
+        this.cancelModalOpen.set(false);
+        this.cancelReason = '';
       },
-      error: e => { alert(e.error?.message ?? 'Failed to cancel order.'); this.cancelling.set(false); }
+      error: (e: { error?: { message?: string } }) => {
+        this.cancelling.set(false);
+        this.toast.error(e?.error?.message ?? 'Failed to cancel order.');
+      }
     });
   }
 

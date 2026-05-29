@@ -1,33 +1,29 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { FooterComponent } from '../../components/footer/footer';
 import { CartSidebarComponent } from '../../components/cart-sidebar/cart-sidebar';
-import { PermissionService } from '../../../core/services/permission.service';
+import { ToastComponent } from '../../components/toast/toast';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, FooterComponent, CartSidebarComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, CartSidebarComponent, ToastComponent],
   template: `
-    <app-navbar (cartOpen)="openCart()" />
+    <app-navbar (cartOpen)="cartVisible.set(true)" />
     <main class="main-content">
       <router-outlet />
     </main>
     <app-footer />
-    @if (cartVisible() && perms.canShop()) {
+    @if (cartVisible()) {
       <app-cart-sidebar (close)="cartVisible.set(false)" />
     }
+    <app-toast />
   `,
   styles: [`
     .main-content { min-height: calc(100vh - 70px); }
   `]
 })
 export class MainLayoutComponent {
-  readonly perms = inject(PermissionService);
   cartVisible = signal(false);
-
-  openCart(): void {
-    if (this.perms.canShop()) this.cartVisible.set(true);
-  }
 }

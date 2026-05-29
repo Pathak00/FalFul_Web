@@ -1,5 +1,12 @@
 .od-page { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
 
+@media (max-width: 600px) {
+  .od-page { padding: 1rem .875rem; }
+  .od-header { flex-direction: column; gap: .5rem; align-items: flex-start; }
+  .od-summary-card { position: static !important; top: auto !important; order: -1; }
+  .tracking-timeline { padding: 1rem .75rem; }
+}
+
 .back-link { color: #6b7280; text-decoration: none; font-size: .85rem; display: inline-flex; align-items: center; gap: .3rem; margin-bottom: 1.5rem;
   &:hover { color: #111; }
 }

@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
 import { UploadService } from '../../../core/services/upload.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../../core/models/product.models';
 
 @Component({
@@ -260,6 +261,10 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
   `
 })
 export class AdminProductsComponent implements OnInit {
+  private svc    = inject(ProductService);
+  private upload = inject(UploadService);
+  private toast  = inject(ToastService);
+
   products     = signal<Product[]>([]);
   categories   = signal<Category[]>([]);
   loading      = signal(true);
@@ -280,14 +285,12 @@ export class AdminProductsComponent implements OnInit {
   uploading    = signal(false);
   uploadError  = signal('');
 
-  constructor(private svc: ProductService, private uploadSvc: UploadService) {}
-
   onImagePicked(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     this.uploading.set(true);
     this.uploadError.set('');
-    this.uploadSvc.upload(file).subscribe({
+    this.upload.upload(file).subscribe({
       next: url  => { this.form.imageUrl = url; this.uploading.set(false); },
       error: (e: { error?: { message?: string } }) => {
         this.uploadError.set(e?.error?.message || 'Upload failed.');
@@ -370,7 +373,7 @@ export class AdminProductsComponent implements OnInit {
     this.saving.set(true);
     this.svc.deleteProduct(t.id).subscribe({
       next: () => { this.saving.set(false); this.deleteTarget.set(null); this.load(); },
-      error: (e: { error?: { message?: string } }) => { this.saving.set(false); alert(e?.error?.message || 'Delete failed.'); }
+      error: (e: { error?: { message?: string } }) => { this.saving.set(false); this.toast.error(e?.error?.message || 'Delete failed.'); }
     });
   }
 

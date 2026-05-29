@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IAdminNavRepository, AdminNavRepository>();
         return services;
     }
 }

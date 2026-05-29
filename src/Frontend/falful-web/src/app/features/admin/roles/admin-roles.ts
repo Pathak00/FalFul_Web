@@ -2,7 +2,9 @@ import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
+import { AdminNavItem } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface Role {
   id: number;
@@ -108,7 +110,14 @@ interface Permission {
                                (change)="togglePerm(perm.id)">
                         <span>
                           <strong>{{ perm.displayName }}</strong>
-                          <small>{{ perm.name }}</small>
+                          @if (navByPerm().get(perm.name); as nav) {
+                            <small>
+                              <i class="bi {{ nav.icon }}"></i>
+                              Unlocks <em>{{ nav.label }}</em> in sidebar
+                            </small>
+                          } @else {
+                            <small>{{ perm.name }}</small>
+                          }
                         </span>
                       </label>
                     }
@@ -196,6 +205,7 @@ interface Permission {
 })
 export class AdminRolesComponent implements OnInit {
   private admin = inject(AdminService);
+  private toast = inject(ToastService);
 
   readonly roles        = signal<Role[]>([]);
   readonly allPerms     = signal<Permission[]>([]);
@@ -211,6 +221,8 @@ export class AdminRolesComponent implements OnInit {
 
   readonly form = { name: '', description: '' };
 
+  readonly navItems  = signal<AdminNavItem[]>([]);
+
   readonly permGroups = computed(() => {
     const map = new Map<string, { category: string; permissions: Permission[] }>();
     for (const p of this.allPerms()) {
@@ -220,9 +232,19 @@ export class AdminRolesComponent implements OnInit {
     return [...map.values()];
   });
 
+  /** Map of permissionName → AdminNavItem for the permission editor hint. */
+  readonly navByPerm = computed(() => {
+    const map = new Map<string, AdminNavItem>();
+    for (const item of this.navItems()) {
+      if (item.requiredPermission) map.set(item.requiredPermission, item);
+    }
+    return map;
+  });
+
   ngOnInit(): void {
     this.loadRoles();
     this.admin.getPermissions().subscribe(p => this.allPerms.set(p as Permission[]));
+    this.admin.getAllAdminNav().subscribe(items => this.navItems.set(items as AdminNavItem[]));
   }
 
   private loadRoles(): void {
@@ -256,8 +278,8 @@ export class AdminRolesComponent implements OnInit {
     if (!role) return;
     this.saving.set(true);
     this.admin.setRolePermissions(role.id, [...this.selectedPermIds()]).subscribe({
-      next: () => this.saving.set(false),
-      error: () => this.saving.set(false)
+      next: () => { this.saving.set(false); this.toast.success('Permissions saved.'); },
+      error: () => { this.saving.set(false); this.toast.error('Failed to save permissions.'); }
     });
   }
 
@@ -282,7 +304,7 @@ export class AdminRolesComponent implements OnInit {
       },
       error: (err: { error?: { message?: string } }) => {
         this.deleteTarget.set(null);
-        alert(err?.error?.message ?? 'Failed to delete role.');
+        this.toast.error(err?.error?.message ?? 'Failed to delete role.');
       }
     });
   }

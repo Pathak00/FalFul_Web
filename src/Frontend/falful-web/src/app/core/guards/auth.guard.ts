@@ -28,11 +28,12 @@ export const guestGuard: CanActivateFn = () => {
 
 export const permissionGuard = (perm: PermKey): CanActivateFn => () => {
   const perms = inject(PermissionService);
+  const homeRoute = inject(HomeRouteService);
   const router = inject(Router);
 
   if (perms.can(perm)) return true;
 
-  router.navigate(['/dashboard']);
+  router.navigate([homeRoute.route()]);
   return false;
 };
 
@@ -51,6 +52,21 @@ export const anyPermGuard: CanActivateFn = () => {
 };
 
 /**
+ * Guards the rider portal. Only allows pure riders (deliveries is their
+ * sole permission). Staff/admin who also hold deliveries are sent to /admin.
+ */
+export const riderGuard: CanActivateFn = () => {
+  const perms  = inject(PermissionService);
+  const router = inject(Router);
+
+  if (perms.isRiderOnly()) return true;
+
+  // Staff or admin — redirect to admin dashboard instead of rider portal
+  router.navigate([perms.canEnterAdmin() ? '/admin' : '/dashboard']);
+  return false;
+};
+
+/**
  * Guards consumer/shop routes. Blocks authenticated users who hold
  * ONLY the 'deliveries' permission (riders). Guests are always allowed.
  */
@@ -61,10 +77,12 @@ export const shopGuard: CanActivateFn = () => {
 
   if (!auth.isAuthenticated()) return true; // guests browse freely
 
-  const userPerms = auth.currentUser()?.permissions ?? [];
+  const currentUser = auth.currentUser();
+  const userPerms = currentUser?.permissions ?? [];
 
-  // Rider: has permissions but every single one is 'deliveries'
-  const isRiderOnly = userPerms.length > 0 && userPerms.every(p => p === Perm.Deliveries);
+  // Rider: identified by role name first, permissions fallback
+  const isRiderOnly = currentUser?.role?.toLowerCase() === 'rider' ||
+    (userPerms.length > 0 && userPerms.every(p => p === Perm.Deliveries));
 
   if (isRiderOnly) {
     router.navigate([homeRoute.route()]);

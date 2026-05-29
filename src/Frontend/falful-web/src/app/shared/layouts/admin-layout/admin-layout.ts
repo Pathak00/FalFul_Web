@@ -1,16 +1,24 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Perm } from '../../../core/constants/permissions';
+import { AdminNavItem } from '../../../core/models/admin.models';
+import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { PermissionService } from '../../../core/services/permission.service';
+import { ToastComponent } from '../../components/toast/toast';
+
+interface NavGroup { label: string; items: AdminNavItem[]; }
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
   template: `
     <div class="admin-shell">
-      <aside class="admin-sidebar">
+      <!-- Sidebar overlay (mobile) -->
+      @if (sidebarOpen()) {
+        <div class="sidebar-overlay" (click)="sidebarOpen.set(false)"></div>
+      }
+
+      <aside class="admin-sidebar" [class.sidebar-mobile-open]="sidebarOpen()">
         <div class="sidebar-brand">
           <a routerLink="/" class="brand-logo">
             <i class="bi bi-basket2-fill"></i> FalFul
@@ -19,106 +27,29 @@ import { PermissionService } from '../../../core/services/permission.service';
         </div>
 
         <nav class="sidebar-nav">
-          <a routerLink="/admin" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
-          </a>
-
-          @if (perms.canAny(Perm.Menus, Perm.Pages, Perm.Banners, Perm.Sections)) {
-            <p class="nav-section-label">Content Management</p>
-            @if (perms.can(Perm.Menus)) {
-              <a routerLink="/admin/menus" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-list-nested nav-icon"></i> Menus
-                <span class="nav-hint">Navigation</span>
-              </a>
-            }
-            @if (perms.can(Perm.Pages)) {
-              <a routerLink="/admin/pages" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-file-earmark-text nav-icon"></i> Pages
-                <span class="nav-hint">Custom pages</span>
-              </a>
-            }
-            @if (perms.can(Perm.Banners)) {
-              <a routerLink="/admin/banners" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-image nav-icon"></i> Banners
-                <span class="nav-hint">Promotions</span>
-              </a>
-            }
-            @if (perms.can(Perm.Sections)) {
-              <a routerLink="/admin/sections" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-layout-text-window-reverse nav-icon"></i> Homepage
-                <span class="nav-hint">Section content</span>
-              </a>
-            }
-          }
-
-          @if (perms.canAny(Perm.Categories, Perm.Products)) {
-            <p class="nav-section-label">Product Catalog</p>
-            @if (perms.can(Perm.Categories)) {
-              <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-tags nav-icon"></i> Categories
-                <span class="nav-hint">Fruit categories</span>
-              </a>
-            }
-            @if (perms.can(Perm.Products)) {
-              <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-box-seam nav-icon"></i> Products
-                <span class="nav-hint">Fruit catalog</span>
-              </a>
-            }
-          }
-
-          @if (perms.canAny(Perm.Orders, Perm.Deliveries, Perm.Reports, Perm.PriceConfig, Perm.Settings)) {
-            <p class="nav-section-label">Orders & Pricing</p>
-          }
-          @if (perms.can(Perm.Orders)) {
-            <a routerLink="/admin/orders" routerLinkActive="active" class="nav-item">
-              <i class="bi bi-bag-check nav-icon"></i> Orders
-              <span class="nav-hint">All orders</span>
-            </a>
-          }
-          @if (perms.can(Perm.Deliveries)) {
-            <a routerLink="/admin/deliveries" routerLinkActive="active" class="nav-item">
-              <i class="bi bi-bicycle nav-icon"></i> Deliveries
-              <span class="nav-hint">Track & manage</span>
-            </a>
-          }
-          @if (perms.can(Perm.Reports)) {
-            <a routerLink="/admin/reports" routerLinkActive="active" class="nav-item">
-              <i class="bi bi-bar-chart-line nav-icon"></i> Reports
-              <span class="nav-hint">Analytics</span>
-            </a>
-          }
-          @if (perms.can(Perm.PriceConfig)) {
-            <a routerLink="/admin/price-config" routerLinkActive="active" class="nav-item">
-              <i class="bi bi-sliders nav-icon"></i> Price Config
-              <span class="nav-hint">Fees & rules</span>
-            </a>
-          }
-          @if (perms.can(Perm.Settings)) {
-            <a routerLink="/admin/settings" routerLinkActive="active" class="nav-item">
-              <i class="bi bi-gear nav-icon"></i> Settings
-              <span class="nav-hint">App configuration</span>
-            </a>
-          }
-
-          @if (perms.canAny(Perm.Users, Perm.System)) {
-            <p class="nav-section-label">User Management</p>
-            @if (perms.can(Perm.Users)) {
-              <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-people nav-icon"></i> Users
-                <span class="nav-hint">All accounts</span>
-              </a>
-            }
-            @if (perms.can(Perm.System)) {
-              <a routerLink="/admin/roles" routerLinkActive="active" class="nav-item">
-                <i class="bi bi-shield-lock nav-icon"></i> Roles
-                <span class="nav-hint">Permissions</span>
-              </a>
+          @if (navLoading()) {
+            <div class="nav-loading">
+              <div class="nav-spinner"></div>
+            </div>
+          } @else {
+            @for (group of navGroups(); track group.label) {
+              @if (group.label) {
+                <p class="nav-section-label">{{ group.label }}</p>
+              }
+              @for (item of group.items; track item.id) {
+                <a [routerLink]="item.route"
+                   [routerLinkActiveOptions]="item.route === '/admin' ? { exact: true } : {}"
+                   routerLinkActive="active"
+                   class="nav-item"
+                   (click)="closeSidebarOnMobile()">
+                  <i class="bi {{ item.icon }} nav-icon"></i> {{ item.label }}
+                </a>
+              }
             }
           }
 
           <p class="nav-section-label" style="margin-top:auto">Account</p>
-          <a routerLink="/" class="nav-item">
+          <a routerLink="/" class="nav-item" (click)="closeSidebarOnMobile()">
             <i class="bi bi-globe nav-icon"></i> View Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
@@ -129,30 +60,38 @@ import { PermissionService } from '../../../core/services/permission.service';
 
       <div class="admin-main">
         <header class="admin-topbar">
+          <button class="sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())"
+                  [class.is-open]="sidebarOpen()" aria-label="Toggle sidebar">
+            <i class="bi" [class.bi-list]="!sidebarOpen()" [class.bi-x-lg]="sidebarOpen()"></i>
+          </button>
           <div class="topbar-breadcrumb">FalFul Admin Panel</div>
           <div class="topbar-user">
             <div class="topbar-avatar">{{ initial() }}</div>
-            <span>{{ user()?.fullName }}</span>
+            <span class="topbar-name">{{ user()?.fullName }}</span>
           </div>
         </header>
         <main class="admin-content">
           <router-outlet />
         </main>
+        <app-toast />
       </div>
     </div>
   `,
   styles: [`
     .admin-shell { display: flex; min-height: 100vh; background: #f8fafc; }
 
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
     .admin-sidebar {
       width: 220px; min-height: 100vh; background: #0a2218;
       display: flex; flex-direction: column; flex-shrink: 0;
       position: sticky; top: 0; height: 100vh;
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      z-index: 120;
     }
 
     .sidebar-brand {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08); flex-shrink: 0;
       .brand-logo {
         color: #fff; text-decoration: none; font-weight: 800; font-size: 1rem;
         display: flex; align-items: center; gap: .4rem;
@@ -166,6 +105,15 @@ import { PermissionService } from '../../../core/services/permission.service';
 
     .sidebar-nav {
       padding: .75rem 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    }
+
+    .nav-loading {
+      display: flex; justify-content: center; padding: 1.5rem;
+      .nav-spinner {
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,.15); border-top-color: #4ade80;
+        animation: spin .7s linear infinite;
+      }
     }
 
     .nav-section-label {
@@ -184,38 +132,115 @@ import { PermissionService } from '../../../core/services/permission.service';
         &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #4ade80; border-radius: 0 2px 2px 0; }
       }
       .nav-icon { font-size: 1rem; flex-shrink: 0; width: 16px; text-align: center; }
-      .nav-hint { margin-left: auto; font-size: .65rem; color: rgba(255,255,255,.25); font-style: italic; }
     }
 
     .nav-btn { border-radius: 0; }
 
+    /* ── Main area ───────────────────────────────────────────────────────── */
     .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
     .admin-topbar {
       height: 52px; background: #fff; border-bottom: 1px solid #e2e8f0;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 1.5rem; position: sticky; top: 0; z-index: 10;
-      .topbar-breadcrumb { font-size: .8rem; color: #94a3b8; font-weight: 500; }
+      gap: .75rem;
+      .topbar-breadcrumb { font-size: .8rem; color: #94a3b8; font-weight: 500; flex: 1; }
       .topbar-user { display: flex; align-items: center; gap: .625rem;
-        span { font-size: .825rem; color: #374151; font-weight: 600; }
+        .topbar-name { font-size: .825rem; color: #374151; font-weight: 600; }
       }
     }
 
     .topbar-avatar {
       width: 30px; height: 30px; border-radius: 50%; background: #dcfce7; color: #16a34a;
       font-size: .8rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-toggle {
+      display: none;
+      background: none; border: 1px solid #e2e8f0; color: #374151;
+      width: 34px; height: 34px; border-radius: 7px;
+      align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem; transition: all .15s; flex-shrink: 0;
+      &:hover { border-color: #16a34a; color: #16a34a; }
+      &.is-open { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
     }
 
     .admin-content { flex: 1; padding: 1.75rem; overflow-y: auto; }
+
+    /* ── Sidebar overlay (mobile) ────────────────────────────────────────── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 119;
+      backdrop-filter: blur(2px);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        position: fixed; left: 0; top: 0;
+        transform: translateX(-100%);
+        height: 100vh; z-index: 120;
+      }
+      .admin-sidebar.sidebar-mobile-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 30px rgba(0,0,0,.3);
+      }
+      .sidebar-overlay { display: block; }
+      .admin-shell { flex-direction: column; }
+      .admin-main { width: 100%; }
+      .sidebar-toggle { display: flex; }
+      .admin-topbar { padding: 0 1rem; }
+      .admin-content { padding: 1rem; }
+      .topbar-name { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .admin-content { padding: .75rem; }
+      .topbar-breadcrumb { font-size: .75rem; }
+    }
   `]
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit {
   private authService = inject(AuthService);
+  private adminService = inject(AdminService);
   private router = inject(Router);
-  readonly perms = inject(PermissionService);
-  readonly Perm = Perm;
+
   readonly user = this.authService.currentUser;
   readonly initial = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'A';
+  readonly sidebarOpen = signal(false);
+  readonly navItems = signal<AdminNavItem[]>([]);
+  readonly navLoading = signal(true);
 
-  logout() { this.authService.logout(); }
+  readonly navGroups = computed<NavGroup[]>(() => {
+    const groups: NavGroup[] = [];
+    const seen = new Map<string, NavGroup>();
+    for (const item of this.navItems()) {
+      const key = item.groupLabel ?? '';
+      if (!seen.has(key)) {
+        const g: NavGroup = { label: item.groupLabel ?? '', items: [] };
+        seen.set(key, g);
+        groups.push(g);
+      }
+      seen.get(key)!.items.push(item);
+    }
+    return groups;
+  });
+
+  ngOnInit(): void {
+    this.adminService.getAdminNav().subscribe({
+      next: items => { this.navItems.set(items); this.navLoading.set(false); },
+      error: () => this.navLoading.set(false)
+    });
+  }
+
+  closeSidebarOnMobile(): void {
+    if (window.innerWidth <= 768) this.sidebarOpen.set(false);
+  }
+
+  logout(): void { this.authService.logout(); }
 }

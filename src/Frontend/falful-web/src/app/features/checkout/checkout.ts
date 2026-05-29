@@ -162,7 +162,10 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
                     @if (availableSlots().length === 0 && form.deliveryDate) {
                       <div class="no-slots">
                         <i class="bi bi-clock-history"></i>
-                        No slots available for today — please select a future date.
+                        <span>All delivery slots for this date have passed.</span>
+                        <button class="no-slots-btn" type="button" (click)="selectTomorrow()">
+                          Schedule for tomorrow
+                        </button>
                       </div>
                     } @else {
                       <select [(ngModel)]="form.deliveryTimeSlot">
@@ -413,6 +416,10 @@ export class CheckoutComponent implements OnInit {
   userLatitude   = signal<number | null>(null);
   userLongitude  = signal<number | null>(null);
 
+  // Bumped whenever form.deliveryDate changes programmatically so that
+  // availableSlots (which reads the non-reactive form property) re-evaluates.
+  private readonly scheduleKey = signal(0);
+
   // ── Derived ───────────────────────────────────────────────────────────────
   readonly hasCutFruits = computed(() =>
     this.cart.items().some(i => i.itemType === 'BUILD_BOWL')
@@ -445,6 +452,7 @@ export class CheckoutComponent implements OnInit {
   });
 
   readonly availableSlots = computed((): TimeSlot[] => {
+    this.scheduleKey(); // tracked so bumping it forces re-evaluation
     const cfg = this.checkoutConfig();
     const date = this.form.deliveryDate;
     if (!cfg || !date) return this.allSlots();
@@ -487,18 +495,43 @@ export class CheckoutComponent implements OnInit {
   ];
 
   get minDate(): string {
+    // Only past dates are disabled — today and all future dates are always allowed.
     return nepalDateString(nepalNow());
   }
 
+  get tomorrowDate(): string {
+    const d = nepalNow();
+    d.setDate(d.getDate() + 1);
+    return nepalDateString(d);
+  }
+
   ngOnInit() {
+    // Restore form data saved before navigating to login/register
+    let hasDraft = false;
+    const draftStr = sessionStorage.getItem('checkout_draft');
+    if (draftStr) {
+      sessionStorage.removeItem('checkout_draft');
+      try {
+        const { form, useManual } = JSON.parse(draftStr);
+        if (form) Object.assign(this.form, form);
+        this.useManual.set(useManual ?? false);
+        hasDraft = true;
+      } catch { /* malformed draft — ignore */ }
+    }
+
     this.orderSvc.getSetting('cancellation_policy_text').subscribe({
       next: s => this.cancelPolicy.set(s.value),
       error: () => {}
     });
 
     this.orderSvc.getCheckoutConfig().subscribe({
-      next: cfg => { this.checkoutConfig.set(cfg); this.configLoading.set(false); },
-      error: ()  => this.configLoading.set(false)
+      next: cfg => {
+        this.checkoutConfig.set(cfg);
+        this.configLoading.set(false);
+        if (hasDraft) this.validateDraftSchedule();
+        else this.setInitialDeliveryDate();
+      },
+      error: () => this.configLoading.set(false)
     });
 
     this.orderSvc.getPriceRules().subscribe({
@@ -516,8 +549,11 @@ export class CheckoutComponent implements OnInit {
       this.orderSvc.getAddresses().subscribe({
         next: list => {
           this.addresses.set(list);
-          const def = list.find(a => a.isDefault) ?? list[0];
-          if (def) this.onAddressSelect(def);
+          // Skip auto-fill when the user's draft data is already in the form
+          if (!hasDraft) {
+            const def = list.find(a => a.isDefault) ?? list[0];
+            if (def) this.onAddressSelect(def);
+          }
         }
       });
     }
@@ -534,11 +570,17 @@ export class CheckoutComponent implements OnInit {
   }
 
   onDateChange(): void {
-    // Reset slot selection when date changes; let the user pick a valid slot
-    const slots = this.availableSlots();
-    if (!slots.some(s => s.label === this.form.deliveryTimeSlot)) {
+    this.scheduleKey.update(v => v + 1);
+    // Clear any previously-selected slot that is no longer in the available list
+    if (!this.availableSlots().some(s => s.label === this.form.deliveryTimeSlot)) {
       this.form.deliveryTimeSlot = '';
     }
+  }
+
+  selectTomorrow(): void {
+    this.form.deliveryDate = this.tomorrowDate;
+    this.form.deliveryTimeSlot = '';
+    this.scheduleKey.update(v => v + 1);
   }
 
   detectLocation(): void {
@@ -562,11 +604,48 @@ export class CheckoutComponent implements OnInit {
   }
 
   goToLogin(): void {
+    this.saveFormDraft();
     this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout' } });
   }
 
   goToRegister(): void {
+    this.saveFormDraft();
     this.router.navigate(['/auth/register'], { queryParams: { returnUrl: '/checkout' } });
+  }
+
+  private saveFormDraft(): void {
+    sessionStorage.setItem('checkout_draft', JSON.stringify({
+      form:      { ...this.form },
+      useManual: this.useManual(),
+    }));
+  }
+
+  private setInitialDeliveryDate(): void {
+    this.form.deliveryDate = nepalDateString(nepalNow());
+    this.scheduleKey.update(v => v + 1);
+  }
+
+  private validateDraftSchedule(): void {
+    const todayStr = nepalDateString(nepalNow());
+
+    if (!this.form.deliveryDate) {
+      this.form.deliveryDate = todayStr;
+      this.scheduleKey.update(v => v + 1);
+      return;
+    }
+
+    // If saved date is in the past (came back next day), reset to today
+    if (this.form.deliveryDate < todayStr) {
+      this.form.deliveryDate    = todayStr;
+      this.form.deliveryTimeSlot = '';
+    }
+
+    this.scheduleKey.update(v => v + 1);
+
+    // Clear saved slot if it's no longer available on the (possibly updated) date
+    if (!this.availableSlots().some(s => s.label === this.form.deliveryTimeSlot)) {
+      this.form.deliveryTimeSlot = '';
+    }
   }
 
   placeOrder(): void {

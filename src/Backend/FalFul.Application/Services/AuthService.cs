@@ -139,6 +139,11 @@ public class AuthService : IAuthService
             if (user == null || !user.IsActive)
                 return Result<AuthResponseDto>.Failure("Account is not active.");
 
+            // New Google users have no role yet — assign the default registration role.
+            var existingRole = await _roleRepo.GetUserRoleAsync(userId);
+            if (existingRole == null)
+                await AssignCustomerRoleAsync(userId);
+
             return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
         }
         catch (Exception ex)

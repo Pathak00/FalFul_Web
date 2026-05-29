@@ -8,6 +8,7 @@ public class AdminUserDto
     public string? PhoneNumber { get; set; }
     public string UserType { get; set; } = string.Empty;
     public string? RoleName { get; set; }
+    public string PortalType { get; set; } = "customer"; // "customer" | "rider" | "admin"
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }

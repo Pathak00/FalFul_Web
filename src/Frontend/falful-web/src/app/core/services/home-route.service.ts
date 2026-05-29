@@ -11,10 +11,13 @@ export class HomeRouteService {
     const user = this.user();
     if (!user) return '/';
     const perms = user.permissions;
-    if (perms.includes(Perm.System))     return '/admin';
-    if (perms.includes(Perm.Shop))       return '/products';
-    if (perms.includes(Perm.Deliveries)) return '/rider/deliveries';
-    if (perms.length > 0)                return '/admin';
+    if (perms.includes(Perm.System)) return '/admin';
+    if (perms.includes(Perm.Shop))   return '/products';
+    // Riders go to the rider portal — checked by role name first, permissions as fallback.
+    const isRider = user.role?.toLowerCase() === 'rider' ||
+      (perms.length > 0 && perms.every(p => p === Perm.Deliveries));
+    if (isRider) return '/rider/deliveries';
+    if (perms.length > 0) return '/admin';
     return '/';
   });
 }

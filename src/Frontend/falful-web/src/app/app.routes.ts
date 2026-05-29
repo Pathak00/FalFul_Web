@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { Perm } from './core/constants/permissions';
-import { anyPermGuard, authGuard, guestGuard, permissionGuard, shopGuard } from './core/guards/auth.guard';
+import { anyPermGuard, authGuard, guestGuard, permissionGuard, riderGuard, shopGuard } from './core/guards/auth.guard';
 import { AdminLayoutComponent } from './shared/layouts/admin-layout/admin-layout';
 import { AuthLayoutComponent } from './shared/layouts/auth-layout/auth-layout';
 import { MainLayoutComponent } from './shared/layouts/main-layout/main-layout';
@@ -85,6 +85,7 @@ export const routes: Routes = [
       { path: 'reports',      canActivate: [permissionGuard(Perm.Reports)],     loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
       { path: 'price-config', canActivate: [permissionGuard(Perm.PriceConfig)], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
       { path: 'settings',     canActivate: [permissionGuard(Perm.Settings)],    loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
+      { path: 'nav',          canActivate: [permissionGuard(Perm.System)],      loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
       { path: '', loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent) }
     ]
   },
@@ -92,10 +93,21 @@ export const routes: Routes = [
   /* ── Rider portal ────────────────────────────────────────────────────────── */
   {
     path: 'rider',
-    canActivate: [authGuard, permissionGuard(Perm.Deliveries)],
+    canActivate: [authGuard, riderGuard],
     loadComponent: () => import('./features/rider/rider-layout').then(m => m.RiderLayoutComponent),
     children: [
-      { path: 'deliveries', loadComponent: () => import('./features/rider/rider-deliveries').then(m => m.RiderDeliveriesComponent) },
+      { path: 'deliveries',  loadComponent: () => import('./features/rider/rider-deliveries').then(m => m.RiderDeliveriesComponent) },
+      { path: 'orders',      canActivate: [permissionGuard(Perm.Orders)],      loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
+      { path: 'products',    canActivate: [permissionGuard(Perm.Products)],    loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent) },
+      { path: 'categories',  canActivate: [permissionGuard(Perm.Categories)],  loadComponent: () => import('./features/admin/categories/admin-categories').then(m => m.AdminCategoriesComponent) },
+      { path: 'reports',     canActivate: [permissionGuard(Perm.Reports)],     loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
+      { path: 'users',       canActivate: [permissionGuard(Perm.Users)],       loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent) },
+      { path: 'settings',    canActivate: [permissionGuard(Perm.Settings)],    loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
+      { path: 'price-config',canActivate: [permissionGuard(Perm.PriceConfig)], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
+      { path: 'menus',       canActivate: [permissionGuard(Perm.Menus)],       loadComponent: () => import('./features/admin/menus/admin-menus').then(m => m.AdminMenusComponent) },
+      { path: 'pages',       canActivate: [permissionGuard(Perm.Pages)],       loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent) },
+      { path: 'banners',     canActivate: [permissionGuard(Perm.Banners)],     loadComponent: () => import('./features/admin/banners/admin-banners').then(m => m.AdminBannersComponent) },
+      { path: 'sections',    canActivate: [permissionGuard(Perm.Sections)],    loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent) },
       { path: '', redirectTo: 'deliveries', pathMatch: 'full' }
     ]
   },

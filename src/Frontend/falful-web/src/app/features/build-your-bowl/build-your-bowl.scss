@@ -1,5 +1,11 @@
 .bowl-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
 
+@media (max-width: 600px) {
+  .bowl-page { padding: 1rem .875rem; }
+  .bowl-hero { margin-bottom: 1.5rem; h1 { font-size: 1.5rem; } }
+  .fruit-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+}
+
 .bowl-hero {
   text-align: center; margin-bottom: 2.5rem;
   h1 { font-size: 2rem; font-weight: 800; color: #111; margin: 0 0 .5rem;

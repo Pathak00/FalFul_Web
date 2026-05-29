@@ -1,5 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AdminNavItem } from '../../core/models/admin.models';
+import { AdminService } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -8,21 +10,32 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <div class="rider-shell">
-      <aside class="rider-sidebar">
+      @if (sidebarOpen()) {
+        <div class="sidebar-overlay" (click)="sidebarOpen.set(false)"></div>
+      }
+
+      <aside class="rider-sidebar" [class.sidebar-mobile-open]="sidebarOpen()">
         <div class="sidebar-brand">
-          <a routerLink="/" class="brand-logo">
+          <a routerLink="/" class="brand-logo" (click)="closeSidebar()">
             <i class="bi bi-basket2-fill"></i> FalFul
           </a>
           <span class="rider-badge">{{ user()?.role }}</span>
         </div>
 
         <nav class="sidebar-nav">
-          <a routerLink="/rider/deliveries" routerLinkActive="active" class="nav-item">
-            <i class="bi bi-bicycle nav-icon"></i> My Deliveries
-          </a>
+          @if (navLoading()) {
+            <div class="nav-loading"><div class="nav-spinner"></div></div>
+          } @else {
+            @for (item of navItems(); track item.id) {
+              <a [routerLink]="item.route" routerLinkActive="active" class="nav-item"
+                 (click)="closeSidebar()">
+                <i class="bi {{ item.icon }} nav-icon"></i> {{ item.label }}
+              </a>
+            }
+          }
 
           <p class="nav-section-label" style="margin-top:auto">Account</p>
-          <a routerLink="/dashboard" class="nav-item">
+          <a routerLink="/dashboard" class="nav-item" (click)="closeSidebar()">
             <i class="bi bi-arrow-left-circle nav-icon"></i> Back to Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
@@ -33,10 +46,16 @@ import { AuthService } from '../../core/services/auth.service';
 
       <div class="rider-main">
         <header class="rider-topbar">
-          <div class="topbar-breadcrumb">FalFul Rider Portal</div>
+          <div class="topbar-left">
+            <button class="sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())"
+                    [class.is-open]="sidebarOpen()" aria-label="Toggle sidebar">
+              <i class="bi" [class.bi-list]="!sidebarOpen()" [class.bi-x-lg]="sidebarOpen()"></i>
+            </button>
+            <div class="topbar-breadcrumb">FalFul Rider Portal</div>
+          </div>
           <div class="topbar-user">
             <div class="topbar-avatar">{{ initial() }}</div>
-            <span>{{ user()?.fullName }}</span>
+            <span class="topbar-name">{{ user()?.fullName }}</span>
           </div>
         </header>
         <main class="rider-content">
@@ -51,7 +70,7 @@ import { AuthService } from '../../core/services/auth.service';
     .rider-sidebar {
       width: 200px; min-height: 100vh; background: #1e293b;
       display: flex; flex-direction: column; flex-shrink: 0;
-      position: sticky; top: 0; height: 100vh;
+      position: sticky; top: 0; height: 100vh; z-index: 200;
     }
 
     .sidebar-brand {
@@ -70,6 +89,15 @@ import { AuthService } from '../../core/services/auth.service';
 
     .sidebar-nav {
       padding: .75rem 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    }
+
+    .nav-loading {
+      display: flex; justify-content: center; padding: 1.5rem;
+      .nav-spinner {
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,.15); border-top-color: #60a5fa;
+        animation: spin .7s linear infinite;
+      }
     }
 
     .nav-section-label {
@@ -100,23 +128,79 @@ import { AuthService } from '../../core/services/auth.service';
       padding: 0 1.5rem; position: sticky; top: 0; z-index: 10;
       .topbar-breadcrumb { font-size: .8rem; color: #94a3b8; font-weight: 500; }
       .topbar-user { display: flex; align-items: center; gap: .625rem;
-        span { font-size: .825rem; color: #374151; font-weight: 600; }
+        .topbar-name { font-size: .825rem; color: #374151; font-weight: 600; }
       }
     }
+
+    .topbar-left { display: flex; align-items: center; gap: .75rem; }
 
     .topbar-avatar {
       width: 30px; height: 30px; border-radius: 50%; background: #dbeafe; color: #2563eb;
       font-size: .8rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
     }
 
+    .sidebar-toggle {
+      display: none; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 8px; background: #f1f5f9;
+      border: 1px solid #e2e8f0; color: #475569; font-size: 1.1rem;
+      cursor: pointer; transition: background .15s; flex-shrink: 0;
+      &:hover { background: #e2e8f0; }
+    }
+
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      z-index: 199; backdrop-filter: blur(2px);
+    }
+
     .rider-content { flex: 1; padding: 1.75rem; overflow-y: auto; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .rider-sidebar {
+        position: fixed; left: 0; top: 0; height: 100vh;
+        transform: translateX(-100%); transition: transform .25s ease;
+      }
+      .rider-sidebar.sidebar-mobile-open { transform: translateX(0); }
+      .sidebar-overlay { display: block; }
+      .sidebar-toggle { display: flex; }
+      .rider-content { padding: 1rem; }
+      .topbar-name { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .rider-content { padding: .75rem; }
+      .rider-topbar { padding: 0 .875rem; }
+    }
   `]
 })
-export class RiderLayoutComponent {
+export class RiderLayoutComponent implements OnInit {
   private authService = inject(AuthService);
+  private adminService = inject(AdminService);
   private router = inject(Router);
+
   readonly user = this.authService.currentUser;
   readonly initial = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'R';
+  sidebarOpen = signal(false);
+  navItems = signal<AdminNavItem[]>([]);
+  navLoading = signal(true);
 
+  ngOnInit(): void {
+    this.adminService.getAdminNav().subscribe({
+      next: items => {
+        // Reuse the same DB items but rebase routes from /admin/ to /rider/
+        // Dashboard (route === '/admin') is skipped — riders default to /rider/deliveries
+        this.navItems.set(
+          items
+            .filter(i => i.route !== '/admin')
+            .map(i => ({ ...i, route: i.route.replace(/^\/admin\//, '/rider/') }))
+        );
+        this.navLoading.set(false);
+      },
+      error: () => this.navLoading.set(false)
+    });
+  }
+
+  closeSidebar() { this.sidebarOpen.set(false); }
   logout() { this.authService.logout(); }
 }

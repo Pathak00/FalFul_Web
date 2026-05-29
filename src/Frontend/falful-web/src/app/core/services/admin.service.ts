@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  AdminCreateUserRequest, AdminResetPasswordRequest, AdminStats, AdminUser,
-  SetUserActiveRequest, SetUserTypeRequest
+  AdminCreateUserRequest, AdminNavItem, AdminResetPasswordRequest, AdminStats, AdminUser,
+  SetUserActiveRequest, SetUserTypeRequest, UpdateAdminNavItemRequest
 } from '../models/admin.models';
 import { ApiService } from './api.service';
 
@@ -85,5 +85,21 @@ export class AdminService {
 
   setUserPermissions(userId: number, permissions: string[]): Observable<void> {
     return this.api.put<void>(`/api/admin/users/${userId}/permissions`, { permissions });
+  }
+
+  /* ── Admin navigation items ──────────────────────────────────────────── */
+
+  /** Returns sidebar items accessible to the current user. */
+  getAdminNav(): Observable<AdminNavItem[]> {
+    return this.api.get<AdminNavItem[]>('/api/admin/nav');
+  }
+
+  /** Returns ALL items — for the Navigation management screen (system only). */
+  getAllAdminNav(): Observable<AdminNavItem[]> {
+    return this.api.get<AdminNavItem[]>('/api/admin/nav/all');
+  }
+
+  updateAdminNavItem(id: number, dto: UpdateAdminNavItemRequest): Observable<void> {
+    return this.api.put<void>(`/api/admin/nav/${id}`, dto);
   }
 }

@@ -39,7 +39,7 @@ public class SettingsController(IAppSettingService settings) : ControllerBase
             cutFruitLeadTimeHours = D(1, 1),
             slotStartHour         = I(2, 9),
             slotEndHour           = I(3, 21),
-            slotIntervalMinutes   = I(4, 180),
+            slotIntervalMinutes   = I(4, 60),
             storeLatitude         = D(5, 27.7172),
             storeLongitude        = D(6, 85.3240),
             cutFruitRadiusKm      = D(7, 5)

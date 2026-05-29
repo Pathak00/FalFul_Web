@@ -26,11 +26,12 @@
 
 /* ─── Table ─── */
 .data-table-wrap {
-  background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;
+  background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
-  width: 100%; border-collapse: collapse;
+  width: 100%; border-collapse: collapse; min-width: 560px;
   thead {
     background: #f8fafc;
     th {
@@ -54,7 +55,7 @@
 .text-sm    { font-size: .775rem !important; }
 
 /* ─── Actions cell ─── */
-.actions { display: flex; gap: .375rem; justify-content: flex-end; flex-wrap: nowrap; }
+.actions { display: flex; gap: .375rem; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
 
 /* ─── Badges ─── */
 .badge {
@@ -246,7 +247,8 @@
 /* ─── Aliases used by newer components ─── */
 .page-subtitle  { color: #64748b; margin: .25rem 0 0; font-size: .875rem; line-height: 1.5; }
 .data-table-wrapper {
-  background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;
+  background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
 .loading-state  { display: flex; align-items: center; gap: .5rem; color: #64748b; padding: 2rem 0; }
 
@@ -424,3 +426,37 @@
 .spin { animation: spin .7s linear infinite; display: inline-block; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Responsive Utilities ─── */
+@media (max-width: 900px) {
+  .admin-page { max-width: 100%; }
+}
+
+@media (max-width: 700px) {
+  /* Tighter page padding on small screens */
+  .page-header {
+    flex-direction: column; align-items: flex-start; gap: .75rem;
+    h1 { font-size: 1.25rem; }
+  }
+
+  /* Form rows collapse to single column */
+  .form-row { grid-template-columns: 1fr !important; }
+
+  /* Modals go full-width */
+  .modal, .modal-lg, .modal-sm { width: 100% !important; max-width: 100% !important; margin: 0; border-radius: 14px 14px 0 0; align-self: flex-end; }
+  .modal-overlay, .modal-backdrop { align-items: flex-end; padding: 0; }
+
+  /* Table cells reduce padding */
+  .data-table tbody td,
+  .data-table thead th { padding: .5rem .625rem; font-size: .8rem; }
+
+  /* Btn-sm text fits smaller screens */
+  .btn-sm { padding: .25rem .5rem; font-size: .72rem; }
+}
+
+@media (max-width: 480px) {
+  .filter-bar { gap: .375rem; }
+  .filter-btn { padding: .3rem .625rem; font-size: .75rem; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions button { width: 100%; justify-content: center; }
+}

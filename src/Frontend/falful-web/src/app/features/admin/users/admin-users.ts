@@ -49,8 +49,8 @@ interface PermOption  { id: number; name: string; displayName: string; category:
           <p>Try a different filter.</p>
         </div>
       } @else {
-        <div class="data-table-wrap">
-          <table class="data-table">
+        <div class="users-table-scroll">
+          <table class="data-table users-table">
             <thead>
               <tr>
                 <th>Name</th>
@@ -58,8 +58,8 @@ interface PermOption  { id: number; name: string; displayName: string; category:
                 <th>Role</th>
                 <th>Status</th>
                 <th>Joined</th>
-                <th>Last Login</th>
-                <th style="text-align:right">Actions</th>
+                <th class="hide-md">Last Login</th>
+                <th class="actions-th">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -74,16 +74,24 @@ interface PermOption  { id: number; name: string; displayName: string; category:
                       </div>
                     </div>
                   </td>
-                  <td>
-                    @if (u.email) { <div>{{ u.email }}</div> }
+                  <td class="contact-cell">
+                    @if (u.email) { <div class="contact-line">{{ u.email }}</div> }
                     @if (u.phoneNumber) { <div class="text-muted text-sm">{{ u.phoneNumber }}</div> }
                   </td>
                   <td>
-                    @if (u.roleName) {
-                      <span class="badge badge-role">{{ u.roleName }}</span>
-                    } @else {
-                      <span class="text-muted text-sm">—</span>
-                    }
+                    <div class="role-cell">
+                      @if (u.roleName) {
+                        <span class="badge badge-role">{{ u.roleName }}</span>
+                      } @else {
+                        <span class="text-muted text-sm">—</span>
+                      }
+                      <span class="portal-tag"
+                            [class.portal-rider]="u.portalType === 'rider'"
+                            [class.portal-admin]="u.portalType === 'admin'"
+                            [class.portal-customer]="u.portalType === 'customer'">
+                        {{ u.portalType === 'rider' ? 'Rider Portal' : u.portalType === 'admin' ? 'Admin Panel' : 'Customer' }}
+                      </span>
+                    </div>
                   </td>
                   <td>
                     <span class="badge" [class.badge-green]="u.isActive" [class.badge-gray]="!u.isActive">
@@ -91,15 +99,22 @@ interface PermOption  { id: number; name: string; displayName: string; category:
                     </span>
                   </td>
                   <td class="text-muted text-sm">{{ u.createdAt | date:'d MMM y' }}</td>
-                  <td class="text-muted text-sm">{{ u.lastLoginAt ? (u.lastLoginAt | date:'d MMM y') : '—' }}</td>
-                  <td class="actions">
-                    <button class="btn-sm btn-edit" (click)="openRole(u)" title="Manage role &amp; permissions"><i class="bi bi-shield-check"></i> Role</button>
-                    <button class="btn-sm btn-edit" (click)="openReset(u)" title="Reset password"><i class="bi bi-key"></i> Reset</button>
-                    <button class="btn-sm" [class.btn-warn]="u.isActive" [class.btn-success]="!u.isActive"
-                            (click)="toggleActive(u)" [title]="u.isActive ? 'Deactivate account' : 'Activate account'">
-                      {{ u.isActive ? 'Deactivate' : 'Activate' }}
+                  <td class="text-muted text-sm hide-md">{{ u.lastLoginAt ? (u.lastLoginAt | date:'d MMM y') : '—' }}</td>
+                  <td class="user-actions">
+                    <button class="ua-btn ua-btn-edit" (click)="openRole(u)" title="Manage role &amp; permissions">
+                      <i class="bi bi-shield-check"></i><span class="btn-label"> Role</span>
                     </button>
-                    <button class="btn-sm btn-danger" (click)="deleteTarget.set(u)" title="Delete user">Delete</button>
+                    <button class="ua-btn ua-btn-edit" (click)="openReset(u)" title="Reset password">
+                      <i class="bi bi-key"></i><span class="btn-label"> Reset</span>
+                    </button>
+                    <button class="ua-btn" [class.ua-btn-warn]="u.isActive" [class.ua-btn-success]="!u.isActive"
+                            (click)="toggleActive(u)" [title]="u.isActive ? 'Deactivate' : 'Activate'">
+                      <i class="bi" [class.bi-pause-circle]="u.isActive" [class.bi-play-circle]="!u.isActive"></i>
+                      <span class="btn-label">{{ u.isActive ? ' Deactivate' : ' Activate' }}</span>
+                    </button>
+                    <button class="ua-btn ua-btn-danger" (click)="deleteTarget.set(u)" title="Delete user">
+                      <i class="bi bi-trash"></i><span class="btn-label"> Delete</span>
+                    </button>
                   </td>
                 </tr>
               }
@@ -178,6 +193,23 @@ interface PermOption  { id: number; name: string; displayName: string; category:
               </select>
             </div>
 
+            <div class="portal-indicator"
+                 [class.portal-indicator-rider]="roleTarget()?.portalType === 'rider'"
+                 [class.portal-indicator-admin]="roleTarget()?.portalType === 'admin'">
+              <i class="bi" [class.bi-bicycle]="roleTarget()?.portalType === 'rider'"
+                            [class.bi-speedometer2]="roleTarget()?.portalType === 'admin'"
+                            [class.bi-person]="roleTarget()?.portalType === 'customer'"></i>
+              <span>
+                @if (roleTarget()?.portalType === 'rider') {
+                  Currently routes to <strong>Rider Portal</strong> — only has <em>deliveries</em> permission.
+                } @else if (roleTarget()?.portalType === 'admin') {
+                  Currently routes to <strong>Admin Panel</strong>.
+                } @else {
+                  No permissions assigned — will access the customer site.
+                }
+              </span>
+            </div>
+
             @if (roleError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ roleError() }}</div> }
 
             <div class="modal-actions">
@@ -199,7 +231,7 @@ interface PermOption  { id: number; name: string; displayName: string; category:
           <div class="modal-header">
             <div>
               <h2>Permissions</h2>
-              <p class="modal-sub">Configure access for <strong>{{ permTarget()!.fullName }}</strong> (Staff).</p>
+              <p class="modal-sub">Override individual permissions for <strong>{{ permTarget()!.fullName }}</strong>. Routing: <em>deliveries only → Rider Portal, any other permission → Admin Panel</em>.</p>
             </div>
             <button class="btn-close" (click)="permTarget.set(null)">✕</button>
           </div>
@@ -324,32 +356,78 @@ interface PermOption  { id: number; name: string; displayName: string; category:
       &.active { background: #16a34a; border-color: #16a34a; color: #fff; }
     }
 
-    .user-avatar-row { display: flex; align-items: center; gap: .625rem; }
+    /* Scrollable table wrapper */
+    .users-table-scroll {
+      background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .users-table { min-width: 680px; }
 
+    .user-avatar-row { display: flex; align-items: center; gap: .625rem; }
     .user-avatar {
       width: 32px; height: 32px; border-radius: 50%; background: #dcfce7; color: #16a34a;
       font-size: .875rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
 
+    .contact-cell { max-width: 180px; }
+    .contact-line { font-size: .8rem; color: #374151; word-break: break-all; }
+
     .row-inactive { opacity: .65; }
+
+    /* Hide lower-priority columns on smaller viewports */
+    @media (max-width: 800px) { .hide-md { display: none !important; } }
 
     .inline-select {
       border: 1px solid #e2e8f0; border-radius: 5px; padding: .25rem .5rem;
-      font-size: .8rem; background: #fff; color: #334155; cursor: pointer;
+      font-size: .8rem; background: #fff; color: #334155; cursor: pointer; width: 100%;
     }
 
-    .btn-warn    { background: #fff7ed; color: #ea580c; &:hover { background: #ffedd5; } }
-    .btn-success { background: #f0fdf4; color: #16a34a; &:hover { background: #dcfce7; } }
-
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: .35rem;
+    /* Action buttons for users table */
+    .actions-th { text-align: right; white-space: nowrap; }
+    .user-actions {
+      display: flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; align-items: center;
+      padding: .375rem .75rem;
     }
+    .ua-btn {
+      display: inline-flex; align-items: center; gap: .2rem;
+      padding: .25rem .55rem; border-radius: 5px; font-size: .72rem; font-weight: 600;
+      border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+      transition: all .12s; line-height: 1.4;
+    }
+    .ua-btn-edit    { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; &:hover { background: #dbeafe; } }
+    .ua-btn-warn    { background: #fff7ed; color: #ea580c; border-color: #fed7aa; &:hover { background: #ffedd5; } }
+    .ua-btn-success { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; &:hover { background: #dcfce7; } }
+    .ua-btn-danger  { background: #fef2f2; color: #dc2626; border-color: #fecaca; &:hover { background: #fee2e2; } }
 
+    /* Hide text labels on very small viewports, keep icons */
+    @media (max-width: 640px) { .btn-label { display: none; } }
+
+    .btn-primary { display: inline-flex; align-items: center; gap: .35rem; }
     .badge-role {
       background: #f1f5f9; color: #475569; font-size: .7rem; padding: 2px 8px;
       border-radius: 4px; font-weight: 600;
     }
+
+    .role-cell { display: flex; flex-direction: column; gap: .25rem; }
+
+    .portal-tag {
+      display: inline-block; font-size: .65rem; font-weight: 600;
+      padding: 1px 7px; border-radius: 4px; letter-spacing: .03em;
+    }
+    .portal-rider    { background: #dbeafe; color: #1d4ed8; }
+    .portal-admin    { background: #dcfce7; color: #15803d; }
+    .portal-customer { background: #f1f5f9; color: #64748b; }
+
+    .portal-indicator {
+      display: flex; align-items: flex-start; gap: .5rem;
+      font-size: .8rem; color: #374151;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 7px; padding: .5rem .75rem; margin: .5rem 0;
+      i { flex-shrink: 0; margin-top: .1rem; }
+    }
+    .portal-indicator-rider { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+    .portal-indicator-admin { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
 
     .perm-groups { display: flex; flex-direction: column; gap: 1rem; padding: .25rem 0; }
     .perm-group  { }
@@ -358,7 +436,6 @@ interface PermOption  { id: number; name: string; displayName: string; category:
 
     .modal-md { max-width: 480px; }
 
-    /* Role selector */
     .role-options { display: flex; flex-direction: column; gap: .5rem; }
     .default-tag { font-size: .65rem; background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 3px; font-weight: 600; margin-left: .35rem; }
 
