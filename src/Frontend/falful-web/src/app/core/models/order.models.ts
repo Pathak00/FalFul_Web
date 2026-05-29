@@ -149,6 +149,13 @@ export interface OrderDetail extends OrderSummary {
   rating?: OrderRating;
 }
 
+export interface RiderUser {
+  id: number;
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+}
+
 export interface DeliverySummary {
   id: number;
   orderId: number;
@@ -157,6 +164,7 @@ export interface DeliverySummary {
   statusLabel: string;
   scheduledDate: string;
   scheduledTimeSlot: string;
+  riderUserId?: number;
   riderName?: string;
   riderPhone?: string;
   attemptCount: number;

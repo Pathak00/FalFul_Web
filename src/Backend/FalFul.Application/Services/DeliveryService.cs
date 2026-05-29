@@ -25,14 +25,16 @@ public class DeliveryService(
         return d is null ? null : MapDetail(d);
     }
 
+    public async Task<IEnumerable<RiderUserDto>> GetRidersAsync()
+        => await deliveries.GetRidersAsync();
+
     public async Task<Result> AssignRiderAsync(int id, AssignRiderDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.RiderName))  return Result.Failure("Rider name is required.");
-        if (string.IsNullOrWhiteSpace(dto.RiderPhone)) return Result.Failure("Rider phone is required.");
+        if (dto.RiderUserId <= 0) return Result.Failure("A registered rider must be selected.");
 
         if (await deliveries.GetByIdAsync(id) is null) return Result.Failure("Delivery not found.");
 
-        try { await deliveries.AssignRiderAsync(id, dto.RiderName.Trim(), dto.RiderPhone.Trim()); return Result.Success(); }
+        try { await deliveries.AssignRiderAsync(id, dto.RiderUserId); return Result.Success(); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -254,6 +256,7 @@ public class DeliveryService(
         StatusLabel       = DeliveryStatusLabel((byte)d.Status),
         ScheduledDate     = d.ScheduledDate.ToString("yyyy-MM-dd"),
         ScheduledTimeSlot = d.ScheduledTimeSlot,
+        RiderUserId       = d.RiderUserId,
         RiderName         = d.RiderName,
         RiderPhone        = d.RiderPhone,
         AttemptCount      = d.AttemptCount,

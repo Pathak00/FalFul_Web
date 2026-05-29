@@ -6,7 +6,7 @@ BEGIN
 
     -- Result set 1: delivery with order / address / user context
     SELECT d.Id, d.OrderId, d.Status, d.ScheduledDate, d.ScheduledTimeSlot,
-           d.RiderName, d.RiderPhone, d.AssignedAt, d.PickedUpAt, d.DeliveredAt,
+           d.RiderUserId, d.RiderName, d.RiderPhone, d.AssignedAt, d.PickedUpAt, d.DeliveredAt,
            d.FailedAt, d.AttemptCount, d.MaxAttempts, d.TrackingNotes,
            d.CreatedAt, d.UpdatedAt,
            o.OrderNumber, o.TotalAmount, o.PaymentMethod, o.Notes AS OrderNotes,

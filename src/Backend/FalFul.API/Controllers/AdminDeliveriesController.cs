@@ -10,6 +10,10 @@ namespace FalFul.API.Controllers;
 [Authorize(Policy = "Perm:deliveries")]
 public class AdminDeliveriesController(IDeliveryService svc) : ControllerBase
 {
+    [HttpGet("riders")]
+    public async Task<IActionResult> GetRiders() =>
+        Ok(await svc.GetRidersAsync());
+
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] byte? status, [FromQuery] string? from, [FromQuery] string? to) =>
         Ok(await svc.GetAllAsync(status, from, to));

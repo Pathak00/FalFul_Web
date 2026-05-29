@@ -3,7 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
 import {
-  DeliverySummary, DeliveryDetail,
+  DeliverySummary, DeliveryDetail, RiderUser,
   DELIVERY_STATUSES, DELIVERY_FAILURE_REASONS, DELIVERY_ISSUE_TYPES,
   PAYMENT_METHODS,
 } from '../../../core/models/order.models';
@@ -161,16 +161,28 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
             <button class="modal-close" (click)="assignModal.set(null)"><i class="bi bi-x-lg"></i></button>
           </div>
           <div class="form-group">
-            <label>Rider Name <span class="required">*</span></label>
-            <input type="text" [(ngModel)]="assignForm.riderName" placeholder="Full name">
-          </div>
-          <div class="form-group">
-            <label>Rider Phone <span class="required">*</span></label>
-            <input type="tel" [(ngModel)]="assignForm.riderPhone" placeholder="98XXXXXXXX">
+            <label>Rider <span class="required">*</span></label>
+            @if (ridersLoading()) {
+              <div style="font-size:.8rem;color:#9ca3af;padding:.5rem 0">
+                <i class="bi bi-arrow-clockwise spin"></i> Loading riders…
+              </div>
+            } @else if (riders().length === 0) {
+              <div style="font-size:.8rem;color:#f59e0b;padding:.5rem 0">
+                <i class="bi bi-exclamation-triangle"></i>
+                No registered riders found. Go to Users and assign the Rider role to a user first.
+              </div>
+            } @else {
+              <select [(ngModel)]="assignForm.riderId">
+                <option [value]="0">Select a rider…</option>
+                @for (r of riders(); track r.id) {
+                  <option [value]="r.id">{{ r.fullName }} · {{ r.phoneNumber }}</option>
+                }
+              </select>
+            }
           </div>
           <div class="modal-footer">
             <button class="btn-secondary btn-sm" (click)="assignModal.set(null)">Cancel</button>
-            <button class="btn-primary btn-sm" [disabled]="saving() || !assignForm.riderName || !assignForm.riderPhone"
+            <button class="btn-primary btn-sm" [disabled]="saving() || !assignForm.riderId"
                     (click)="submitAssign()">
               @if (saving()) { <i class="bi bi-arrow-clockwise spin"></i> } Assign Rider
             </button>
@@ -505,7 +517,11 @@ export class AdminDeliveriesComponent implements OnInit {
   resolveNotes     = '';
   saving           = signal(false);
 
-  assignForm     = { riderName: '', riderPhone: '' };
+  riders        = signal<RiderUser[]>([]);
+  ridersLoading = signal(false);
+  ridersLoaded  = false;
+
+  assignForm     = { riderId: 0 };
   attemptForm    = { wasSuccessful: true, failureReason: 0, failureNotes: '', nextAction: 0, rescheduledDate: '', rescheduledTimeSlot: '' };
   issueForm      = { issueType: 1, description: '' };
   transitionForm = { status: 0, trackingNotes: '', scheduledDate: '', scheduledTimeSlot: '' };
@@ -561,15 +577,22 @@ export class AdminDeliveriesComponent implements OnInit {
   // ── Assign ───────────────────────────────────────────────────────────────────
   openAssign(id: number, status: number) {
     this.isReassign.set(status !== 1);
-    this.assignForm = { riderName: '', riderPhone: '' };
+    this.assignForm = { riderId: 0 };
     this.assignModal.set(id);
+    if (!this.ridersLoaded) {
+      this.ridersLoading.set(true);
+      this.svc.getRiders().subscribe({
+        next: list => { this.riders.set(list); this.ridersLoading.set(false); this.ridersLoaded = true; },
+        error: ()   => this.ridersLoading.set(false),
+      });
+    }
   }
 
   submitAssign() {
     const id = this.assignModal();
-    if (!id) return;
+    if (!id || !this.assignForm.riderId) return;
     this.saving.set(true);
-    this.svc.assignRider(id, this.assignForm.riderName, this.assignForm.riderPhone).subscribe({
+    this.svc.assignRider(id, this.assignForm.riderId).subscribe({
       next: () => { this.assignModal.set(null); this.saving.set(false); this.load(); },
       error: () => this.saving.set(false),
     });

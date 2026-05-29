@@ -4,8 +4,15 @@ namespace FalFul.Application.DTOs.Order;
 
 public class AssignRiderDto
 {
-    public string RiderName  { get; set; } = string.Empty;
-    public string RiderPhone { get; set; } = string.Empty;
+    public int RiderUserId { get; set; }
+}
+
+public class RiderUserDto
+{
+    public int    Id          { get; set; }
+    public string FullName    { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Email       { get; set; } = string.Empty;
 }
 
 public class UpdateDeliveryStatusDto
@@ -82,6 +89,7 @@ public class DeliverySummaryDto
     public string   StatusLabel       { get; set; } = string.Empty;
     public string   ScheduledDate     { get; set; } = string.Empty;
     public string   ScheduledTimeSlot { get; set; } = string.Empty;
+    public int?     RiderUserId       { get; set; }
     public string?  RiderName         { get; set; }
     public string?  RiderPhone        { get; set; }
     public byte     AttemptCount      { get; set; }

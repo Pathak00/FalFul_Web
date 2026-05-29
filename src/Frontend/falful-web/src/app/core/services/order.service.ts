@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import {
   Address, CheckoutConfig, CreateAddressRequest, PriceRule,
   OrderSummary, OrderDetail, PlaceOrderRequest,
-  DeliverySummary, DeliveryDetail, DeliveryReport, OrderReport, OrderRating,
+  DeliverySummary, DeliveryDetail, DeliveryReport, OrderReport, OrderRating, RiderUser,
 } from '../models/order.models';
 import { ApiService } from './api.service';
 
@@ -95,8 +95,12 @@ export class OrderService {
     return this.api.get<DeliveryDetail>(`/api/admin/deliveries/${id}`);
   }
 
-  assignRider(id: number, riderName: string, riderPhone: string): Observable<void> {
-    return this.api.put<void>(`/api/admin/deliveries/${id}/assign`, { riderName, riderPhone });
+  getRiders(): Observable<RiderUser[]> {
+    return this.api.get<RiderUser[]>('/api/admin/deliveries/riders');
+  }
+
+  assignRider(id: number, riderUserId: number): Observable<void> {
+    return this.api.put<void>(`/api/admin/deliveries/${id}/assign`, { riderUserId });
   }
 
   updateDeliveryStatus(id: number, status: number, trackingNotes?: string, scheduledDate?: string, scheduledTimeSlot?: string): Observable<void> {

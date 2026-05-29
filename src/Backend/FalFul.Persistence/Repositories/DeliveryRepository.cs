@@ -43,12 +43,20 @@ public class DeliveryRepository(DapperContext context) : IDeliveryRepository
         return delivery;
     }
 
-    public async Task AssignRiderAsync(int id, string riderName, string riderPhone)
+    public async Task AssignRiderAsync(int id, int riderUserId)
     {
         using var conn = context.CreateConnection();
         await conn.ExecuteAsync(
             "sp_Delivery_Assign",
-            new { Id = id, RiderName = riderName, RiderPhone = riderPhone },
+            new { Id = id, RiderUserId = riderUserId },
+            commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<IEnumerable<RiderUserDto>> GetRidersAsync()
+    {
+        using var conn = context.CreateConnection();
+        return await conn.QueryAsync<RiderUserDto>(
+            "sp_User_GetRiders",
             commandType: CommandType.StoredProcedure);
     }
 

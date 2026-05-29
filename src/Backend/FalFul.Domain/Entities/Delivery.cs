@@ -9,6 +9,7 @@ public class Delivery
     public DeliveryStatus Status            { get; set; }
     public DateOnly       ScheduledDate     { get; set; }
     public string         ScheduledTimeSlot { get; set; } = string.Empty;
+    public int?           RiderUserId       { get; set; }
     public string?        RiderName         { get; set; }
     public string?        RiderPhone        { get; set; }
     public DateTime?      AssignedAt        { get; set; }
