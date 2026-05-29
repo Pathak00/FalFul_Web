@@ -1,12 +1,10 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { CartItem } from '../models/order.models';
-import { PermissionService } from './permission.service';
 
 const CART_KEY = 'falful_cart';
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
-  private perms  = inject(PermissionService);
   private _items = signal<CartItem[]>(this.loadCart());
 
   readonly items      = this._items.asReadonly();
@@ -17,7 +15,6 @@ export class CartService {
   readonly bowlItems     = computed(() => this._items().filter(i => i.itemType === 'BUILD_BOWL'));
 
   addItem(item: CartItem): void {
-    if (!this.perms.canShop()) return;
     if (item.itemType === 'BUILD_BOWL') {
       // Identical bowl signature → increment quantity; different composition → new entry
       const idx = this._items().findIndex(

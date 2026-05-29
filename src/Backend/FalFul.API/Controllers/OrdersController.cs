@@ -18,6 +18,7 @@ public class OrdersController(IOrderService orderService, IDeliveryService deliv
         Ok(await orderService.GetPriceRulesAsync());
 
     [HttpPost]
+    [Authorize(Policy = "Perm:shop")]
     public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderDto dto)
     {
         var customerName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;

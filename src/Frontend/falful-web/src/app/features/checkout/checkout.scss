@@ -212,3 +212,54 @@ textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 
   border-radius: 7px; padding: .5rem .75rem; margin: .5rem 0 0;
   display: flex; align-items: center; gap: .4rem;
 }
+
+// ── Auth hint (inline, above Place Order button) ─────────────────────────────
+.co-auth-hint {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .78rem; color: #6b7280; background: #f8fafc;
+  border: 1px solid #e2e8f0; border-radius: 7px; padding: .5rem .75rem; margin-bottom: .5rem;
+  i { flex-shrink: 0; }
+  &.co-auth-hint-warn { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+}
+
+// ── Auth gate modal ──────────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+
+.modal-box {
+  background: #fff; border-radius: 14px; padding: 2rem; max-width: 440px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+}
+
+.auth-gate-modal {
+  text-align: center;
+
+  h3 { font-size: 1.1rem; font-weight: 800; color: #111; margin: .75rem 0 .5rem; }
+  p  { font-size: .88rem; color: #6b7280; line-height: 1.5; margin: 0 0 1.5rem; }
+}
+
+.agm-icon {
+  i { font-size: 2.75rem; color: #22c55e; }
+  &.agm-icon-warn i { color: #f59e0b; }
+}
+
+.agm-actions {
+  display: flex; flex-direction: column; gap: .5rem; margin-bottom: .75rem;
+}
+
+.agm-btn {
+  width: 100%; padding: .65rem 1rem; border-radius: 8px; font-size: .9rem;
+  font-weight: 600; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: .4rem; border: none;
+  &.btn-primary  { background: #16a34a; color: #fff; &:hover { background: #15803d; } }
+  &.btn-secondary { background: #f1f5f9; color: #374151; border: 1px solid #e2e8f0;
+    &:hover { background: #e2e8f0; } }
+}
+
+.agm-skip {
+  background: none; border: none; color: #9ca3af; font-size: .8rem;
+  cursor: pointer; padding: .25rem; text-decoration: underline;
+  &:hover { color: #374151; }
+}

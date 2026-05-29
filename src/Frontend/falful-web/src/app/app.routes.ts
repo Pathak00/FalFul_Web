@@ -49,8 +49,8 @@ export const routes: Routes = [
         loadComponent: () => import('./features/build-your-bowl/build-your-bowl').then(m => m.BuildYourBowlComponent)
       },
       {
+        /* No guards — everyone can browse checkout; auth+role enforced at "Place Order" */
         path: 'checkout',
-        canActivate: [authGuard, shopGuard],
         loadComponent: () => import('./features/checkout/checkout').then(m => m.CheckoutComponent)
       },
       {

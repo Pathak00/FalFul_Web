@@ -1,7 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { HomeRouteService } from '../../../core/services/home-route.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { GoogleSignInButtonComponent } from '../../../shared/components/google-signin-button/google-signin-button';
 
 @Component({
@@ -12,11 +14,14 @@ import { GoogleSignInButtonComponent } from '../../../shared/components/google-s
   styleUrl: './register.scss'
 })
 export class RegisterComponent {
-  private fb = inject(FormBuilder);
+  private fb          = inject(FormBuilder);
   private authService = inject(AuthService);
-  private router = inject(Router);
+  private homeRoute   = inject(HomeRouteService);
+  private perms       = inject(PermissionService);
+  private router      = inject(Router);
+  private route       = inject(ActivatedRoute);
 
-  isLoading = signal(false);
+  isLoading    = signal(false);
   errorMessage = signal('');
 
   form = this.fb.group({
@@ -26,11 +31,20 @@ export class RegisterComponent {
     password: ['', [Validators.minLength(8)]]
   });
 
+  private redirectAfterAuth(): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl && this.perms.canShop()) {
+      this.router.navigateByUrl(returnUrl);
+    } else {
+      this.router.navigate([this.homeRoute.route()]);
+    }
+  }
+
   onGoogleSignUp(idToken: string): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
     this.authService.googleLogin(idToken).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.redirectAfterAuth(),
       error: (err) => {
         this.errorMessage.set(err.error?.message ?? 'Google sign-up failed.');
         this.isLoading.set(false);
@@ -51,7 +65,7 @@ export class RegisterComponent {
     this.errorMessage.set('');
 
     this.authService.register(this.form.value as any).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.redirectAfterAuth(),
       error: (err) => {
         this.errorMessage.set(err.error?.message ?? 'Registration failed. Please try again.');
         this.isLoading.set(false);

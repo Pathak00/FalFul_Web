@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
+import { PermissionService } from '../../core/services/permission.service';
 import {
   Address, CheckoutConfig, PriceRule, PlaceOrderRequest, PAYMENT_METHODS
 } from '../../core/models/order.models';
@@ -306,6 +307,19 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
               <div class="co-error"><i class="bi bi-exclamation-circle"></i> {{ error() }}</div>
             }
 
+            <!-- Auth hint — shown before clicking Place Order -->
+            @if (!isAuthenticated()) {
+              <div class="co-auth-hint">
+                <i class="bi bi-person-lock"></i>
+                Sign in or create an account to complete your order.
+              </div>
+            } @else if (!isCustomer()) {
+              <div class="co-auth-hint co-auth-hint-warn">
+                <i class="bi bi-exclamation-triangle"></i>
+                This account type cannot place customer orders.
+              </div>
+            }
+
             <button class="btn-place-order" (click)="placeOrder()" [disabled]="placing() || !canPlaceOrder()">
               @if (placing()) { <span class="spinner"></span> Processing... }
               @else { <i class="bi bi-bag-check"></i> Place Order }
@@ -332,6 +346,38 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
         </div>
       }
     </div>
+
+    <!-- ── Auth gate modal ───────────────────────────────────────────────────── -->
+    @if (authGateModal() !== 'none') {
+      <div class="modal-overlay" (click)="authGateModal.set('none')">
+        <div class="modal-box auth-gate-modal" (click)="$event.stopPropagation()">
+          @if (authGateModal() === 'unauthenticated') {
+            <div class="agm-icon"><i class="bi bi-bag-heart-fill"></i></div>
+            <h3>Sign in to place your order</h3>
+            <p>
+              Your cart is saved. Log in or create a free customer account to complete your purchase.
+            </p>
+            <div class="agm-actions">
+              <button class="btn-primary agm-btn" (click)="goToLogin()">
+                <i class="bi bi-box-arrow-in-right"></i> Log In
+              </button>
+              <button class="btn-secondary agm-btn" (click)="goToRegister()">
+                <i class="bi bi-person-plus"></i> Create Account
+              </button>
+            </div>
+            <button class="agm-skip" (click)="authGateModal.set('none')">Continue browsing</button>
+          } @else {
+            <div class="agm-icon agm-icon-warn"><i class="bi bi-shield-exclamation"></i></div>
+            <h3>Customer account required</h3>
+            <p>
+              Orders can only be placed from an Individual or Organization customer account.
+              Rider, staff, and admin accounts cannot place customer orders.
+            </p>
+            <button class="btn-secondary agm-btn" (click)="authGateModal.set('none')">Got it</button>
+          }
+        </div>
+      </div>
+    }
   `,
   styleUrl: './checkout.scss'
 })
@@ -339,9 +385,13 @@ export class CheckoutComponent implements OnInit {
   readonly cart       = inject(CartService);
   private orderSvc    = inject(OrderService);
   private authSvc     = inject(AuthService);
+  private permSvc     = inject(PermissionService);
   private router      = inject(Router);
 
   readonly isAuthenticated = this.authSvc.isAuthenticated;
+  readonly isCustomer      = computed(() => this.permSvc.canShop());
+
+  authGateModal = signal<'none' | 'unauthenticated' | 'non-customer'>('none');
 
   addresses         = signal<Address[]>([]);
   selectedAddressId = signal<number | null>(null);
@@ -511,7 +561,25 @@ export class CheckoutComponent implements OnInit {
     this.userLongitude.set(null);
   }
 
+  goToLogin(): void {
+    this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout' } });
+  }
+
+  goToRegister(): void {
+    this.router.navigate(['/auth/register'], { queryParams: { returnUrl: '/checkout' } });
+  }
+
   placeOrder(): void {
+    // Auth gate: enforce before any form validation so the experience is clear
+    if (!this.authSvc.isAuthenticated()) {
+      this.authGateModal.set('unauthenticated');
+      return;
+    }
+    if (!this.permSvc.canShop()) {
+      this.authGateModal.set('non-customer');
+      return;
+    }
+
     this.error.set('');
     const sub = this.cart.subTotal();
 
