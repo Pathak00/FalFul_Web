@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Category_Create
     @Name        NVARCHAR(100),
@@ -19,7 +19,8 @@ BEGIN
     END
 
     INSERT INTO Categories (Name, Slug, Description, Icon, ImageUrl, DisplayOrder, IsActive, CreatedAt)
-    VALUES (@Name, @Slug, @Description, @Icon, @ImageUrl, @DisplayOrder, 1, GETUTCDATE());
+    VALUES (@Name, @Slug, @Description, @Icon, @ImageUrl, @DisplayOrder, 1, dbo.fn_NepalNow());
 
     SELECT SCOPE_IDENTITY() AS Id;
 END
+

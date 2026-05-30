@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
@@ -23,7 +23,8 @@ BEGIN
         ButtonLink = @ButtonLink, ImageUrl = @ImageUrl, Position = @Position,
         IsActive = @IsActive, DisplayOrder = @DisplayOrder,
         StartDate = @StartDate, EndDate = @EndDate,
-        UpdatedAt = GETUTCDATE(), UpdatedBy = @UpdatedBy
+        UpdatedAt = dbo.fn_NepalNow(), UpdatedBy = @UpdatedBy
     WHERE Id = @Id AND IsDeleted = 0;
 END
 GO
+

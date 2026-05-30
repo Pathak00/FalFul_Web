@@ -1,6 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { Perm, PermKey } from '../constants/permissions';
+import { map } from 'rxjs/operators';
+import { PermKey } from '../constants/permissions';
+import { AdminNavStore } from '../stores/admin-nav.store';
 import { AuthService } from '../services/auth.service';
 import { HomeRouteService } from '../services/home-route.service';
 import { PermissionService } from '../services/permission.service';
@@ -38,56 +40,47 @@ export const permissionGuard = (perm: PermKey): CanActivateFn => () => {
 };
 
 /**
- * Guards admin routes. Blocks users whose only permission is 'deliveries'
- * (riders) — they have their own portal at /rider/deliveries.
+ * Guards admin routes. Only allows users whose role's PortalType is 'admin'.
  */
 export const anyPermGuard: CanActivateFn = () => {
   const perms = inject(PermissionService);
+  const homeRoute = inject(HomeRouteService);
   const router = inject(Router);
 
   if (perms.canEnterAdmin()) return true;
 
-  router.navigate(['/dashboard']);
+  router.navigate([homeRoute.route()]);
   return false;
 };
 
 /**
- * Guards the rider portal. Only allows pure riders (deliveries is their
- * sole permission). Staff/admin who also hold deliveries are sent to /admin.
+ * Guards the rider portal. Only allows users whose role's PortalType is 'rider'.
  */
 export const riderGuard: CanActivateFn = () => {
-  const perms  = inject(PermissionService);
+  const perms = inject(PermissionService);
+  const homeRoute = inject(HomeRouteService);
   const router = inject(Router);
 
   if (perms.isRiderOnly()) return true;
 
-  // Staff or admin — redirect to admin dashboard instead of rider portal
-  router.navigate([perms.canEnterAdmin() ? '/admin' : '/dashboard']);
+  router.navigate([homeRoute.route()]);
   return false;
 };
 
 /**
- * Guards consumer/shop routes. Blocks authenticated users who hold
- * ONLY the 'deliveries' permission (riders). Guests are always allowed.
+ * DB-driven guard for admin and rider child routes.
+ *
+ * Looks up the required permission for the current URL from AdminNavStore
+ * (which is backed by AdminNavItems.RequiredPermission in the database).
+ * This means sidebar visibility and route access are always in sync:
+ * changing RequiredPermission in the DB updates both the nav item and the guard.
  */
-export const shopGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+export const dynamicNavGuard: CanActivateFn = (_route, state) => {
+  const store     = inject(AdminNavStore);
   const homeRoute = inject(HomeRouteService);
-  const router = inject(Router);
+  const router    = inject(Router);
 
-  if (!auth.isAuthenticated()) return true; // guests browse freely
-
-  const currentUser = auth.currentUser();
-  const userPerms = currentUser?.permissions ?? [];
-
-  // Rider: identified by role name first, permissions fallback
-  const isRiderOnly = currentUser?.role?.toLowerCase() === 'rider' ||
-    (userPerms.length > 0 && userPerms.every(p => p === Perm.Deliveries));
-
-  if (isRiderOnly) {
-    router.navigate([homeRoute.route()]);
-    return false;
-  }
-
-  return true;
+  return store.canAccess(state.url).pipe(
+    map(allowed => allowed || router.createUrlTree([homeRoute.route()]))
+  );
 };

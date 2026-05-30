@@ -18,9 +18,10 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO Organizations (Name, OrganizationType, Description, ContactEmail, ContactPhone, Address, OwnerId, CreatedAt)
-    VALUES (@Name, @OrganizationType, @Description, @ContactEmail, @ContactPhone, @Address, @OwnerId, GETUTCDATE());
+    VALUES (@Name, @OrganizationType, @Description, @ContactEmail, @ContactPhone, @Address, @OwnerId, dbo.fn_NepalNow());
 
     SELECT SCOPE_IDENTITY();
 END
 GO
+
 

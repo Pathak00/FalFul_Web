@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Category_Update
     @Id          INT,
@@ -28,6 +28,7 @@ BEGIN
            ImageUrl     = @ImageUrl,
            DisplayOrder = @DisplayOrder,
            IsActive     = @IsActive,
-           UpdatedAt    = GETUTCDATE()
+           UpdatedAt    = dbo.fn_NepalNow()
     WHERE  Id = @Id;
 END
+

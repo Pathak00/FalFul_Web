@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Order_Cancel
     @Id           INT,
@@ -9,7 +9,7 @@ BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
 
-    -- Allow cancel only while Pending(1) or Paid(2) – before preparation begins
+    -- Allow cancel only while Pending(1) or Paid(2) â€“ before preparation begins
     IF NOT EXISTS (SELECT 1 FROM Orders WHERE Id = @Id AND UserId = @UserId AND Status IN (1, 2))
     BEGIN
         RAISERROR('Order cannot be cancelled at this stage.', 16, 1);
@@ -19,12 +19,13 @@ BEGIN
     UPDATE Orders
     SET    Status       = 5,          -- Cancelled
            CancelReason = @CancelReason,
-           UpdatedAt    = GETUTCDATE()
+           UpdatedAt    = dbo.fn_NepalNow()
     WHERE  Id = @Id AND UserId = @UserId;
 
     UPDATE Deliveries
     SET    Status    = 6,             -- Failed
-           FailedAt  = GETUTCDATE(),
-           UpdatedAt = GETUTCDATE()
+           FailedAt  = dbo.fn_NepalNow(),
+           UpdatedAt = dbo.fn_NepalNow()
     WHERE  OrderId = @Id AND Status NOT IN (5, 7);
 END
+

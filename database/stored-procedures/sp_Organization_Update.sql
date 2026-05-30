@@ -25,9 +25,10 @@ BEGIN
         ContactPhone = @ContactPhone,
         Address      = @Address,
         IsActive     = @IsActive,
-        UpdatedAt    = GETUTCDATE(),
+        UpdatedAt    = dbo.fn_NepalNow(),
         UpdatedBy    = @UpdatedBy
     WHERE Id = @Id AND IsDeleted = 0;
 END
 GO
+
 

@@ -3,7 +3,8 @@ GO
 CREATE OR ALTER PROCEDURE sp_Role_Update
     @Id          INT,
     @Name        NVARCHAR(50),
-    @Description NVARCHAR(200) = NULL
+    @Description NVARCHAR(200) = NULL,
+    @PortalType  NVARCHAR(20)  = 'admin'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -20,6 +21,7 @@ BEGIN
     UPDATE Roles
     SET    Name           = @Name,
            NormalizedName = @NormalizedName,
-           Description    = @Description
+           Description    = @Description,
+           PortalType     = @PortalType
     WHERE  Id = @Id;
 END

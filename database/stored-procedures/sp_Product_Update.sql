@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Product_Update
     @Id               INT,
@@ -46,6 +46,7 @@ BEGIN
            MinOrderGrams    = @MinOrderGrams,
            GramStep         = @GramStep,
            CutFruitPrice    = @CutFruitPrice,
-           UpdatedAt        = GETUTCDATE()
+           UpdatedAt        = dbo.fn_NepalNow()
     WHERE  Id = @Id AND IsDeleted = 0;
 END
+

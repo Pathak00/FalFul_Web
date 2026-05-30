@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import {
   AdminCreateUserRequest, AdminNavItem, AdminResetPasswordRequest, AdminStats, AdminUser,
   SetUserActiveRequest, SetUserTypeRequest, UpdateAdminNavItemRequest
@@ -9,6 +9,11 @@ import { ApiService } from './api.service';
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   constructor(private api: ApiService) {}
+
+  private _navRefresh = new Subject<void>();
+  /** Emits whenever role/user permissions change so the sidebar re-fetches. */
+  readonly navRefresh$ = this._navRefresh.asObservable();
+  triggerNavRefresh(): void { this._navRefresh.next(); }
 
   getStats(): Observable<AdminStats> {
     return this.api.get<AdminStats>('/api/admin/stats');
@@ -39,16 +44,16 @@ export class AdminService {
     return this.api.delete<void>(`/api/admin/users/${id}`);
   }
 
-  getRoles(): Observable<{ id: number; name: string; description?: string; isDefault: boolean }[]> {
+  getRoles(): Observable<{ id: number; name: string; description?: string; isDefault: boolean; portalType: string }[]> {
     return this.api.get('/api/admin/roles');
   }
 
-  createRole(name: string, description?: string): Observable<{ id: number; name: string }> {
-    return this.api.post('/api/admin/roles', { name, description });
+  createRole(name: string, description?: string, portalType = 'admin'): Observable<{ id: number; name: string }> {
+    return this.api.post('/api/admin/roles', { name, description, portalType });
   }
 
-  updateRole(id: number, name: string, description?: string): Observable<void> {
-    return this.api.put<void>(`/api/admin/roles/${id}`, { name, description });
+  updateRole(id: number, name: string, description?: string, portalType = 'admin'): Observable<void> {
+    return this.api.put<void>(`/api/admin/roles/${id}`, { name, description, portalType });
   }
 
   deleteRole(id: number): Observable<void> {
@@ -77,14 +82,6 @@ export class AdminService {
 
   getPermissions(): Observable<{ id: number; name: string; displayName: string; category: string }[]> {
     return this.api.get('/api/admin/permissions');
-  }
-
-  getUserPermissions(userId: number): Observable<string[]> {
-    return this.api.get(`/api/admin/users/${userId}/permissions`);
-  }
-
-  setUserPermissions(userId: number, permissions: string[]): Observable<void> {
-    return this.api.put<void>(`/api/admin/users/${userId}/permissions`, { permissions });
   }
 
   /* ── Admin navigation items ──────────────────────────────────────────── */

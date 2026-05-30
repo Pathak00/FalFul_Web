@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
@@ -19,7 +19,8 @@ BEGIN
     UPDATE MenuItems
     SET ParentId = @ParentId, Label = @Label, Url = @Url, Icon = @Icon,
         DisplayOrder = @DisplayOrder, IsVisible = @IsVisible, VisibleTo = @VisibleTo,
-        OpenInNewTab = @OpenInNewTab, UpdatedAt = GETUTCDATE(), UpdatedBy = @UpdatedBy
+        OpenInNewTab = @OpenInNewTab, UpdatedAt = dbo.fn_NepalNow(), UpdatedBy = @UpdatedBy
     WHERE Id = @Id AND IsDeleted = 0;
 END
 GO
+

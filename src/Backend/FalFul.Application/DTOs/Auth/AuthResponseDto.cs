@@ -18,4 +18,5 @@ public class UserInfoDto
     public string? ProfileImageUrl { get; set; }
     public string Role { get; set; } = string.Empty;
     public List<string> Permissions { get; set; } = [];
+    public string       PortalType  { get; set; } = "customer";
 }

@@ -40,6 +40,7 @@ public class DeliveryRepository(DapperContext context) : IDeliveryRepository
 
         delivery.Attempts = (await multi.ReadAsync<DeliveryAttempt>()).ToList();
         delivery.Issues   = (await multi.ReadAsync<DeliveryIssue>()).ToList();
+        delivery.Items    = (await multi.ReadAsync<OrderItem>()).ToList();
         return delivery;
     }
 

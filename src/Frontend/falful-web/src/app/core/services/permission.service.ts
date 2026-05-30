@@ -1,43 +1,36 @@
 import { Injectable, inject } from '@angular/core';
-import { Perm, PermKey } from '../constants/permissions';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class PermissionService {
   private user = inject(AuthService).currentUser;
 
-  can(key: PermKey): boolean {
+  can(key: string): boolean {
     return this.user()?.permissions.includes(key) ?? false;
   }
 
-  canAny(...keys: PermKey[]): boolean {
+  canAny(...keys: string[]): boolean {
     const perms = this.user()?.permissions ?? [];
     return keys.some(k => perms.includes(k));
   }
 
-  /** True if the user holds at least one permission (used for admin shell entry). */
+  /** True if the user holds at least one permission. */
   hasAny(): boolean {
     return (this.user()?.permissions.length ?? 0) > 0;
   }
 
-  /** True if the user holds at least one admin-panel permission (excludes riders and customer-only perms). */
+  /** True when the user belongs to the admin portal (set by role's PortalType in DB). */
   canEnterAdmin(): boolean {
-    if (this.isRiderOnly()) return false;
-    const perms = this.user()?.permissions ?? [];
-    return perms.some(p => p !== Perm.Deliveries && p !== Perm.Shop);
+    return this.user()?.portalType === 'admin';
   }
 
-  /** True when the user is a Rider — checked by role name first, then by permissions fallback. */
+  /** True when the user belongs to the rider portal (set by role's PortalType in DB). */
   isRiderOnly(): boolean {
-    const user = this.user();
-    if (!user) return false;
-    if (user.role?.toLowerCase() === 'rider') return true;
-    const perms = user.permissions ?? [];
-    return perms.length > 0 && perms.every(p => p === Perm.Deliveries);
+    return this.user()?.portalType === 'rider';
   }
 
-  /** True if the user holds the 'shop' permission (assigned per role in /admin/roles). */
+  /** True when the user belongs to the customer/shop portal. */
   canShop(): boolean {
-    return this.can(Perm.Shop);
+    return this.user()?.portalType === 'customer';
   }
 }

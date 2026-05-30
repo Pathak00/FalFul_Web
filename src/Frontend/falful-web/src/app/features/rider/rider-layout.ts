@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AdminNavItem } from '../../core/models/admin.models';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Subscription, switchMap } from 'rxjs';
 import { AdminService } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AdminNavStore } from '../../core/stores/admin-nav.store';
 
 @Component({
   selector: 'app-rider-layout',
@@ -35,8 +36,8 @@ import { AuthService } from '../../core/services/auth.service';
           }
 
           <p class="nav-section-label" style="margin-top:auto">Account</p>
-          <a routerLink="/dashboard" class="nav-item" (click)="closeSidebar()">
-            <i class="bi bi-arrow-left-circle nav-icon"></i> Back to Site
+          <a routerLink="/" class="nav-item" (click)="closeSidebar()">
+            <i class="bi bi-globe nav-icon"></i> View Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
             <i class="bi bi-box-arrow-right nav-icon"></i> Logout
@@ -174,29 +175,50 @@ import { AuthService } from '../../core/services/auth.service';
     }
   `]
 })
-export class RiderLayoutComponent implements OnInit {
-  private authService = inject(AuthService);
+export class RiderLayoutComponent implements OnInit, OnDestroy {
+  private authService  = inject(AuthService);
   private adminService = inject(AdminService);
-  private router = inject(Router);
+  private navStore     = inject(AdminNavStore);
 
-  readonly user = this.authService.currentUser;
+  readonly user    = this.authService.currentUser;
   readonly initial = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'R';
   sidebarOpen = signal(false);
-  navItems = signal<AdminNavItem[]>([]);
-  navLoading = signal(true);
+  navLoading  = signal(true);
+
+  // Remap admin routes to rider equivalents from the shared store.
+  readonly navItems = computed(() =>
+    this.navStore.items()
+      .filter(i => i.route !== '/admin')
+      .map(i => ({ ...i, route: i.route.replace(/^\/admin\//, '/rider/') }))
+  );
+
+  private navSub = new Subscription();
 
   ngOnInit(): void {
-    this.adminService.getAdminNav().subscribe({
-      next: items => {
-        // Reuse the same DB items but rebase routes from /admin/ to /rider/
-        // Dashboard (route === '/admin') is skipped — riders default to /rider/deliveries
-        this.navItems.set(
-          items
-            .filter(i => i.route !== '/admin')
-            .map(i => ({ ...i, route: i.route.replace(/^\/admin\//, '/rider/') }))
-        );
-        this.navLoading.set(false);
-      },
+    if (this.navStore.loaded()) {
+      this.navLoading.set(false);
+    } else {
+      this.loadNav();
+    }
+
+    this.navSub = this.adminService.navRefresh$
+      .pipe(switchMap(() => this.authService.refreshToken()))
+      .subscribe({ next: () => this.reloadNav(), error: () => this.reloadNav() });
+  }
+
+  ngOnDestroy(): void { this.navSub.unsubscribe(); }
+
+  private loadNav(): void {
+    this.navStore.load().subscribe({
+      next: () => this.navLoading.set(false),
+      error: () => this.navLoading.set(false)
+    });
+  }
+
+  private reloadNav(): void {
+    this.navLoading.set(true);
+    this.navStore.load().subscribe({
+      next: () => this.navLoading.set(false),
       error: () => this.navLoading.set(false)
     });
   }

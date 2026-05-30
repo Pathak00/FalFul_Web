@@ -4,4 +4,5 @@ public class CreateRoleDto
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string  PortalType  { get; set; } = "admin";
 }

@@ -1,25 +1,9 @@
+-- REMOVED in migration 020 (pure RBAC).
+-- sp_UserPermission_SetForStaff set per-user permission overrides for Staff members.
+-- User-level permissions no longer exist; permissions are managed at the role level only.
+-- This file is kept as a tombstone.
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE OR ALTER PROCEDURE sp_UserPermission_SetForStaff
-    @UserId      INT,
-    @Permissions NVARCHAR(MAX),  -- comma-separated permission names, empty string = clear all
-    @GrantedBy   INT = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SET QUOTED_IDENTIFIER ON;
-
-    DELETE FROM UserPermissions WHERE UserId = @UserId;
-
-    IF LEN(LTRIM(RTRIM(@Permissions))) > 0
-    BEGIN
-        INSERT INTO UserPermissions (UserId, PermissionId, Granted, GrantedBy)
-        SELECT @UserId, p.Id, 1, @GrantedBy
-        FROM   Permissions p
-        WHERE  p.Name IN (
-            SELECT LTRIM(RTRIM(value))
-            FROM   STRING_SPLIT(@Permissions, ',')
-            WHERE  LEN(LTRIM(RTRIM(value))) > 0
-        );
-    END
-END
+IF OBJECT_ID('sp_UserPermission_SetForStaff', 'P') IS NOT NULL
+    DROP PROCEDURE sp_UserPermission_SetForStaff;
+GO

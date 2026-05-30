@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Product_SetAvailability
     @Id          INT,
@@ -7,5 +7,6 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
-    UPDATE Products SET IsAvailable = @IsAvailable, UpdatedAt = GETUTCDATE() WHERE Id = @Id AND IsDeleted = 0;
+    UPDATE Products SET IsAvailable = @IsAvailable, UpdatedAt = dbo.fn_NepalNow() WHERE Id = @Id AND IsDeleted = 0;
 END
+

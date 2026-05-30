@@ -24,6 +24,9 @@ public class Delivery
 
     // Populated by GetAll / GetById JOINs
     public string  OrderNumber   { get; set; } = string.Empty;
+    public decimal SubTotal      { get; set; }
+    public decimal DeliveryFee   { get; set; }
+    public decimal ServiceFee    { get; set; }
     public decimal TotalAmount   { get; set; }
     public byte    PaymentMethod { get; set; }
     public string  CustomerName  { get; set; } = string.Empty;
@@ -36,4 +39,5 @@ public class Delivery
 
     public List<DeliveryAttempt> Attempts { get; set; } = [];
     public List<DeliveryIssue>   Issues   { get; set; } = [];
+    public List<OrderItem>       Items    { get; set; } = [];
 }

@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_DeliveryIssue_Resolve
     @Id              INT,
@@ -10,7 +10,8 @@ BEGIN
 
     UPDATE DeliveryIssues
     SET    IsResolved      = 1,
-           ResolvedAt      = GETUTCDATE(),
+           ResolvedAt      = dbo.fn_NepalNow(),
            ResolutionNotes = @ResolutionNotes
     WHERE  Id = @Id;
 END
+

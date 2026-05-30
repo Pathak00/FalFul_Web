@@ -34,6 +34,7 @@ export interface UserInfo {
   profileImageUrl?: string;
   role: string;
   permissions: string[];
+  portalType: string;
 }
 
 export interface AuthResponse {

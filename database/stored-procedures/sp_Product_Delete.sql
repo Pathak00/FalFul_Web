@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Product_Delete
     @Id INT
@@ -6,5 +6,6 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET QUOTED_IDENTIFIER ON;
-    UPDATE Products SET IsDeleted = 1, UpdatedAt = GETUTCDATE() WHERE Id = @Id;
+    UPDATE Products SET IsDeleted = 1, UpdatedAt = dbo.fn_NepalNow() WHERE Id = @Id;
 END
+

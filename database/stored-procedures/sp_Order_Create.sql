@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Order_Create
     @UserId            INT,
@@ -38,9 +38,10 @@ BEGIN
             @DeliveryLatitude, @DeliveryLongitude);
 
     SET @NewId = SCOPE_IDENTITY();
-    SET @OrderNumber = 'FF-' + CAST(YEAR(GETUTCDATE()) AS NVARCHAR) + '-' + RIGHT('000000' + CAST(@NewId AS NVARCHAR), 6);
+    SET @OrderNumber = 'FF-' + CAST(YEAR(dbo.fn_NepalNow()) AS NVARCHAR) + '-' + RIGHT('000000' + CAST(@NewId AS NVARCHAR), 6);
 
     UPDATE Orders SET OrderNumber = @OrderNumber WHERE Id = @NewId;
 
     SELECT @NewId AS Id, @OrderNumber AS OrderNumber;
 END
+

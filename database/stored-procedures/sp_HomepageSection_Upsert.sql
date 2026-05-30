@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
@@ -19,7 +19,7 @@ BEGIN
         UPDATE HomepageSections
         SET Title = @Title, Subtitle = @Subtitle, Content = @Content,
             IsVisible = @IsVisible, DisplayOrder = @DisplayOrder,
-            UpdatedAt = GETUTCDATE(), UpdatedBy = @UpdatedBy
+            UpdatedAt = dbo.fn_NepalNow(), UpdatedBy = @UpdatedBy
         WHERE SectionKey = @SectionKey;
 
         SELECT Id FROM HomepageSections WHERE SectionKey = @SectionKey;
@@ -32,3 +32,4 @@ BEGIN
     END
 END
 GO
+

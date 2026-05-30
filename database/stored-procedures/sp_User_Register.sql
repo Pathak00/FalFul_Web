@@ -16,9 +16,10 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO Users (FullName, Email, PhoneNumber, PasswordHash, UserType, CreatedAt)
-    VALUES (@FullName, @Email, @PhoneNumber, @PasswordHash, @UserType, GETUTCDATE());
+    VALUES (@FullName, @Email, @PhoneNumber, @PasswordHash, @UserType, dbo.fn_NepalNow());
 
     SELECT SCOPE_IDENTITY();
 END
 GO
+
 

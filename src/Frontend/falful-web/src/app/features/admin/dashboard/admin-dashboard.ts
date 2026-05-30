@@ -4,23 +4,8 @@ import { AdminStats } from '../../../core/models/admin.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { AdminService } from '../../../core/services/admin.service';
+import { AdminNavStore } from '../../../core/stores/admin-nav.store';
 import { Perm } from '../../../core/constants/permissions';
-
-const QUICK_ACTIONS = [
-  { perm: 'menus',     link: '/admin/menus',     icon: 'bi-list-nested',              title: 'Navigation Menus',     desc: 'Build the site navigation — create links, dropdowns, and control who sees each item' },
-  { perm: 'pages',     link: '/admin/pages',     icon: 'bi-file-earmark-text',        title: 'Manage Pages',         desc: 'Add legal, about, or custom content pages accessible via /pages/[slug]' },
-  { perm: 'banners',   link: '/admin/banners',   icon: 'bi-images',                   title: 'Manage Banners',       desc: 'Create promotional banners shown on the homepage and product pages' },
-  { perm: 'sections',  link: '/admin/sections',  icon: 'bi-layout-text-window-reverse', title: 'Homepage Sections', desc: 'Edit the text content of each section on the landing page' },
-  { perm: 'users',     link: '/admin/users',     icon: 'bi-people-fill',              title: 'Manage Users',         desc: 'View, activate, promote, reset passwords, or remove users' },
-  { perm: 'system',    link: '/admin/roles',     icon: 'bi-shield-lock',              title: 'Roles & Permissions',  desc: 'Create roles, assign permissions, and set the default role for new registrations' },
-  { perm: 'products',  link: '/admin/products',  icon: 'bi-box-seam',                 title: 'Products',             desc: 'Manage the fruit product catalog' },
-  { perm: 'categories',link: '/admin/categories',icon: 'bi-tags',                     title: 'Categories',           desc: 'Organise products into categories and sub-categories' },
-  { perm: 'orders',    link: '/admin/orders',    icon: 'bi-bag-check',                title: 'Orders',               desc: 'View and manage all customer orders' },
-  { perm: 'deliveries',link: '/admin/deliveries',icon: 'bi-bicycle',                  title: 'Deliveries',           desc: 'Track and manage delivery assignments' },
-  { perm: 'reports',   link: '/admin/reports',   icon: 'bi-bar-chart-line',           title: 'Reports',              desc: 'Sales analytics and operational reports' },
-  { perm: 'price_config', link: '/admin/price-config', icon: 'bi-sliders',            title: 'Price Config',         desc: 'Configure delivery fees and pricing rules' },
-  { perm: 'settings',  link: '/admin/settings',  icon: 'bi-gear',                     title: 'Settings',             desc: 'Manage application-wide configuration' },
-];
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -88,16 +73,18 @@ const QUICK_ACTIONS = [
         }
       }
 
-      <!-- Quick actions — filtered by what the user can actually access -->
+      <!-- Quick actions — sourced from the same DB-driven nav store as the sidebar -->
       <div class="quick-links">
         <h2>Quick Actions</h2>
         <div class="link-grid">
-          @for (action of visibleActions(); track action.perm) {
-            <a [routerLink]="action.link" class="quick-link">
-              <i class="bi {{ action.icon }} ql-icon"></i>
+          @for (item of navActions(); track item.id) {
+            <a [routerLink]="item.route" class="quick-link">
+              <i class="bi {{ item.icon ?? 'bi-grid' }} ql-icon"></i>
               <div>
-                <strong>{{ action.title }}</strong>
-                <p>{{ action.desc }}</p>
+                <strong>{{ item.label }}</strong>
+                @if (item.groupLabel) {
+                  <p>{{ item.groupLabel }}</p>
+                }
               </div>
             </a>
           }
@@ -163,14 +150,18 @@ const QUICK_ACTIONS = [
   `]
 })
 export class AdminDashboardComponent implements OnInit {
-  private adminService = inject(AdminService);
-  private authService  = inject(AuthService);
-  private perms        = inject(PermissionService);
+  private adminService  = inject(AdminService);
+  private authService   = inject(AuthService);
+  private perms         = inject(PermissionService);
+  private adminNavStore = inject(AdminNavStore);
 
-  readonly user    = this.authService.currentUser;
+  readonly user     = this.authService.currentUser;
   readonly isSystem = computed(() => this.perms.can(Perm.System));
-  readonly visibleActions = computed(() =>
-    QUICK_ACTIONS.filter(a => this.perms.can(a.perm as any))
+
+  // DB-driven quick actions: exactly the same items the sidebar shows,
+  // minus the dashboard root itself. No hardcoded permission strings here.
+  readonly navActions = computed(() =>
+    this.adminNavStore.items().filter(item => item.route !== '/admin')
   );
 
   stats     = signal<AdminStats | null>(null);

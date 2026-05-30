@@ -1,12 +1,12 @@
-CREATE OR ALTER PROCEDURE sp_Report_OrderSummary
+﻿CREATE OR ALTER PROCEDURE sp_Report_OrderSummary
     @FromDate DATE = NULL,
     @ToDate   DATE = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    SET @FromDate = ISNULL(@FromDate, CAST(DATEADD(DAY, -30, GETUTCDATE()) AS DATE));
-    SET @ToDate   = ISNULL(@ToDate,   CAST(GETUTCDATE() AS DATE));
+    SET @FromDate = ISNULL(@FromDate, CAST(DATEADD(DAY, -30, dbo.fn_NepalNow()) AS DATE));
+    SET @ToDate   = ISNULL(@ToDate,   CAST(dbo.fn_NepalNow() AS DATE));
 
     -- Result set 1: summary row
     -- "Delivered" = orders whose linked delivery has Status=5 (Delivered)
@@ -35,3 +35,4 @@ BEGIN
     WHERE  CAST(CreatedAt AS DATE) BETWEEN @FromDate AND @ToDate
     GROUP  BY PaymentMethod;
 END
+

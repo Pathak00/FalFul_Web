@@ -115,7 +115,7 @@ public class AuthService : IAuthService
     {
         var token = await _tokenRepo.GetByTokenAsync(refreshToken);
 
-        if (token == null || token.IsRevoked || token.ExpiresAt < DateTime.UtcNow)
+        if (token == null || token.IsRevoked || token.ExpiresAt < NepalTime.Now)
             return Result<AuthResponseDto>.Failure("Invalid or expired refresh token.");
 
         var user = await _userRepo.GetByIdAsync(token.UserId);
@@ -178,14 +178,14 @@ public class AuthService : IAuthService
         {
             UserId = user.Id,
             Token = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            ExpiresAt = NepalTime.Now.AddDays(30)
         });
 
         return new AuthResponseDto
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(60),
+            ExpiresAt = NepalTime.Now.AddMinutes(60),
             User = new UserInfoDto
             {
                 Id = user.Id,
@@ -195,7 +195,8 @@ public class AuthService : IAuthService
                 UserType = user.UserType.ToString(),
                 ProfileImageUrl = user.ProfileImageUrl,
                 Role = roleName,
-                Permissions = permissions
+                Permissions = permissions,
+                PortalType = role?.PortalType ?? "customer"
             }
         };
     }
