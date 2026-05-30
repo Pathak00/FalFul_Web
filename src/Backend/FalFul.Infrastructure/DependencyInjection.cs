@@ -3,6 +3,7 @@ using FalFul.Infrastructure.Gateways;
 using FalFul.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace FalFul.Infrastructure;
 
@@ -19,6 +20,15 @@ public static class DependencyInjection
 
         services.Configure<ESewaConfig>(config.GetSection("PaymentGateways:eSewa"));
         services.AddScoped<IPaymentGateway, ESewaGateway>();
+
+        services.Configure<KhaltiConfig>(config.GetSection("PaymentGateways:Khalti"));
+        services.AddHttpClient("Khalti", (sp, client) =>
+        {
+            var cfg = sp.GetRequiredService<IOptions<KhaltiConfig>>().Value;
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Key", cfg.SecretKey);
+        });
+        services.AddScoped<IPaymentGateway, KhaltiGateway>();
 
         return services;
     }

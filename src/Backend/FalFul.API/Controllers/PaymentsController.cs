@@ -77,6 +77,26 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
             : BadRequest(new { message = result.Error });
     }
 
+    /// <summary>
+    /// Khalti sends ?pidx=...&amp;payment_id=... on redirect to return_url.
+    /// Angular's /payment/callback page forwards the query params here.
+    /// POST variant is for Angular forwarding the params as JSON body.
+    /// </summary>
+    [HttpGet("verify/khalti")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyKhaltiGet([FromQuery] string? pidx = null, [FromQuery] string? payment_id = null)
+    {
+        if (string.IsNullOrEmpty(pidx))
+            return BadRequest(new { message = "Missing Khalti pidx parameter." });
+
+        var data = new Dictionary<string, string> { ["pidx"] = pidx };
+        if (!string.IsNullOrEmpty(payment_id))
+            data["payment_id"] = payment_id;
+
+        var result = await paymentService.HandleCallbackAsync("khalti", data);
+        return result.IsSuccess ? Ok(new { message = "Payment verified." }) : BadRequest(new { message = result.Error });
+    }
+
     [HttpPost("verify/khalti")]
     [AllowAnonymous]
     public async Task<IActionResult> VerifyKhalti([FromBody] Dictionary<string, string> body)
