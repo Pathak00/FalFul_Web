@@ -108,7 +108,7 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
     // ── Admin ─────────────────────────────────────────────────────────────────
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> GetAll(
         [FromQuery] byte?   methodId  = null,
         [FromQuery] byte?   status    = null,
@@ -117,7 +117,7 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
         => Ok(await paymentService.GetAllAsync(methodId, status, fromDate, toDate));
 
     [HttpPost("{paymentId:int}/confirm-cod")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> ConfirmCod(int paymentId)
     {
         var result = await paymentService.ConfirmCodBalanceAsync(paymentId);
@@ -125,12 +125,12 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
     }
 
     [HttpGet("settings")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> GetSettings()
         => Ok(await paymentService.GetSettingsAsync());
 
     [HttpPut("settings")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> UpdateSettings([FromBody] PaymentSettingsDto dto)
     {
         var result = await paymentService.UpdateSettingsAsync(dto);
@@ -138,12 +138,12 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
     }
 
     [HttpGet("methods/all")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> GetAllMethods()
         => Ok(await paymentService.GetAllMethodsAsync());
 
     [HttpPatch("methods/{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> UpdateMethod(byte id, [FromBody] PaymentMethodUpdateDto dto)
     {
         var result = await paymentService.UpdateMethodAsync(id, dto);
@@ -151,7 +151,7 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
     }
 
     [HttpGet("report")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Perm:payments")]
     public async Task<IActionResult> GetReport([FromQuery] string? fromDate = null, [FromQuery] string? toDate = null)
         => Ok(await paymentService.GetReportAsync(fromDate, toDate));
 
