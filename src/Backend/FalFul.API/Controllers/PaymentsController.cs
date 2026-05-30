@@ -3,6 +3,8 @@ using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
 namespace FalFul.API.Controllers;
 
@@ -37,24 +39,42 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
     public async Task<IActionResult> GetByOrder(int orderId)
         => Ok(await paymentService.GetByOrderAsync(orderId));
 
-    // ── Gateway callbacks (public — gateway POSTs/redirects here) ────────────
+    // ── Gateway callbacks (public — called by Angular after redirect) ─────────
 
+    /// <summary>
+    /// eSewa sends ?data=base64JSON on redirect to success_url.
+    /// Angular's /payment/callback page forwards it here.
+    /// Accepts both GET (Angular query param) and POST (direct form POST fallback).
+    /// </summary>
+    [HttpGet("verify/esewa")]
     [HttpPost("verify/esewa")]
     [AllowAnonymous]
-    public async Task<IActionResult> VerifyEsewa([FromQuery] Dictionary<string, string> query, [FromForm] Dictionary<string, string> form)
+    public async Task<IActionResult> VerifyEsewa([FromQuery] string? data = null)
     {
-        var data = new Dictionary<string, string>(query);
-        foreach (var kv in form) data[kv.Key] = kv.Value;
-        var result = await paymentService.HandleCallbackAsync("esewa", data);
-        return result.IsSuccess ? Ok(new { message = "Payment verified." }) : BadRequest(new { message = result.Error });
-    }
+        if (string.IsNullOrEmpty(data))
+            return BadRequest(new { message = "Missing eSewa data parameter." });
 
-    [HttpGet("verify/esewa")]
-    [AllowAnonymous]
-    public async Task<IActionResult> VerifyEsewaGet([FromQuery] Dictionary<string, string> query)
-    {
-        var result = await paymentService.HandleCallbackAsync("esewa", query);
-        return result.IsSuccess ? Ok(new { message = "Payment verified." }) : BadRequest(new { message = result.Error });
+        Dictionary<string, string> decoded;
+        try
+        {
+            var json = Encoding.UTF8.GetString(Convert.FromBase64String(data));
+            decoded  = JsonSerializer.Deserialize<Dictionary<string, string>>(json)
+                       ?? throw new Exception();
+        }
+        catch { return BadRequest(new { message = "Invalid eSewa callback data." }); }
+
+        // Extract payment_id from transaction_uuid (encoded as FF-{paymentId}-{timestamp})
+        if (decoded.TryGetValue("transaction_uuid", out var uuid))
+        {
+            var parts = uuid.Split('-');
+            if (parts.Length >= 2 && int.TryParse(parts[1], out var pid))
+                decoded["payment_id"] = pid.ToString();
+        }
+
+        var result = await paymentService.HandleCallbackAsync("esewa", decoded);
+        return result.IsSuccess
+            ? Ok(new { message = "Payment verified." })
+            : BadRequest(new { message = result.Error });
     }
 
     [HttpPost("verify/khalti")]
