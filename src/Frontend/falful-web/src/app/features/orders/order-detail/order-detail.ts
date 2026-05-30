@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
+import { PaymentService } from '../../../core/services/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { OrderDetail, ORDER_STATUSES, DELIVERY_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
+import { PaymentDto } from '../../../core/models/payment.models';
 
 interface BowlDetails {
   container: string;
@@ -336,20 +338,49 @@ const DELIVERY_STEPS = [
             <div class="ps-row"><span>Service Fee</span><span>Rs. {{ order()!.serviceFee | number:'1.0-0' }}</span></div>
             <div class="ps-row total"><span>Total</span><span>Rs. {{ order()!.totalAmount | number:'1.0-0' }}</span></div>
 
-            <div class="ps-payment-section">
-              <div class="ps-row">
-                <span>Method</span>
-                <span>{{ paymentMethodLabel(order()!.paymentMethod) }}</span>
+            <!-- Payment details (live from Payments table) -->
+            @if (payments().length > 0) {
+              <div class="ps-payment-section">
+                <p class="ps-section-title">Payment</p>
+                @for (p of payments(); track p.id) {
+                  <div class="payment-row">
+                    <div class="payment-row-left">
+                      <span class="payment-method-name">{{ p.paymentMethodName }}</span>
+                      @if (payments().length > 1) {
+                        <span class="payment-type-tag">{{ p.paymentTypeLabel }}</span>
+                      }
+                    </div>
+                    <div class="payment-row-right">
+                      <span class="payment-amount">Rs. {{ p.amount | number:'1.0-0' }}</span>
+                      <span class="pstatus-badge" [ngClass]="paymentStatusClass(p.status)">
+                        {{ p.statusLabel }}
+                      </span>
+                    </div>
+                  </div>
+                  @if (p.paidAt) {
+                    <div class="payment-paid-at">
+                      Paid {{ p.paidAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}
+                    </div>
+                  }
+                }
               </div>
-              <div class="ps-row">
-                <span>Payment</span>
-                <span class="pstatus-badge"
-                      [style.background]="paymentStatusColor(order()!) + '20'"
-                      [style.color]="paymentStatusColor(order()!)">
-                  {{ paymentStatusLabel(order()!) }}
-                </span>
+            } @else {
+              <!-- Fallback for legacy orders without payment records -->
+              <div class="ps-payment-section">
+                <div class="ps-row">
+                  <span>Method</span>
+                  <span>{{ paymentMethodLabel(order()!.paymentMethod) }}</span>
+                </div>
+                <div class="ps-row">
+                  <span>Payment</span>
+                  <span class="pstatus-badge"
+                        [style.background]="paymentStatusColor(order()!) + '20'"
+                        [style.color]="paymentStatusColor(order()!)">
+                    {{ paymentStatusLabel(order()!) }}
+                  </span>
+                </div>
               </div>
-            </div>
+            }
 
             @if (canCancel()) {
               <button class="btn-cancel" (click)="cancelModalOpen.set(true)" [disabled]="cancelling()">
@@ -419,7 +450,20 @@ const DELIVERY_STEPS = [
     .bc-fee-row .bc-name { color: #6b7280; font-style: italic; }
 
     .ps-payment-section { border-top: 1px solid #f1f5f9; margin-top: .5rem; padding-top: .5rem; }
-    .pstatus-badge { display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+    .ps-section-title { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 0 0 .5rem; }
+    .pstatus-badge { display: inline-block; font-size: .68rem; font-weight: 700; padding: 1px 7px; border-radius: 10px; white-space: nowrap; }
+    .pstatus-pending   { background: #fff7ed; color: #ea580c; }
+    .pstatus-completed { background: #dcfce7; color: #16a34a; }
+    .pstatus-failed    { background: #fef2f2; color: #dc2626; }
+    .pstatus-refunded  { background: #f5f3ff; color: #7c3aed; }
+
+    .payment-row { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; padding: .3rem 0; }
+    .payment-row-left { display: flex; flex-direction: column; gap: .15rem; }
+    .payment-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; }
+    .payment-method-name { font-size: .8rem; font-weight: 600; color: #0f172a; }
+    .payment-type-tag { font-size: .65rem; background: #f1f5f9; color: #64748b; padding: 1px 6px; border-radius: 4px; width: fit-content; }
+    .payment-amount { font-size: .82rem; font-weight: 700; color: #0f172a; }
+    .payment-paid-at { font-size: .68rem; color: #9ca3af; padding-bottom: .35rem; text-align: right; }
 
     .attempts-list { }
     .attempts-title { font-size: .72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .5rem; }
@@ -461,11 +505,13 @@ const DELIVERY_STEPS = [
   styleUrl: './order-detail.scss'
 })
 export class OrderDetailComponent implements OnInit {
-  private svc   = inject(OrderService);
-  private route = inject(ActivatedRoute);
-  private toast = inject(ToastService);
+  private svc     = inject(OrderService);
+  private paySvc  = inject(PaymentService);
+  private route   = inject(ActivatedRoute);
+  private toast   = inject(ToastService);
 
   order            = signal<OrderDetail | null>(null);
+  payments         = signal<PaymentDto[]>([]);
   loading          = signal(true);
   cancelling       = signal(false);
   submittingRating = signal(false);
@@ -489,6 +535,10 @@ export class OrderDetailComponent implements OnInit {
     this.svc.getOrderById(id).subscribe({
       next: o  => { this.order.set(o); this.loading.set(false); },
       error: () => this.loading.set(false)
+    });
+    this.paySvc.getPaymentsByOrder(id).subscribe({
+      next: list => this.payments.set(list),
+      error: ()  => {}
     });
     this.svc.getSetting('cancellation_policy_text').subscribe({
       next: s => this.cancelPolicy.set(s.value),
@@ -570,6 +620,10 @@ export class OrderDetailComponent implements OnInit {
       case 5:  return '#9ca3af';
       default: return '#f59e0b';
     }
+  }
+
+  paymentStatusClass(status: number): string {
+    return { 1: 'pstatus-pending', 2: 'pstatus-completed', 3: 'pstatus-failed', 4: 'pstatus-refunded' }[status] ?? 'pstatus-pending';
   }
 
   orderStatusLabel(s: number): string  { return ORDER_STATUSES[s]?.label    ?? 'Unknown'; }
