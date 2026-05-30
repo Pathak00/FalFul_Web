@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
@@ -24,7 +24,8 @@ BEGIN
     UPDATE Pages
     SET Title = @Title, Slug = @Slug, Content = @Content,
         MetaTitle = @MetaTitle, MetaDescription = @MetaDescription,
-        IsPublished = @IsPublished, UpdatedAt = GETUTCDATE(), UpdatedBy = @UpdatedBy
+        IsPublished = @IsPublished, UpdatedAt = dbo.fn_NepalNow(), UpdatedBy = @UpdatedBy
     WHERE Id = @Id AND IsDeleted = 0;
 END
 GO
+

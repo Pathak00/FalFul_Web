@@ -105,13 +105,29 @@ public class DeliverySummaryDto
     public DateTime? FailedAt         { get; set; }
 }
 
+public class DeliveryOrderItemDto
+{
+    public int     Id                 { get; set; }
+    public string  ProductName        { get; set; } = string.Empty;
+    public decimal Quantity           { get; set; }
+    public string  Unit               { get; set; } = string.Empty;
+    public decimal UnitPrice          { get; set; }
+    public decimal TotalPrice         { get; set; }
+    public bool    IsCustomBuild      { get; set; }
+    public string? CustomBuildDetails { get; set; }
+}
+
 public class DeliveryDetailDto : DeliverySummaryDto
 {
+    public decimal   SubTotal      { get; set; }
+    public decimal   DeliveryFee   { get; set; }
+    public decimal   ServiceFee    { get; set; }
     public string?   Landmark      { get; set; }
     public string?   OrderNotes    { get; set; }
     public byte      PaymentMethod { get; set; }
     public DateTime? PickedUpAt    { get; set; }
     public string?   TrackingNotes { get; set; }
-    public List<DeliveryAttemptDto> Attempts { get; set; } = [];
-    public List<DeliveryIssueDto>   Issues   { get; set; } = [];
+    public List<DeliveryAttemptDto>   Attempts { get; set; } = [];
+    public List<DeliveryIssueDto>     Issues   { get; set; } = [];
+    public List<DeliveryOrderItemDto> Items    { get; set; } = [];
 }

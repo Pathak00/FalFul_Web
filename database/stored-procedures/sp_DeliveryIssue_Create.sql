@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_DeliveryIssue_Create
     @DeliveryId  INT,
@@ -11,7 +11,8 @@ BEGIN
     SET QUOTED_IDENTIFIER ON;
 
     INSERT INTO DeliveryIssues (DeliveryId, IssueType, ReportedBy, Description, ReportedAt, IsResolved)
-    VALUES (@DeliveryId, @IssueType, @ReportedBy, @Description, GETUTCDATE(), 0);
+    VALUES (@DeliveryId, @IssueType, @ReportedBy, @Description, dbo.fn_NepalNow(), 0);
 
     SELECT SCOPE_IDENTITY() AS Id;
 END
+

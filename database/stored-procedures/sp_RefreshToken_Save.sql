@@ -16,7 +16,8 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO RefreshTokens (UserId, Token, ExpiresAt, DeviceInfo, IpAddress, CreatedAt)
-    VALUES (@UserId, @Token, @ExpiresAt, @DeviceInfo, @IpAddress, GETUTCDATE());
+    VALUES (@UserId, @Token, @ExpiresAt, @DeviceInfo, @IpAddress, dbo.fn_NepalNow());
 END
 GO
+
 

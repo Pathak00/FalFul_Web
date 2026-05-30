@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Product_Create
     @CategoryId       INT,
@@ -33,7 +33,8 @@ BEGIN
                           MinOrderGrams, GramStep, CutFruitPrice, CreatedAt)
     VALUES (@CategoryId, @Name, @Slug, @Description, @ShortDescription, @Price, @Unit,
             @Stock, @IsAvailable, @IsFeatured, @ImageUrl, @Tags, @DisplayOrder,
-            @MinOrderGrams, @GramStep, @CutFruitPrice, GETUTCDATE());
+            @MinOrderGrams, @GramStep, @CutFruitPrice, dbo.fn_NepalNow());
 
     SELECT SCOPE_IDENTITY() AS Id;
 END
+

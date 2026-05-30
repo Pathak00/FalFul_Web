@@ -47,6 +47,19 @@ const NEXT_ACTIONS = [
   { value: 4, label: 'Customer Unavailable' },
 ];
 
+const PAYMENT_LABELS: Record<number, string> = {
+  1: 'Cash on Delivery',
+  2: 'Online Payment',
+  3: 'Card on Delivery',
+};
+
+interface BowlDetails {
+  container: string;
+  totalGrams?: number;
+  containerFee?: number;
+  fruits: { productId: number; name: string; grams: number; price?: number }[];
+}
+
 @Component({
   selector: 'app-rider-deliveries',
   standalone: true,
@@ -102,6 +115,9 @@ const NEXT_ACTIONS = [
                       Log Attempt
                     </button>
                   }
+                  <button class="btn-action btn-detail" (click)="viewDetail(d.id)" title="View Details">
+                    <i class="bi bi-eye"></i>
+                  </button>
                 </div>
               </div>
 
@@ -134,6 +150,149 @@ const NEXT_ACTIONS = [
         </div>
       }
     </div>
+
+    <!-- Order Detail Modal -->
+    @if (detail()) {
+      <div class="modal-overlay" (click)="detail.set(null)">
+        <div class="modal modal-detail" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>#{{ detail()!.orderNumber }}</h2>
+              <span class="badge {{ STATUS_BADGE[detail()!.status] ?? 'badge-gray' }}">
+                {{ STATUS_LABELS[detail()!.status] ?? detail()!.statusLabel }}
+              </span>
+            </div>
+            <button class="btn-close" (click)="detail.set(null)">✕</button>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Customer</div>
+            <div class="detail-row"><i class="bi bi-person"></i> {{ detail()!.customerName }}</div>
+            <div class="detail-row"><i class="bi bi-telephone"></i> {{ detail()!.deliveryPhone }}</div>
+            <div class="detail-row">
+              <i class="bi bi-geo-alt"></i>
+              {{ detail()!.fullAddress }}{{ detail()!.city ? ', ' + detail()!.city : '' }}
+            </div>
+            @if (detail()!.landmark) {
+              <div class="detail-row"><i class="bi bi-signpost"></i> {{ detail()!.landmark }}</div>
+            }
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Delivery</div>
+            <div class="detail-row">
+              <i class="bi bi-calendar3"></i>
+              {{ detail()!.scheduledDate }}{{ detail()!.scheduledTimeSlot ? ' · ' + detail()!.scheduledTimeSlot : '' }}
+            </div>
+            <div class="detail-row">
+              <i class="bi bi-credit-card"></i>
+              {{ PAYMENT_LABELS[detail()!.paymentMethod] ?? 'Cash on Delivery' }}
+            </div>
+            @if (detail()!.trackingNotes) {
+              <div class="detail-row"><i class="bi bi-sticky"></i> {{ detail()!.trackingNotes }}</div>
+            }
+          </div>
+
+          @if (detail()!.items?.length) {
+            <div class="detail-section">
+              <div class="detail-section-title">Items ({{ detail()!.items.length }})</div>
+              @for (item of detail()!.items; track item.id) {
+                <div class="item-row">
+                  <span class="item-name">
+                    {{ item.productName }}
+                    @if (item.isCustomBuild) { <span class="item-custom">Custom</span> }
+                  </span>
+                  <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
+                  <span class="item-price">Rs {{ item.totalPrice | number:'1.0-0' }}</span>
+                </div>
+                @if (item.isCustomBuild && item.customBuildDetails) {
+                  @let bowl = parseBowlDetails(item.customBuildDetails);
+                  @if (bowl) {
+                    <div class="bowl-comp">
+                      <div class="bowl-comp-header">
+                        <i class="bi bi-scissors"></i>
+                        {{ bowl.container === 'bowl' ? 'Bowl' : 'Box' }} Composition
+                        — {{ bowlTotalGrams(bowl) }}g
+                      </div>
+                      @for (fruit of bowl.fruits; track fruit.productId) {
+                        <div class="bowl-fruit">
+                          <span>{{ fruit.name }}</span>
+                          <span>{{ fruit.grams }}g</span>
+                          @if (fruit.price) {
+                            <span class="bowl-fruit-price">Rs {{ fruit.price | number:'1.0-0' }}</span>
+                          }
+                        </div>
+                      }
+                      @if (bowl.containerFee) {
+                        <div class="bowl-fruit bowl-extra">
+                          <span>Container fee</span>
+                          <span></span>
+                          <span class="bowl-fruit-price">Rs {{ bowl.containerFee | number:'1.0-0' }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                }
+              }
+              <div class="charge-row">
+                <span>Subtotal</span>
+                <span>Rs {{ detail()!.subTotal | number:'1.0-0' }}</span>
+              </div>
+              @if (detail()!.deliveryFee > 0) {
+                <div class="charge-row">
+                  <span>Delivery Fee</span>
+                  <span>Rs {{ detail()!.deliveryFee | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (detail()!.serviceFee > 0) {
+                <div class="charge-row">
+                  <span>Service Fee</span>
+                  <span>Rs {{ detail()!.serviceFee | number:'1.0-0' }}</span>
+                </div>
+              }
+              <div class="item-total">
+                <span>Total</span>
+                <span>Rs {{ detail()!.totalAmount | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          }
+
+          @if (detail()!.orderNotes) {
+            <div class="detail-section">
+              <div class="detail-section-title">Order Notes</div>
+              <div class="detail-row"><i class="bi bi-chat-left-text"></i> {{ detail()!.orderNotes }}</div>
+            </div>
+          }
+
+          @if (detail()!.attempts?.length) {
+            <div class="detail-section">
+              <div class="detail-section-title">Delivery Attempts</div>
+              @for (a of detail()!.attempts; track a.id) {
+                <div class="attempt-row">
+                  <div class="attempt-meta">
+                    <span class="attempt-num">Attempt {{ a.attemptNumber }}</span>
+                    <span class="badge {{ a.wasSuccessful ? 'badge-green' : 'badge-red' }}">
+                      {{ a.wasSuccessful ? 'Successful' : 'Failed' }}
+                    </span>
+                    <span class="attempt-time">{{ a.attemptedAt | date:'dd MMM, HH:mm':'Asia/Kathmandu' }}</span>
+                  </div>
+                  @if (a.failureReasonLabel) {
+                    <div class="attempt-note">{{ a.failureReasonLabel }}</div>
+                  }
+                  @if (a.failureNotes) {
+                    <div class="attempt-note text-muted">{{ a.failureNotes }}</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="detail.set(null)">Close</button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Log Attempt Modal -->
     @if (attemptTarget()) {
@@ -524,6 +683,107 @@ const NEXT_ACTIONS = [
       .modal-sm {
         max-width: 440px;
       }
+      .modal-detail {
+        max-width: 520px;
+      }
+      .btn-detail {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        color: #64748b;
+        padding: 0.3rem 0.6rem;
+      }
+
+      .detail-section {
+        margin-bottom: 1.25rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        &:last-of-type { border-bottom: none; }
+      }
+      .detail-section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+      }
+      .detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #374151;
+        margin-bottom: 0.35rem;
+        i { color: #94a3b8; flex-shrink: 0; margin-top: 2px; }
+      }
+
+      .item-row {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .35rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: .825rem;
+        &:last-of-type { border-bottom: none; }
+      }
+      .item-name { flex: 1; color: #374151; font-weight: 500; }
+      .item-custom {
+        font-size: .65rem; background: #ede9fe; color: #7c3aed;
+        padding: 1px 5px; border-radius: 4px; font-weight: 600; margin-left: .3rem;
+      }
+      .item-qty { color: #64748b; white-space: nowrap; }
+      .item-price { color: #111827; font-weight: 600; white-space: nowrap; min-width: 70px; text-align: right; }
+      .charge-row {
+        display: flex; justify-content: space-between;
+        padding: .3rem 0; font-size: .8rem; color: #64748b;
+        border-top: 1px solid #f1f5f9;
+      }
+      .item-total {
+        display: flex; justify-content: space-between;
+        padding: .5rem 0 0; font-size: .85rem; font-weight: 700; color: #111827;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .bowl-comp {
+        background: #faf5ff;
+        border-radius: 6px;
+        padding: .5rem .65rem;
+        margin: .25rem 0 .5rem;
+        font-size: .78rem;
+      }
+      .bowl-comp-header {
+        font-size: .72rem; font-weight: 700; color: #7c3aed;
+        margin-bottom: .35rem;
+        i { margin-right: .25rem; }
+      }
+      .bowl-fruit {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .15rem 0;
+        border-top: 1px solid #f3e8ff;
+        color: #374151;
+        span:first-child { flex: 1; }
+        span:nth-child(2) { color: #6b7280; white-space: nowrap; }
+      }
+      .bowl-fruit-price { color: #7c3aed; font-weight: 600; white-space: nowrap; }
+      .bowl-extra { color: #6b7280; font-style: italic; }
+
+      .attempt-row {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 0.625rem 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+      .attempt-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+        flex-wrap: wrap;
+      }
+      .attempt-num { font-size: 0.8rem; font-weight: 700; color: #374151; }
+      .attempt-time { font-size: 0.72rem; color: #94a3b8; margin-left: auto; }
+      .attempt-note { font-size: 0.78rem; color: #475569; margin-top: 0.2rem; }
+      .text-muted { color: #94a3b8; }
     `,
   ],
 })
@@ -532,11 +792,14 @@ export class RiderDeliveriesComponent implements OnInit {
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_BADGE = STATUS_BADGE;
+  readonly PAYMENT_LABELS = PAYMENT_LABELS;
   readonly failureReasons = FAILURE_REASONS;
   readonly nextActions = NEXT_ACTIONS;
 
   deliveries = signal<any[]>([]);
   loading = signal(true);
+
+  detail = signal<any>(null);
 
   attemptTarget = signal<any>(null);
   attemptSaving = signal(false);
@@ -560,6 +823,12 @@ export class RiderDeliveriesComponent implements OnInit {
 
   quickStatus(id: number, status: number) {
     this.riderService.updateStatus(id, status).subscribe({ next: () => this.load() });
+  }
+
+  viewDetail(id: number) {
+    this.riderService.getDeliveryDetail(id).subscribe({
+      next: d => this.detail.set(d),
+    });
   }
 
   openAttempt(d: any) {
@@ -593,6 +862,16 @@ export class RiderDeliveriesComponent implements OnInit {
           this.attemptError.set(e.error?.message ?? 'Failed to submit.');
         },
       });
+  }
+
+  parseBowlDetails(json?: string): BowlDetails | null {
+    if (!json) return null;
+    try { return JSON.parse(json) as BowlDetails; }
+    catch { return null; }
+  }
+
+  bowlTotalGrams(bowl: BowlDetails): number {
+    return bowl.totalGrams ?? bowl.fruits.reduce((s, f) => s + f.grams, 0);
   }
 
   private emptyAttemptForm() {

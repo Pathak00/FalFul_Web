@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 GO
 -- Assigns a rider to a delivery by RiderUserId.
 -- Looks up the rider's name and phone from the Users table to keep delivery records
@@ -29,7 +29,8 @@ BEGIN
            RiderName   = @RiderName,
            RiderPhone  = @RiderPhone,
            Status      = CASE WHEN Status IN (1, 6, 7, 8) THEN 2 ELSE Status END,
-           AssignedAt  = CASE WHEN AssignedAt IS NULL THEN GETUTCDATE() ELSE AssignedAt END,
-           UpdatedAt   = GETUTCDATE()
+           AssignedAt  = CASE WHEN AssignedAt IS NULL THEN dbo.fn_NepalNow() ELSE AssignedAt END,
+           UpdatedAt   = dbo.fn_NepalNow()
     WHERE  Id = @Id;
 END
+

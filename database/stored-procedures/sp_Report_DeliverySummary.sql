@@ -1,12 +1,12 @@
-CREATE OR ALTER PROCEDURE sp_Report_DeliverySummary
+﻿CREATE OR ALTER PROCEDURE sp_Report_DeliverySummary
     @FromDate DATE = NULL,
     @ToDate   DATE = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    SET @FromDate = ISNULL(@FromDate, CAST(DATEADD(DAY, -30, GETUTCDATE()) AS DATE));
-    SET @ToDate   = ISNULL(@ToDate,   CAST(GETUTCDATE() AS DATE));
+    SET @FromDate = ISNULL(@FromDate, CAST(DATEADD(DAY, -30, dbo.fn_NepalNow()) AS DATE));
+    SET @ToDate   = ISNULL(@ToDate,   CAST(dbo.fn_NepalNow() AS DATE));
 
     -- Result set 1: summary row
     -- New statuses: 1=AwaitingRider, 2=Assigned, 3=PickedUp, 4=OutForDelivery,
@@ -43,3 +43,4 @@ BEGIN
     GROUP  BY Status
     ORDER  BY Status;
 END
+

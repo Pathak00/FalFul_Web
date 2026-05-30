@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
@@ -9,7 +9,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     UPDATE Users
-    SET IsDeleted = 1, IsActive = 0, UpdatedAt = GETUTCDATE(), UpdatedBy = @DeletedBy
+    SET IsDeleted = 1, IsActive = 0, UpdatedAt = dbo.fn_NepalNow(), UpdatedBy = @DeletedBy
     WHERE Id = @UserId;
 END
 GO
+

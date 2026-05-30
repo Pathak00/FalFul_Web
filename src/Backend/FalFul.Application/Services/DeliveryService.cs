@@ -289,6 +289,9 @@ public class DeliveryService(
         City              = d.City,
         FullAddress       = d.FullAddress,
         DeliveryPhone     = d.DeliveryPhone,
+        SubTotal          = d.SubTotal,
+        DeliveryFee       = d.DeliveryFee,
+        ServiceFee        = d.ServiceFee,
         TotalAmount       = d.TotalAmount,
         CreatedAt         = d.CreatedAt,
         AssignedAt        = d.AssignedAt,
@@ -300,6 +303,17 @@ public class DeliveryService(
         PickedUpAt        = d.PickedUpAt,
         TrackingNotes     = d.TrackingNotes,
         Attempts          = d.Attempts.Select(MapAttempt).ToList(),
-        Issues            = d.Issues.Select(MapIssue).ToList()
+        Issues            = d.Issues.Select(MapIssue).ToList(),
+        Items             = d.Items.Select(i => new DeliveryOrderItemDto
+        {
+            Id                 = i.Id,
+            ProductName        = i.ProductName,
+            Quantity           = i.Quantity,
+            Unit               = i.Unit,
+            UnitPrice          = i.UnitPrice,
+            TotalPrice         = i.TotalPrice,
+            IsCustomBuild      = i.IsCustomBuild,
+            CustomBuildDetails = i.CustomBuildDetails
+        }).ToList()
     };
 }

@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
@@ -7,7 +7,7 @@ CREATE OR ALTER PROCEDURE sp_Banner_GetActive
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @Now DATETIME2 = GETUTCDATE();
+    DECLARE @Now DATETIME2 = dbo.fn_NepalNow();
 
     SELECT Id, Title, Subtitle, ButtonText, ButtonLink, ImageUrl, Position, DisplayOrder
     FROM Banners
@@ -19,3 +19,4 @@ BEGIN
     ORDER BY DisplayOrder ASC;
 END
 GO
+

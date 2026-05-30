@@ -1,4 +1,5 @@
 using System.Text;
+using FalFul.API;
 using FalFul.API.Authorization;
 using FalFul.API.Middleware;
 using FalFul.Application;
@@ -10,7 +11,12 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(opt =>
+    {
+        opt.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+        opt.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeConverter());
+    });
 builder.Services.AddOpenApi();
 
 builder.Services.AddApplication();

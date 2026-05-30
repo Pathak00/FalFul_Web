@@ -9,7 +9,7 @@ BEGIN
            d.RiderUserId, d.RiderName, d.RiderPhone, d.AssignedAt, d.PickedUpAt, d.DeliveredAt,
            d.FailedAt, d.AttemptCount, d.MaxAttempts, d.TrackingNotes,
            d.CreatedAt, d.UpdatedAt,
-           o.OrderNumber, o.TotalAmount, o.PaymentMethod, o.Notes AS OrderNotes,
+           o.OrderNumber, o.SubTotal, o.DeliveryFee, o.ServiceFee, o.TotalAmount, o.PaymentMethod, o.Notes AS OrderNotes,
            COALESCE(a.FullAddress, o.FullAddress)   AS FullAddress,
            COALESCE(a.City,        o.City)           AS City,
            COALESCE(a.Landmark,    o.Landmark)       AS Landmark,
@@ -36,4 +36,13 @@ BEGIN
     FROM   DeliveryIssues
     WHERE  DeliveryId = @Id
     ORDER  BY ReportedAt;
+
+    -- Result set 4: order items
+    SELECT oi.Id, oi.OrderId, oi.ProductId, oi.ProductName, oi.ProductSlug,
+           oi.ImageUrl, oi.UnitPrice, oi.Quantity, oi.Unit, oi.TotalPrice,
+           oi.IsCustomBuild, oi.CustomBuildDetails
+    FROM   OrderItems oi
+    INNER  JOIN Deliveries d ON d.OrderId = oi.OrderId
+    WHERE  d.Id = @Id
+    ORDER  BY oi.Id;
 END

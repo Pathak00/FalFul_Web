@@ -12,8 +12,9 @@ BEGIN
     SET NOCOUNT ON;
 
     UPDATE RefreshTokens
-    SET IsRevoked = 1, UpdatedAt = GETUTCDATE()
+    SET IsRevoked = 1, UpdatedAt = dbo.fn_NepalNow()
     WHERE UserId = @UserId AND IsRevoked = 0;
 END
 GO
+
 

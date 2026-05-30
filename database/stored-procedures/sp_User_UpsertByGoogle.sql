@@ -1,4 +1,4 @@
-USE FalFulDb;
+﻿USE FalFulDb;
 GO
 
 SET QUOTED_IDENTIFIER ON;
@@ -22,7 +22,7 @@ BEGIN
     IF @UserId IS NOT NULL
     BEGIN
         UPDATE Users
-        SET LastLoginAt = GETUTCDATE(), UpdatedAt = GETUTCDATE()
+        SET LastLoginAt = dbo.fn_NepalNow(), UpdatedAt = dbo.fn_NepalNow()
         WHERE Id = @UserId;
 
         SELECT @UserId;
@@ -37,8 +37,8 @@ BEGIN
         UPDATE Users
         SET GoogleId        = @GoogleId,
             IsEmailVerified = 1,
-            LastLoginAt     = GETUTCDATE(),
-            UpdatedAt       = GETUTCDATE()
+            LastLoginAt     = dbo.fn_NepalNow(),
+            UpdatedAt       = dbo.fn_NepalNow()
         WHERE Id = @UserId;
 
         SELECT @UserId;
@@ -47,8 +47,9 @@ BEGIN
 
     -- Create brand-new user via Google
     INSERT INTO Users (FullName, Email, GoogleId, ProfileImageUrl, UserType, IsEmailVerified, IsActive, CreatedAt, LastLoginAt)
-    VALUES (@FullName, @Email, @GoogleId, @ProfileImageUrl, 1, 1, 1, GETUTCDATE(), GETUTCDATE());
+    VALUES (@FullName, @Email, @GoogleId, @ProfileImageUrl, 1, 1, 1, dbo.fn_NepalNow(), dbo.fn_NepalNow());
 
     SELECT SCOPE_IDENTITY();
 END
 GO
+
