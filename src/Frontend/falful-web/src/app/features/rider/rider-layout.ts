@@ -37,7 +37,7 @@ import { AdminNavStore } from '../../core/stores/admin-nav.store';
 
           <p class="nav-section-label" style="margin-top:auto">Account</p>
           <a routerLink="/" class="nav-item" (click)="closeSidebar()">
-            <i class="bi bi-arrow-left-circle nav-icon"></i> Back to Site
+            <i class="bi bi-globe nav-icon"></i> View Site
           </a>
           <button class="nav-item nav-btn" (click)="logout()">
             <i class="bi bi-box-arrow-right nav-icon"></i> Logout
