@@ -13,9 +13,11 @@ export class HomeRouteService {
     const perms = user.permissions;
     if (perms.includes(Perm.System)) return '/admin';
     if (perms.includes(Perm.Shop))   return '/products';
-    // Riders go to the rider portal — checked by role name first, permissions as fallback.
-    const isRider = user.role?.toLowerCase() === 'rider' ||
-      (perms.length > 0 && perms.every(p => p === Perm.Deliveries));
+    // Riders go to the rider portal. Role name is authoritative; permissions fallback
+    // only applies for users with no role assigned (edge case).
+    const isRider = user.role
+      ? user.role.toLowerCase() === 'rider'
+      : (perms.length > 0 && perms.every(p => p === Perm.Deliveries));
     if (isRider) return '/rider/deliveries';
     if (perms.length > 0) return '/admin';
     return '/';

@@ -20,11 +20,13 @@ export class PermissionService {
     return (this.user()?.permissions.length ?? 0) > 0;
   }
 
-  /** True if the user holds at least one admin-panel permission (excludes riders and customer-only perms). */
+  /** True if the user holds at least one admin-panel permission (excludes riders and shop-only users). */
   canEnterAdmin(): boolean {
     if (this.isRiderOnly()) return false;
+    // isRiderOnly() handles the rider gate by role name, so deliveries is valid here
+    // for non-rider staff. Only 'shop' is customer-only and must be excluded.
     const perms = this.user()?.permissions ?? [];
-    return perms.some(p => p !== Perm.Deliveries && p !== Perm.Shop);
+    return perms.some(p => p !== Perm.Shop);
   }
 
   /** True when the user is a Rider — checked by role name first, then by permissions fallback. */

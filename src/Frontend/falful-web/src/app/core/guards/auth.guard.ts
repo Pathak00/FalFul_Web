@@ -80,9 +80,10 @@ export const shopGuard: CanActivateFn = () => {
   const currentUser = auth.currentUser();
   const userPerms = currentUser?.permissions ?? [];
 
-  // Rider: identified by role name first, permissions fallback
-  const isRiderOnly = currentUser?.role?.toLowerCase() === 'rider' ||
-    (userPerms.length > 0 && userPerms.every(p => p === Perm.Deliveries));
+  // Rider: role name is authoritative; permissions fallback only for users with no role
+  const isRiderOnly = currentUser?.role
+    ? currentUser.role.toLowerCase() === 'rider'
+    : (userPerms.length > 0 && userPerms.every(p => p === Perm.Deliveries));
 
   if (isRiderOnly) {
     router.navigate([homeRoute.route()]);
