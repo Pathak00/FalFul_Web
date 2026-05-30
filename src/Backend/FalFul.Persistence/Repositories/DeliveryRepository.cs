@@ -95,4 +95,13 @@ public class DeliveryRepository(DapperContext context) : IDeliveryRepository
             new { RiderUserId = riderUserId },
             commandType: CommandType.StoredProcedure);
     }
+
+    public async Task CompleteAsync(int id, decimal collectedAmount, string? proofPhotoUrl, string? collectionRemarks)
+    {
+        using var conn = context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_Delivery_Complete",
+            new { Id = id, CollectedAmount = collectedAmount, ProofPhotoUrl = proofPhotoUrl, CollectionRemarks = collectionRemarks },
+            commandType: CommandType.StoredProcedure);
+    }
 }

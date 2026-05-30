@@ -28,4 +28,12 @@ export class RiderService {
   }): Observable<void> {
     return this.api.post<void>(`/api/rider/deliveries/${id}/attempts`, dto);
   }
+
+  completeDelivery(id: number, dto: {
+    collectedAmount: number;
+    proofPhotoUrl?: string;
+    collectionRemarks?: string;
+  }): Observable<void> {
+    return this.api.post<void>(`/api/rider/deliveries/${id}/complete`, dto);
+  }
 }

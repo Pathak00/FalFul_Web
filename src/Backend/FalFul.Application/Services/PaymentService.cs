@@ -67,6 +67,43 @@ public class PaymentService(
         if (order is null || order.UserId != userId)
             return Result<InitiatePaymentResultDto>.Failure("Order not found.");
 
+        // Allow re-initiation when a prior payment attempt failed (AwaitingPayment = pending gateway round-trip)
+        if (order.Status == OrderStatus.AwaitingPayment)
+        {
+            var existing = (await payments.GetByOrderAsync(orderId)).ToList();
+            var pendingOnline = existing.FirstOrDefault(p =>
+                p.Status == PaymentStatus.Pending && p.PaymentMethodCode != "cod");
+
+            if (pendingOnline is null)
+                return Result<InitiatePaymentResultDto>.Failure("No pending payment found to retry.");
+
+            var retryGateway = ResolveGateway(pendingOnline.PaymentMethodCode!);
+            if (retryGateway is null)
+                return Result<InitiatePaymentResultDto>.Failure("Payment gateway not configured.");
+
+            var retryResult = await retryGateway.InitiateAsync(new GatewayInitiateRequest
+            {
+                PaymentId   = pendingOnline.Id,
+                OrderId     = orderId,
+                OrderNumber = order.OrderNumber,
+                Amount      = pendingOnline.Amount,
+                ReturnUrl   = dto.ReturnUrl,
+                FailureUrl  = dto.FailureUrl
+            });
+
+            if (!retryResult.IsSuccess)
+                return Result<InitiatePaymentResultDto>.Failure(retryResult.ErrorMessage ?? "Gateway initiation failed.");
+
+            return Result<InitiatePaymentResultDto>.Success(new InitiatePaymentResultDto
+            {
+                RequiresRedirect = true,
+                RedirectUrl      = retryResult.RedirectUrl,
+                FormFields       = retryResult.FormFields,
+                AdvanceAmount    = pendingOnline.Amount,
+                Message          = "Retrying payment…"
+            });
+        }
+
         if (order.Status != OrderStatus.Pending)
             return Result<InitiatePaymentResultDto>.Failure("Payment can only be initiated for pending orders.");
 
@@ -111,6 +148,9 @@ public class PaymentService(
             if (!result.IsSuccess)
                 return Result<InitiatePaymentResultDto>.Failure(result.ErrorMessage ?? "Gateway initiation failed.");
 
+            // Order awaits advance payment verification before admin can process it
+            await orders.UpdateStatusAsync(orderId, OrderStatus.AwaitingPayment);
+
             return Result<InitiatePaymentResultDto>.Success(new InitiatePaymentResultDto
             {
                 RequiresRedirect = result.RedirectUrl is not null || result.FormFields is not null,
@@ -151,6 +191,9 @@ public class PaymentService(
 
             if (!result.IsSuccess)
                 return Result<InitiatePaymentResultDto>.Failure(result.ErrorMessage ?? "Gateway initiation failed.");
+
+            // Order awaits full payment verification before admin can process it
+            await orders.UpdateStatusAsync(orderId, OrderStatus.AwaitingPayment);
 
             return Result<InitiatePaymentResultDto>.Success(new InitiatePaymentResultDto
             {
@@ -197,6 +240,11 @@ public class PaymentService(
 
         if (allOnlineDone)
             await payments.UpdateOrderPaymentStatusAsync(payment.OrderId, PaymentStatus.Completed);
+
+        // Advance/full payment verified: unblock the order so admin can process it
+        var order = await orders.GetByIdAsync(payment.OrderId);
+        if (order?.Status == OrderStatus.AwaitingPayment)
+            await orders.UpdateStatusAsync(payment.OrderId, OrderStatus.Pending);
 
         return Result.Success();
     }

@@ -6,7 +6,7 @@ BEGIN
 
     -- Result set 1: order header
     SELECT o.Id, o.UserId, o.OrderNumber, o.Status, o.SubTotal, o.DeliveryFee, o.ServiceFee,
-           o.TotalAmount, o.PaymentMethod, o.PaymentStatus, o.DeliveryAddressId,
+           o.TotalAmount, o.AdvanceAmount, o.PaymentMethod, o.PaymentStatus, o.DeliveryAddressId,
            o.DeliveryDate, o.DeliveryTimeSlot, o.Notes, o.CancelReason, o.CreatedAt, o.UpdatedAt,
            COALESCE(a.Label,       o.AddressLabel)   AS AddressLabel,
            COALESCE(a.FullAddress, o.FullAddress)    AS FullAddress,
@@ -30,7 +30,8 @@ BEGIN
     -- Result set 3: delivery (with expanded fields)
     SELECT Id, OrderId, Status, ScheduledDate, ScheduledTimeSlot,
            RiderName, RiderPhone, AssignedAt, PickedUpAt, DeliveredAt,
-           FailedAt, AttemptCount, MaxAttempts, TrackingNotes, CreatedAt, UpdatedAt
+           FailedAt, AttemptCount, MaxAttempts, TrackingNotes, CreatedAt, UpdatedAt,
+           CollectedAmount, ProofPhotoUrl, CollectionRemarks
     FROM   Deliveries
     WHERE  OrderId = @Id;
 

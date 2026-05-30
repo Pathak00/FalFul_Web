@@ -108,7 +108,7 @@ interface BowlDetails {
                     </button>
                   }
                   @if (d.status === 4) {
-                    <button class="btn-action btn-delivered" (click)="quickStatus(d.id, 5)">
+                    <button class="btn-action btn-delivered" (click)="openComplete(d)">
                       Mark Delivered
                     </button>
                     <button class="btn-action btn-attempt" (click)="openAttempt(d)">
@@ -142,7 +142,12 @@ interface BowlDetails {
               </div>
 
               <div class="card-footer">
-                <span class="amount">Rs {{ d.totalAmount | number }}</span>
+                <div class="footer-amounts">
+                  <span class="amount">Rs {{ d.remainingBalance | number:'1.0-0' }}</span>
+                  @if (d.advanceAmount > 0) {
+                    <span class="advance-note">to collect · Rs {{ d.advanceAmount | number:'1.0-0' }} advance paid</span>
+                  }
+                </div>
                 <span class="payment">{{ d.paymentMethod ?? 'Cash on Delivery' }}</span>
               </div>
             </div>
@@ -289,6 +294,58 @@ interface BowlDetails {
 
           <div class="modal-actions">
             <button class="btn-secondary" (click)="detail.set(null)">Close</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delivery Completion Modal -->
+    @if (completeTarget()) {
+      <div class="modal-overlay" (click)="completeTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Complete Delivery</h2>
+              <p class="modal-sub">#{{ completeTarget()!.orderNumber }}</p>
+            </div>
+            <button class="btn-close" (click)="completeTarget.set(null)">✕</button>
+          </div>
+
+          <div class="collect-banner">
+            <div class="collect-label">Amount to Collect</div>
+            <div class="collect-amount">Rs {{ completeTarget()!.remainingBalance | number:'1.0-0' }}</div>
+            @if (completeTarget()!.advanceAmount > 0) {
+              <div class="collect-note">Advance of Rs {{ completeTarget()!.advanceAmount | number:'1.0-0' }} already paid</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Collected Amount (Rs) *</label>
+            <input type="number" [(ngModel)]="completeForm.collectedAmount"
+                   [placeholder]="completeTarget()!.remainingBalance" min="0" step="1" />
+          </div>
+
+          <div class="form-group">
+            <label>Proof Photo URL (optional)</label>
+            <input type="url" [(ngModel)]="completeForm.proofPhotoUrl"
+                   placeholder="https://… receipt or proof photo link" />
+          </div>
+
+          <div class="form-group">
+            <label>Remarks (optional)</label>
+            <textarea [(ngModel)]="completeForm.collectionRemarks" rows="2"
+                      placeholder="Any notes about the delivery or collection…"></textarea>
+          </div>
+
+          @if (completeError()) {
+            <div class="form-error">{{ completeError() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="completeTarget.set(null)">Cancel</button>
+            <button class="btn-primary btn-green" (click)="submitComplete()" [disabled]="completeSaving()">
+              {{ completeSaving() ? 'Saving…' : 'Confirm Delivery' }}
+            </button>
           </div>
         </div>
       </div>
@@ -520,15 +577,43 @@ interface BowlDetails {
         justify-content: space-between;
         padding: 0.5rem 1rem;
         border-top: 1px solid #f1f5f9;
+        .footer-amounts { display: flex; flex-direction: column; gap: 0.1rem; }
         .amount {
           font-weight: 700;
           font-size: 0.95rem;
           color: #0f172a;
         }
+        .advance-note { font-size: 0.68rem; color: #94a3b8; }
         .payment {
           font-size: 0.75rem;
           color: #64748b;
         }
+      }
+
+      .collect-banner {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+      .collect-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #16a34a; margin-bottom: 0.2rem; }
+      .collect-amount { font-size: 1.5rem; font-weight: 800; color: #15803d; }
+      .collect-note { font-size: 0.72rem; color: #6b7280; margin-top: 0.2rem; }
+
+      .form-group input[type=number],
+      .form-group input[type=url] {
+        width: 100%;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        outline: none;
+        box-sizing: border-box;
+      }
+      .btn-green {
+        background: #16a34a;
       }
 
       .badge {
@@ -801,6 +886,11 @@ export class RiderDeliveriesComponent implements OnInit {
 
   detail = signal<any>(null);
 
+  completeTarget = signal<any>(null);
+  completeSaving = signal(false);
+  completeError = signal('');
+  completeForm = this.emptyCompleteForm();
+
   attemptTarget = signal<any>(null);
   attemptSaving = signal(false);
   attemptError = signal('');
@@ -829,6 +919,38 @@ export class RiderDeliveriesComponent implements OnInit {
     this.riderService.getDeliveryDetail(id).subscribe({
       next: d => this.detail.set(d),
     });
+  }
+
+  openComplete(d: any) {
+    this.completeTarget.set(d);
+    this.completeForm = { collectedAmount: d.remainingBalance, proofPhotoUrl: '', collectionRemarks: '' };
+    this.completeError.set('');
+  }
+
+  submitComplete() {
+    const f = this.completeForm;
+    if (f.collectedAmount < 0) {
+      this.completeError.set('Collected amount cannot be negative.');
+      return;
+    }
+    this.completeSaving.set(true);
+    this.riderService
+      .completeDelivery(this.completeTarget()!.id, {
+        collectedAmount: f.collectedAmount,
+        proofPhotoUrl: f.proofPhotoUrl || undefined,
+        collectionRemarks: f.collectionRemarks || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.completeSaving.set(false);
+          this.completeTarget.set(null);
+          this.load();
+        },
+        error: (e: any) => {
+          this.completeSaving.set(false);
+          this.completeError.set(e.error?.message ?? 'Failed to complete delivery.');
+        },
+      });
   }
 
   openAttempt(d: any) {
@@ -872,6 +994,10 @@ export class RiderDeliveriesComponent implements OnInit {
 
   bowlTotalGrams(bowl: BowlDetails): number {
     return bowl.totalGrams ?? bowl.fruits.reduce((s, f) => s + f.grams, 0);
+  }
+
+  private emptyCompleteForm() {
+    return { collectedAmount: 0, proofPhotoUrl: '', collectionRemarks: '' };
   }
 
   private emptyAttemptForm() {

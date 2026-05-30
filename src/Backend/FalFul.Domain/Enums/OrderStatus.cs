@@ -7,8 +7,9 @@ namespace FalFul.Domain.Enums;
 /// </summary>
 public enum OrderStatus
 {
-    Pending          = 1,   // Order placed, awaiting admin review
-    Confirmed        = 2,   // Admin confirmed (payment verified for online; COD confirmed without payment)
+    AwaitingPayment  = 7,   // Order placed but advance/online payment not yet verified
+    Pending          = 1,   // Order placed and payment verified (or COD no advance), awaiting admin review
+    Confirmed        = 2,   // Admin confirmed
     Preparing        = 3,   // Kitchen/warehouse is preparing the order
     ReadyForDelivery = 4,   // Preparation complete — delivery record is created at this point
     Cancelled        = 5,   // Cancelled by customer or admin (before/during preparation)

@@ -47,6 +47,13 @@ public class ResolveIssueDto
     public string? ResolutionNotes { get; set; }
 }
 
+public class CompleteDeliveryDto
+{
+    public decimal  CollectedAmount   { get; set; }
+    public string?  ProofPhotoUrl     { get; set; }
+    public string?  CollectionRemarks { get; set; }
+}
+
 // ── Outbound ──────────────────────────────────────────────────────────────────
 
 public class DeliveryAttemptDto
@@ -99,6 +106,11 @@ public class DeliverySummaryDto
     public string   FullAddress       { get; set; } = string.Empty;
     public string   DeliveryPhone     { get; set; } = string.Empty;
     public decimal  TotalAmount       { get; set; }
+    public decimal  AdvanceAmount     { get; set; }
+    public decimal  RemainingBalance  { get; set; }
+    public decimal? CollectedAmount   { get; set; }
+    public string?  ProofPhotoUrl     { get; set; }
+    public string?  CollectionRemarks { get; set; }
     public DateTime CreatedAt         { get; set; }
     public DateTime? AssignedAt       { get; set; }
     public DateTime? DeliveredAt      { get; set; }

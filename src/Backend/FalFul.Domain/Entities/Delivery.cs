@@ -19,16 +19,21 @@ public class Delivery
     public byte           AttemptCount      { get; set; }
     public byte           MaxAttempts       { get; set; } = 3;
     public string?        TrackingNotes     { get; set; }
+    public decimal?       CollectedAmount   { get; set; }
+    public string?        ProofPhotoUrl     { get; set; }
+    public string?        CollectionRemarks { get; set; }
     public DateTime       CreatedAt         { get; set; }
     public DateTime?      UpdatedAt         { get; set; }
 
     // Populated by GetAll / GetById JOINs
-    public string  OrderNumber   { get; set; } = string.Empty;
-    public decimal SubTotal      { get; set; }
-    public decimal DeliveryFee   { get; set; }
-    public decimal ServiceFee    { get; set; }
-    public decimal TotalAmount   { get; set; }
-    public byte    PaymentMethod { get; set; }
+    public string  OrderNumber     { get; set; } = string.Empty;
+    public decimal SubTotal        { get; set; }
+    public decimal DeliveryFee     { get; set; }
+    public decimal ServiceFee      { get; set; }
+    public decimal TotalAmount     { get; set; }
+    public decimal AdvanceAmount   { get; set; }
+    public decimal RemainingBalance { get; set; }
+    public byte    PaymentMethod   { get; set; }
     public string  CustomerName  { get; set; } = string.Empty;
     public int     UserId        { get; set; }
     public string  FullAddress   { get; set; } = string.Empty;

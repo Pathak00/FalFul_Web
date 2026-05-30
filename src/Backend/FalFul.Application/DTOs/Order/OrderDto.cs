@@ -88,6 +88,7 @@ public class OrderSummaryDto
     public decimal       DeliveryFee      { get; set; }
     public decimal       ServiceFee       { get; set; }
     public decimal       TotalAmount      { get; set; }
+    public decimal       AdvanceAmount    { get; set; }
     public PaymentMethod PaymentMethod    { get; set; }
     public PaymentStatus PaymentStatus    { get; set; }
     public DateOnly      DeliveryDate     { get; set; }
