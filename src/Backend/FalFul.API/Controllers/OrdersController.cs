@@ -24,7 +24,7 @@ public class OrdersController(IOrderService orderService, IDeliveryService deliv
         var customerName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
         var result = await orderService.PlaceOrderAsync(GetUserId(), customerName, dto);
         return result.IsSuccess
-            ? Ok(new { orderNumber = result.Data })
+            ? Ok(new { orderId = result.Data!.OrderId, orderNumber = result.Data.OrderNumber })
             : BadRequest(new { message = result.Error });
     }
 

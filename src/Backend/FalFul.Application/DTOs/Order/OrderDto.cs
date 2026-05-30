@@ -35,6 +35,12 @@ public class PlaceOrderDto
     public List<PlaceOrderItemDto>  Items             { get; set; } = [];
 }
 
+public class PlaceOrderResultDto
+{
+    public int    OrderId     { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+}
+
 // ── Outbound ─────────────────────────────────────────────────────────────────
 
 public class OrderItemDto

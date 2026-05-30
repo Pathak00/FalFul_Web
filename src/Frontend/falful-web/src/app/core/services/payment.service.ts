@@ -24,6 +24,17 @@ export class PaymentService {
     return this.api.get<PaymentDto[]>(`/api/payments/order/${orderId}`);
   }
 
+  // ── Gateway callbacks (called from PaymentCallbackComponent) ─────────────────
+  verifyEsewa(data: string): Observable<{ message: string }> {
+    return this.api.get<{ message: string }>(`/api/payments/verify/esewa?data=${encodeURIComponent(data)}`);
+  }
+
+  verifyKhalti(pidx: string, paymentId?: string): Observable<{ message: string }> {
+    const p = new URLSearchParams({ pidx });
+    if (paymentId) p.set('payment_id', paymentId);
+    return this.api.get<{ message: string }>(`/api/payments/verify/khalti?${p}`);
+  }
+
   // ── Admin ──────────────────────────────────────────────────────────────────────
   getAllPayments(methodId?: number, status?: number, fromDate?: string, toDate?: string): Observable<PaymentDto[]> {
     const p = new URLSearchParams();

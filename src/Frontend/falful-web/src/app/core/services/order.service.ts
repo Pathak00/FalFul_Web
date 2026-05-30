@@ -34,8 +34,8 @@ export class OrderService {
   }
 
   // ── Orders ────────────────────────────────────────────────────────────────────
-  placeOrder(dto: PlaceOrderRequest): Observable<{ orderNumber: string }> {
-    return this.api.post<{ orderNumber: string }>('/api/orders', dto);
+  placeOrder(dto: PlaceOrderRequest): Observable<{ orderId: number; orderNumber: string }> {
+    return this.api.post<{ orderId: number; orderNumber: string }>('/api/orders', dto);
   }
 
   getMyOrders(): Observable<OrderSummary[]> {

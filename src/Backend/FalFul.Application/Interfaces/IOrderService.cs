@@ -16,7 +16,7 @@ public interface IOrderService
     Task<Result>                    UpsertPriceRuleAsync(UpsertPriceRuleDto dto);
 
     // Orders (customer)
-    Task<Result<string>>              PlaceOrderAsync(int userId, string customerName, PlaceOrderDto dto);
+    Task<Result<PlaceOrderResultDto>>  PlaceOrderAsync(int userId, string customerName, PlaceOrderDto dto);
     Task<IEnumerable<OrderSummaryDto>> GetUserOrdersAsync(int userId);
     Task<OrderDetailDto?>             GetOrderByIdAsync(int id, int? userId = null);
     Task<Result>                      CancelOrderAsync(int id, int userId, CancelOrderDto dto);
