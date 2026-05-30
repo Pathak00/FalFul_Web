@@ -11,6 +11,7 @@ interface Role {
   name: string;
   description?: string;
   isDefault: boolean;
+  portalType: string;
 }
 
 interface Permission {
@@ -48,6 +49,7 @@ interface Permission {
               <thead>
                 <tr>
                   <th>Name</th>
+                  <th>Portal</th>
                   <th>Description</th>
                   <th>Default</th>
                   <th></th>
@@ -58,6 +60,11 @@ interface Permission {
                   <tr [class.row-active]="selectedRole()?.id === role.id">
                     <td>
                       <strong>{{ role.name }}</strong>
+                    </td>
+                    <td>
+                      <span class="badge" [class.badge-blue]="role.portalType === 'rider'" [class.badge-purple]="role.portalType === 'customer'" [class.badge-green]="role.portalType === 'admin'">
+                        {{ role.portalType }}
+                      </span>
                     </td>
                     <td class="text-muted">{{ role.description ?? '—' }}</td>
                     <td>
@@ -163,6 +170,14 @@ interface Permission {
               <input class="form-control" [(ngModel)]="form.name" placeholder="e.g. Staff, Rider, Manager" />
             </div>
             <div class="form-group">
+              <label>Portal <span class="text-muted">(determines which dashboard users with this role see)</span></label>
+              <select class="form-control" [(ngModel)]="form.portalType">
+                <option value="admin">Admin — access to admin panel</option>
+                <option value="rider">Rider — access to rider portal</option>
+                <option value="customer">Customer — access to shop/storefront</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label>Description <span class="text-muted">(optional)</span></label>
               <input class="form-control" [(ngModel)]="form.description" placeholder="Brief description" />
             </div>
@@ -201,6 +216,9 @@ interface Permission {
 
     .btn-xs { font-size: .7rem; padding: .2rem .5rem; }
     .btn-danger-soft { background: #fef2f2; color: #dc2626; border-color: #fecaca; &:hover { background: #fee2e2; } &:disabled { opacity: .4; cursor: not-allowed; } }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+    .badge-purple { background: #ede9fe; color: #6d28d9; }
+    .badge-green  { background: #dcfce7; color: #15803d; }
   `]
 })
 export class AdminRolesComponent implements OnInit {
@@ -219,7 +237,7 @@ export class AdminRolesComponent implements OnInit {
   readonly deleteTarget = signal<Role | null>(null);
   readonly error        = signal('');
 
-  readonly form = { name: '', description: '' };
+  readonly form = { name: '', description: '', portalType: 'admin' };
 
   readonly navItems  = signal<AdminNavItem[]>([]);
 
@@ -317,6 +335,7 @@ export class AdminRolesComponent implements OnInit {
     this.editTarget.set(null);
     this.form.name = '';
     this.form.description = '';
+    this.form.portalType = 'admin';
     this.error.set('');
     this.modalOpen.set(true);
   }
@@ -325,6 +344,7 @@ export class AdminRolesComponent implements OnInit {
     this.editTarget.set(role);
     this.form.name = role.name;
     this.form.description = role.description ?? '';
+    this.form.portalType = role.portalType ?? 'admin';
     this.error.set('');
     this.modalOpen.set(true);
   }
@@ -338,8 +358,8 @@ export class AdminRolesComponent implements OnInit {
     const target = this.editTarget();
 
     const obs: Observable<unknown> = target
-      ? this.admin.updateRole(target.id, this.form.name.trim(), this.form.description || undefined)
-      : this.admin.createRole(this.form.name.trim(), this.form.description || undefined);
+      ? this.admin.updateRole(target.id, this.form.name.trim(), this.form.description || undefined, this.form.portalType)
+      : this.admin.createRole(this.form.name.trim(), this.form.description || undefined, this.form.portalType);
 
     obs.subscribe({
       next: () => {

@@ -36,8 +36,9 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
 
         try
         {
-            var id = await roleRepo.CreateAsync(dto.Name.Trim(), dto.Description?.Trim());
-            return Result<RoleDto>.Success(new RoleDto { Id = id, Name = dto.Name.Trim(), Description = dto.Description });
+            var portalType = NormalisePortalType(dto.PortalType);
+            var id = await roleRepo.CreateAsync(dto.Name.Trim(), dto.Description?.Trim(), portalType);
+            return Result<RoleDto>.Success(new RoleDto { Id = id, Name = dto.Name.Trim(), Description = dto.Description, PortalType = portalType });
         }
         catch (Exception ex)
         {
@@ -52,7 +53,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
 
         try
         {
-            await roleRepo.UpdateAsync(id, dto.Name.Trim(), dto.Description?.Trim());
+            await roleRepo.UpdateAsync(id, dto.Name.Trim(), dto.Description?.Trim(), NormalisePortalType(dto.PortalType));
             return Result.Success();
         }
         catch (Exception ex)
@@ -60,6 +61,9 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
             return Result.Failure(ex.Message);
         }
     }
+
+    private static string NormalisePortalType(string? raw) =>
+        raw?.ToLower() switch { "rider" => "rider", "customer" => "customer", _ => "admin" };
 
     public async Task<IEnumerable<PermissionDto>> GetRolePermissionsAsync(int roleId)
     {
@@ -104,5 +108,5 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
     }
 
     private static RoleDto MapDto(Domain.Entities.Role r) =>
-        new() { Id = r.Id, Name = r.Name, Description = r.Description, IsDefault = r.IsDefault };
+        new() { Id = r.Id, Name = r.Name, Description = r.Description, IsDefault = r.IsDefault, PortalType = r.PortalType };
 }

@@ -195,7 +195,8 @@ public class AuthService : IAuthService
                 UserType = user.UserType.ToString(),
                 ProfileImageUrl = user.ProfileImageUrl,
                 Role = roleName,
-                Permissions = permissions
+                Permissions = permissions,
+                PortalType = role?.PortalType ?? "customer"
             }
         };
     }

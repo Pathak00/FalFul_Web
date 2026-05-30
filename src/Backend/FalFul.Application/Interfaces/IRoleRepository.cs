@@ -8,8 +8,8 @@ public interface IRoleRepository
     Task<Role?> GetByIdAsync(int id);
     Task<Role?> GetUserRoleAsync(int userId);
     Task AssignRoleAsync(int userId, int roleId, int? assignedBy = null);
-    Task<int> CreateAsync(string name, string? description);
-    Task UpdateAsync(int id, string name, string? description);
+    Task<int> CreateAsync(string name, string? description, string portalType = "admin");
+    Task UpdateAsync(int id, string name, string? description, string portalType = "admin");
     Task<IEnumerable<Permission>> GetRolePermissionsAsync(int roleId);
     Task SetRolePermissionsAsync(int roleId, IEnumerable<int> permissionIds);
     Task<Role?> GetDefaultAsync();

@@ -5,7 +5,7 @@ CREATE OR ALTER PROCEDURE sp_UserRole_GetByUser
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT r.Id, r.Name, r.NormalizedName, r.Description
+    SELECT r.Id, r.Name, r.NormalizedName, r.Description, r.PortalType
     FROM   UserRoles ur
     JOIN   Roles r ON r.Id = ur.RoleId
     WHERE  ur.UserId = @UserId;

@@ -7,4 +7,5 @@ public class Role
     public string  NormalizedName { get; set; } = string.Empty;
     public string? Description    { get; set; }
     public bool    IsDefault      { get; set; }
+    public string  PortalType     { get; set; } = "admin";
 }

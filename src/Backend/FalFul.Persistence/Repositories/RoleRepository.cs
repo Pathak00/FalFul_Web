@@ -39,21 +39,21 @@ public class RoleRepository(DapperContext context) : IRoleRepository
             commandType: System.Data.CommandType.StoredProcedure);
     }
 
-    public async Task<int> CreateAsync(string name, string? description)
+    public async Task<int> CreateAsync(string name, string? description, string portalType = "admin")
     {
         using var conn = context.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             "sp_Role_Create",
-            new { Name = name, Description = description },
+            new { Name = name, Description = description, PortalType = portalType },
             commandType: System.Data.CommandType.StoredProcedure);
     }
 
-    public async Task UpdateAsync(int id, string name, string? description)
+    public async Task UpdateAsync(int id, string name, string? description, string portalType = "admin")
     {
         using var conn = context.CreateConnection();
         await conn.ExecuteAsync(
             "sp_Role_Update",
-            new { Id = id, Name = name, Description = description },
+            new { Id = id, Name = name, Description = description, PortalType = portalType },
             commandType: System.Data.CommandType.StoredProcedure);
     }
 

@@ -44,16 +44,16 @@ export class AdminService {
     return this.api.delete<void>(`/api/admin/users/${id}`);
   }
 
-  getRoles(): Observable<{ id: number; name: string; description?: string; isDefault: boolean }[]> {
+  getRoles(): Observable<{ id: number; name: string; description?: string; isDefault: boolean; portalType: string }[]> {
     return this.api.get('/api/admin/roles');
   }
 
-  createRole(name: string, description?: string): Observable<{ id: number; name: string }> {
-    return this.api.post('/api/admin/roles', { name, description });
+  createRole(name: string, description?: string, portalType = 'admin'): Observable<{ id: number; name: string }> {
+    return this.api.post('/api/admin/roles', { name, description, portalType });
   }
 
-  updateRole(id: number, name: string, description?: string): Observable<void> {
-    return this.api.put<void>(`/api/admin/roles/${id}`, { name, description });
+  updateRole(id: number, name: string, description?: string, portalType = 'admin'): Observable<void> {
+    return this.api.put<void>(`/api/admin/roles/${id}`, { name, description, portalType });
   }
 
   deleteRole(id: number): Observable<void> {
