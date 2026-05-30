@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import {
   AdminCreateUserRequest, AdminNavItem, AdminResetPasswordRequest, AdminStats, AdminUser,
   SetUserActiveRequest, SetUserTypeRequest, UpdateAdminNavItemRequest
@@ -9,6 +9,11 @@ import { ApiService } from './api.service';
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   constructor(private api: ApiService) {}
+
+  private _navRefresh = new Subject<void>();
+  /** Emits whenever role/user permissions change so the sidebar re-fetches. */
+  readonly navRefresh$ = this._navRefresh.asObservable();
+  triggerNavRefresh(): void { this._navRefresh.next(); }
 
   getStats(): Observable<AdminStats> {
     return this.api.get<AdminStats>('/api/admin/stats');

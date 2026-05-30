@@ -1,5 +1,6 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AdminNavItem } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -205,7 +206,7 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
     }
   `]
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
   private router = inject(Router);
@@ -215,6 +216,8 @@ export class AdminLayoutComponent implements OnInit {
   readonly sidebarOpen = signal(false);
   readonly navItems = signal<AdminNavItem[]>([]);
   readonly navLoading = signal(true);
+
+  private navSub = new Subscription();
 
   readonly navGroups = computed<NavGroup[]>(() => {
     const groups: NavGroup[] = [];
@@ -232,6 +235,13 @@ export class AdminLayoutComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.loadNav();
+    this.navSub = this.adminService.navRefresh$.subscribe(() => this.loadNav());
+  }
+
+  ngOnDestroy(): void { this.navSub.unsubscribe(); }
+
+  private loadNav(): void {
     this.adminService.getAdminNav().subscribe({
       next: items => { this.navItems.set(items); this.navLoading.set(false); },
       error: () => this.navLoading.set(false)

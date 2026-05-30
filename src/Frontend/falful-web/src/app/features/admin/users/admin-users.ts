@@ -526,7 +526,11 @@ export class AdminUsersComponent implements OnInit {
   savePermissions() {
     this.permSaving.set(true);
     this.adminService.setUserPermissions(this.permTarget()!.id, this.selectedPerms()).subscribe({
-      next: () => { this.permSaving.set(false); this.permTarget.set(null); },
+      next: () => {
+        this.permSaving.set(false);
+        this.permTarget.set(null);
+        this.adminService.triggerNavRefresh();
+      },
       error: (e: any) => { this.permSaving.set(false); this.permError.set(e.error?.message ?? 'Failed to save permissions.'); }
     });
   }

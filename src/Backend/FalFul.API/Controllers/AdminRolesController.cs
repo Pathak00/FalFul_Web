@@ -17,7 +17,8 @@ public class AdminRolesController(IRoleService roleService) : ControllerBase
     // ── Role CRUD (system-only) ───────────────────────────────────────────────
 
     [HttpGet("api/admin/roles")]
-    [Authorize(Policy = "Perm:users")]   // also needed by Users page for role dropdown
+    // Read-only metadata needed by multiple pages (roles admin, users dropdown).
+    // Any authenticated admin can list roles; mutations remain Perm:system.
     public async Task<IActionResult> GetAll() =>
         Ok(await roleService.GetAllAsync());
 

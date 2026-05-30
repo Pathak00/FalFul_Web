@@ -278,7 +278,11 @@ export class AdminRolesComponent implements OnInit {
     if (!role) return;
     this.saving.set(true);
     this.admin.setRolePermissions(role.id, [...this.selectedPermIds()]).subscribe({
-      next: () => { this.saving.set(false); this.toast.success('Permissions saved.'); },
+      next: () => {
+        this.saving.set(false);
+        this.toast.success('Permissions saved.');
+        this.admin.triggerNavRefresh();
+      },
       error: () => { this.saving.set(false); this.toast.error('Failed to save permissions.'); }
     });
   }

@@ -11,9 +11,9 @@ namespace FalFul.API.Controllers;
 [Authorize]
 public class AdminPermissionsController(IPermissionService permService) : ControllerBase
 {
-    // Listing permissions is needed by any admin page that renders permission checkboxes.
+    // Read-only metadata needed by multiple admin pages (roles, users).
+    // Any authenticated admin can list permissions; writes remain restricted.
     [HttpGet("permissions")]
-    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> GetPermissions() =>
         Ok(await permService.GetAllAsync());
 

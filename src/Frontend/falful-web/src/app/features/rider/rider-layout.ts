@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AdminNavItem } from '../../core/models/admin.models';
 import { AdminService } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -174,7 +175,7 @@ import { AuthService } from '../../core/services/auth.service';
     }
   `]
 })
-export class RiderLayoutComponent implements OnInit {
+export class RiderLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
   private router = inject(Router);
@@ -185,11 +186,18 @@ export class RiderLayoutComponent implements OnInit {
   navItems = signal<AdminNavItem[]>([]);
   navLoading = signal(true);
 
+  private navSub = new Subscription();
+
   ngOnInit(): void {
+    this.loadNav();
+    this.navSub = this.adminService.navRefresh$.subscribe(() => this.loadNav());
+  }
+
+  ngOnDestroy(): void { this.navSub.unsubscribe(); }
+
+  private loadNav(): void {
     this.adminService.getAdminNav().subscribe({
       next: items => {
-        // Reuse the same DB items but rebase routes from /admin/ to /rider/
-        // Dashboard (route === '/admin') is skipped — riders default to /rider/deliveries
         this.navItems.set(
           items
             .filter(i => i.route !== '/admin')
