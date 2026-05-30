@@ -1,12 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminUser } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
 
-interface RoleOption { id: number; name: string; description?: string; isDefault?: boolean; }
-interface PermOption  { id: number; name: string; displayName: string; category: string; }
+interface RoleOption { id: number; name: string; description?: string; isDefault?: boolean; portalType: string; }
 
 @Component({
   selector: 'app-admin-users',
@@ -101,7 +100,7 @@ interface PermOption  { id: number; name: string; displayName: string; category:
                   <td class="text-muted text-sm">{{ u.createdAt | date:'d MMM y' }}</td>
                   <td class="text-muted text-sm hide-md">{{ u.lastLoginAt ? (u.lastLoginAt | date:'d MMM y') : '—' }}</td>
                   <td class="user-actions">
-                    <button class="ua-btn ua-btn-edit" (click)="openRole(u)" title="Manage role &amp; permissions">
+                    <button class="ua-btn ua-btn-edit" (click)="openRole(u)" title="Assign role">
                       <i class="bi bi-shield-check"></i><span class="btn-label"> Role</span>
                     </button>
                     <button class="ua-btn ua-btn-edit" (click)="openReset(u)" title="Reset password">
@@ -169,14 +168,14 @@ interface PermOption  { id: number; name: string; displayName: string; category:
       </div>
     }
 
-    <!-- Role Management Modal -->
+    <!-- Role Assignment Modal -->
     @if (roleTarget()) {
       <div class="modal-overlay" (click)="roleTarget.set(null)">
         <div class="modal modal-sm" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div>
-              <h2>Manage Role</h2>
-              <p class="modal-sub">Set the system role for <strong>{{ roleTarget()!.fullName }}</strong>.</p>
+              <h2>Assign Role</h2>
+              <p class="modal-sub">Set the role for <strong>{{ roleTarget()!.fullName }}</strong>. Permissions are inherited from the assigned role.</p>
             </div>
             <button class="btn-close" (click)="roleTarget.set(null)">✕</button>
           </div>
@@ -194,18 +193,18 @@ interface PermOption  { id: number; name: string; displayName: string; category:
             </div>
 
             <div class="portal-indicator"
-                 [class.portal-indicator-rider]="roleTarget()?.portalType === 'rider'"
-                 [class.portal-indicator-admin]="roleTarget()?.portalType === 'admin'">
-              <i class="bi" [class.bi-bicycle]="roleTarget()?.portalType === 'rider'"
-                            [class.bi-speedometer2]="roleTarget()?.portalType === 'admin'"
-                            [class.bi-person]="roleTarget()?.portalType === 'customer'"></i>
+                 [class.portal-indicator-rider]="selectedRolePortalType === 'rider'"
+                 [class.portal-indicator-admin]="selectedRolePortalType === 'admin'">
+              <i class="bi" [class.bi-bicycle]="selectedRolePortalType === 'rider'"
+                            [class.bi-speedometer2]="selectedRolePortalType === 'admin'"
+                            [class.bi-person]="selectedRolePortalType === 'customer'"></i>
               <span>
-                @if (roleTarget()?.portalType === 'rider') {
-                  Currently routes to <strong>Rider Portal</strong> — only has <em>deliveries</em> permission.
-                } @else if (roleTarget()?.portalType === 'admin') {
-                  Currently routes to <strong>Admin Panel</strong>.
+                @if (selectedRolePortalType === 'rider') {
+                  Will route to <strong>Rider Portal</strong> after login.
+                } @else if (selectedRolePortalType === 'admin') {
+                  Will route to <strong>Admin Panel</strong> after login.
                 } @else {
-                  No permissions assigned — will access the customer site.
+                  Will route to the <strong>Customer site</strong> after login.
                 }
               </span>
             </div>
@@ -213,53 +212,9 @@ interface PermOption  { id: number; name: string; displayName: string; category:
             @if (roleError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ roleError() }}</div> }
 
             <div class="modal-actions">
-              <button class="btn-secondary" (click)="openPermissions()"><i class="bi bi-key"></i> Permissions</button>
               <button class="btn-secondary" (click)="roleTarget.set(null)">Cancel</button>
               <button class="btn-primary" (click)="saveRole()" [disabled]="roleSaving()">
                 {{ roleSaving() ? 'Saving…' : 'Save Role' }}
-              </button>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- Permissions Modal -->
-    @if (permTarget()) {
-      <div class="modal-overlay" (click)="permTarget.set(null)">
-        <div class="modal modal-md" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div>
-              <h2>Permissions</h2>
-              <p class="modal-sub">Override individual permissions for <strong>{{ permTarget()!.fullName }}</strong>. Routing: <em>deliveries only → Rider Portal, any other permission → Admin Panel</em>.</p>
-            </div>
-            <button class="btn-close" (click)="permTarget.set(null)">✕</button>
-          </div>
-
-          @if (permLoading()) {
-            <div style="padding:1rem;text-align:center"><div class="spinner"></div></div>
-          } @else {
-            <div class="perm-groups">
-              @for (cat of permCategories(); track cat) {
-                <div class="perm-group">
-                  <p class="perm-cat">{{ cat }}</p>
-                  @for (p of permsByCategory(cat); track p.id) {
-                    <label class="perm-row">
-                      <input type="checkbox" [checked]="selectedPerms().includes(p.name)"
-                             (change)="togglePerm(p.name, $any($event.target).checked)" />
-                      <span>{{ p.displayName }}</span>
-                    </label>
-                  }
-                </div>
-              }
-            </div>
-
-            @if (permError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ permError() }}</div> }
-
-            <div class="modal-actions">
-              <button class="btn-secondary" (click)="permTarget.set(null)">Cancel</button>
-              <button class="btn-primary" (click)="savePermissions()" [disabled]="permSaving()">
-                {{ permSaving() ? 'Saving…' : 'Save Permissions' }}
               </button>
             </div>
           }
@@ -356,7 +311,6 @@ interface PermOption  { id: number; name: string; displayName: string; category:
       &.active { background: #16a34a; border-color: #16a34a; color: #fff; }
     }
 
-    /* Scrollable table wrapper */
     .users-table-scroll {
       background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
       overflow-x: auto; -webkit-overflow-scrolling: touch;
@@ -375,7 +329,6 @@ interface PermOption  { id: number; name: string; displayName: string; category:
 
     .row-inactive { opacity: .65; }
 
-    /* Hide lower-priority columns on smaller viewports */
     @media (max-width: 800px) { .hide-md { display: none !important; } }
 
     .inline-select {
@@ -383,7 +336,6 @@ interface PermOption  { id: number; name: string; displayName: string; category:
       font-size: .8rem; background: #fff; color: #334155; cursor: pointer; width: 100%;
     }
 
-    /* Action buttons for users table */
     .actions-th { text-align: right; white-space: nowrap; }
     .user-actions {
       display: flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; align-items: center;
@@ -400,7 +352,6 @@ interface PermOption  { id: number; name: string; displayName: string; category:
     .ua-btn-success { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; &:hover { background: #dcfce7; } }
     .ua-btn-danger  { background: #fef2f2; color: #dc2626; border-color: #fecaca; &:hover { background: #fee2e2; } }
 
-    /* Hide text labels on very small viewports, keep icons */
     @media (max-width: 640px) { .btn-label { display: none; } }
 
     .btn-primary { display: inline-flex; align-items: center; gap: .35rem; }
@@ -428,13 +379,6 @@ interface PermOption  { id: number; name: string; displayName: string; category:
     }
     .portal-indicator-rider { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
     .portal-indicator-admin { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
-
-    .perm-groups { display: flex; flex-direction: column; gap: 1rem; padding: .25rem 0; }
-    .perm-group  { }
-    .perm-cat    { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin: 0 0 .375rem; }
-    .perm-row    { display: flex; align-items: center; gap: .5rem; padding: .25rem 0; cursor: pointer; font-size: .875rem; color: #374151; }
-
-    .modal-md { max-width: 480px; }
 
     .role-options { display: flex; flex-direction: column; gap: .5rem; }
     .default-tag { font-size: .65rem; background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 3px; font-weight: 600; margin-left: .35rem; }
@@ -470,13 +414,17 @@ export class AdminUsersComponent implements OnInit {
 
   deleteTarget = signal<AdminUser | null>(null);
 
-  /* Role management */
   roles = signal<RoleOption[]>([]);
   roleTarget  = signal<AdminUser | null>(null);
   selectedRoleId = 0;
   roleLoading = signal(false);
   roleSaving  = signal(false);
   roleError   = signal('');
+
+  /** Portal type of the currently selected role (reactive via getter). */
+  get selectedRolePortalType(): string {
+    return this.roles().find(r => r.id === +this.selectedRoleId)?.portalType ?? 'customer';
+  }
 
   openRole(u: AdminUser) {
     this.roleTarget.set(u);
@@ -496,45 +444,6 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  /* Permissions management */
-  allPermissions = signal<PermOption[]>([]);
-  permTarget  = signal<AdminUser | null>(null);
-  selectedPerms = signal<string[]>([]);
-  permLoading = signal(false);
-  permSaving  = signal(false);
-  permError   = signal('');
-  permCategories = () => [...new Set(this.allPermissions().map(p => p.category))];
-  permsByCategory = (cat: string) => this.allPermissions().filter(p => p.category === cat);
-
-  openPermissions() {
-    const u = this.roleTarget();
-    if (!u) return;
-    this.permTarget.set(u);
-    this.permError.set('');
-    this.permLoading.set(true);
-    this.adminService.getUserPermissions(u.id).subscribe({
-      next: perms => { this.selectedPerms.set(perms); this.permLoading.set(false); },
-      error: () => { this.selectedPerms.set([]); this.permLoading.set(false); }
-    });
-  }
-
-  togglePerm(name: string, checked: boolean) {
-    const cur = this.selectedPerms();
-    this.selectedPerms.set(checked ? [...cur, name] : cur.filter(p => p !== name));
-  }
-
-  savePermissions() {
-    this.permSaving.set(true);
-    this.adminService.setUserPermissions(this.permTarget()!.id, this.selectedPerms()).subscribe({
-      next: () => {
-        this.permSaving.set(false);
-        this.permTarget.set(null);
-        this.adminService.triggerNavRefresh();
-      },
-      error: (e: any) => { this.permSaving.set(false); this.permError.set(e.error?.message ?? 'Failed to save permissions.'); }
-    });
-  }
-
   /* Create user */
   showCreate = signal(false);
   creating = signal(false);
@@ -542,7 +451,6 @@ export class AdminUsersComponent implements OnInit {
   createForm = this.emptyCreateForm();
 
   openCreate() {
-    // Pre-select the default role
     const def = this.roles().find(r => r.isDefault);
     this.createForm = this.emptyCreateForm();
     if (def) this.createForm.roleId = def.id;
@@ -577,7 +485,7 @@ export class AdminUsersComponent implements OnInit {
   filtered = () => {
     const f = this.filter();
     const all = this.users();
-    if (f === 'all')     return all;
+    if (f === 'all')      return all;
     if (f === 'inactive') return all.filter(u => !u.isActive);
     if (f === 'norole')   return all.filter(u => !u.roleName);
     return all.filter(u => u.roleName === f);
@@ -586,12 +494,14 @@ export class AdminUsersComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.adminService.getRoles().subscribe(r => this.roles.set(r));
-    this.adminService.getPermissions().subscribe(p => this.allPermissions.set(p));
   }
 
   load() {
     this.loading.set(true);
-    this.adminService.getUsers().subscribe({ next: u => { this.users.set(u); this.loading.set(false); }, error: () => this.loading.set(false) });
+    this.adminService.getUsers().subscribe({
+      next: u => { this.users.set(u); this.loading.set(false); },
+      error: () => this.loading.set(false)
+    });
   }
 
   toggleActive(u: AdminUser) {

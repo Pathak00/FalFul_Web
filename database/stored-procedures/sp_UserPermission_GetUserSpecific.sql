@@ -1,14 +1,9 @@
+-- REMOVED in migration 020 (pure RBAC).
+-- sp_UserPermission_GetUserSpecific returned user-level permission overrides.
+-- User-level permissions no longer exist; permissions are role-only.
+-- This file is kept as a tombstone. The SP is dropped by migration 020 via table drop cascade.
 SET QUOTED_IDENTIFIER ON
 GO
--- Returns only the explicitly-granted user-level permissions (for admin viewing staff config).
-CREATE OR ALTER PROCEDURE sp_UserPermission_GetUserSpecific
-    @UserId INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT p.Name
-    FROM   UserPermissions up
-    JOIN   Permissions p ON p.Id = up.PermissionId
-    WHERE  up.UserId = @UserId AND up.Granted = 1
-    ORDER BY p.SortOrder;
-END
+IF OBJECT_ID('sp_UserPermission_GetUserSpecific', 'P') IS NOT NULL
+    DROP PROCEDURE sp_UserPermission_GetUserSpecific;
+GO

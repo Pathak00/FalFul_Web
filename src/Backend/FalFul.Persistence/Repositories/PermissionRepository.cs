@@ -27,22 +27,4 @@ public class PermissionRepository : IPermissionRepository
             new { UserId = userId },
             commandType: System.Data.CommandType.StoredProcedure);
     }
-
-    public async Task<IEnumerable<string>> GetUserSpecificPermissionsAsync(int userId)
-    {
-        using var conn = _context.CreateConnection();
-        return await conn.QueryAsync<string>(
-            "sp_UserPermission_GetUserSpecific",
-            new { UserId = userId },
-            commandType: System.Data.CommandType.StoredProcedure);
-    }
-
-    public async Task SetUserPermissionsAsync(int userId, IEnumerable<string> permissions, int? grantedBy = null)
-    {
-        using var conn = _context.CreateConnection();
-        await conn.ExecuteAsync(
-            "sp_UserPermission_SetForStaff",
-            new { UserId = userId, Permissions = string.Join(",", permissions), GrantedBy = grantedBy },
-            commandType: System.Data.CommandType.StoredProcedure);
-    }
 }

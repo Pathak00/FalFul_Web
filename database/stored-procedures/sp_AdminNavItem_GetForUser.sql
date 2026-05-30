@@ -1,7 +1,7 @@
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
 -- Returns the admin sidebar items a specific user is allowed to see,
--- based on their effective permissions (role permissions ∪ individual overrides).
+-- based exclusively on their role's permissions (pure RBAC, no user-level overrides).
 CREATE OR ALTER PROCEDURE sp_AdminNavItem_GetForUser
     @UserId INT
 AS
@@ -17,13 +17,11 @@ BEGIN
       AND (
               RequiredPermission IS NULL
           OR  EXISTS (
-                  SELECT 1 FROM Permissions p
-                  WHERE  p.Name = RequiredPermission
-                    AND  p.Id IN (
-                             SELECT PermissionId FROM RolePermissions  WHERE RoleId = @RoleId
-                             UNION
-                             SELECT PermissionId FROM UserPermissions  WHERE UserId = @UserId AND Granted = 1
-                         )
+                  SELECT 1
+                  FROM   Permissions p
+                  JOIN   RolePermissions rp ON rp.PermissionId = p.Id
+                  WHERE  p.Name      = RequiredPermission
+                    AND  rp.RoleId   = @RoleId
               )
       )
     ORDER BY DisplayOrder;

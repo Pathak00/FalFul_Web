@@ -84,14 +84,6 @@ export class AdminService {
     return this.api.get('/api/admin/permissions');
   }
 
-  getUserPermissions(userId: number): Observable<string[]> {
-    return this.api.get(`/api/admin/users/${userId}/permissions`);
-  }
-
-  setUserPermissions(userId: number, permissions: string[]): Observable<void> {
-    return this.api.put<void>(`/api/admin/users/${userId}/permissions`, { permissions });
-  }
-
   /* ── Admin navigation items ──────────────────────────────────────────── */
 
   /** Returns sidebar items accessible to the current user. */
