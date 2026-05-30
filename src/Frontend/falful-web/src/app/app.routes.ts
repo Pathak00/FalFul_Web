@@ -78,6 +78,7 @@ export const routes: Routes = [
       { path: 'orders',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
       { path: 'deliveries',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/deliveries/admin-deliveries').then(m => m.AdminDeliveriesComponent) },
       { path: 'reports',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
+      { path: 'payments',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/payments/admin-payments').then(m => m.AdminPaymentsComponent) },
       { path: 'price-config', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
       { path: 'settings',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
       { path: 'nav',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
