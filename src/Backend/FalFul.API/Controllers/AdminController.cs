@@ -8,7 +8,7 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Policy = "Perm:system")]
+[Authorize]
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _admin;
@@ -16,14 +16,17 @@ public class AdminController : ControllerBase
     public AdminController(IAdminService admin) => _admin = admin;
 
     [HttpGet("stats")]
+    [Authorize(Policy = "Perm:system")]
     public async Task<IActionResult> GetStats() =>
         Ok(await _admin.GetStatsAsync());
 
     [HttpGet("users")]
+    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> GetUsers() =>
         Ok(await _admin.GetAllUsersAsync());
 
     [HttpPost("users")]
+    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> CreateUser([FromBody] CreateAdminUserDto dto)
     {
         var result = await _admin.CreateUserAsync(dto, GetUserId());
@@ -31,6 +34,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("users/set-active")]
+    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> SetActive([FromBody] SetUserActiveDto dto)
     {
         var result = await _admin.SetUserActiveAsync(dto, GetUserId());
@@ -38,6 +42,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("users/set-type")]
+    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> SetType([FromBody] SetUserTypeDto dto)
     {
         var result = await _admin.SetUserTypeAsync(dto, GetUserId());
@@ -45,6 +50,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("users/reset-password")]
+    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> ResetPassword([FromBody] AdminResetPasswordDto dto)
     {
         var result = await _admin.ResetPasswordAsync(dto, GetUserId());
@@ -52,6 +58,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpDelete("users/{id:int}")]
+    [Authorize(Policy = "Perm:users")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var result = await _admin.DeleteUserAsync(id, GetUserId());
