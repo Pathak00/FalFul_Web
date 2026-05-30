@@ -1,4 +1,5 @@
 using Dapper;
+using FalFul.Application.DTOs.Payment;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Common;
 using FalFul.Domain.Entities;
@@ -60,6 +61,24 @@ public class PaymentRepository(DapperContext context) : IPaymentRepository
             commandType: CommandType.StoredProcedure);
     }
 
+    public async Task<Payment?> GetByIdAsync(int id)
+    {
+        using var conn = context.CreateConnection();
+        return await conn.QuerySingleOrDefaultAsync<Payment>(
+            "sp_Payment_GetById",
+            new { Id = id },
+            commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task UpdateOrderPaymentStatusAsync(int orderId, PaymentStatus status, decimal? advanceAmount = null)
+    {
+        using var conn = context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_Order_UpdatePaymentStatus",
+            new { Id = orderId, PaymentStatus = (byte)status, AdvanceAmount = advanceAmount },
+            commandType: CommandType.StoredProcedure);
+    }
+
     public async Task<PaymentSettings> GetSettingsAsync()
     {
         using var conn = context.CreateConnection();
@@ -75,5 +94,19 @@ public class PaymentRepository(DapperContext context) : IPaymentRepository
             AdvancePercent   = map.TryGetValue("payment:advance:percent",    out var p) && decimal.TryParse(p, out var pv) ? pv : 30m,
             MinAdvanceAmount = map.TryGetValue("payment:advance:min_amount", out var m) && decimal.TryParse(m, out var mv) ? mv : 100m
         };
+    }
+
+    public async Task<PaymentReportData> GetReportAsync(DateOnly? fromDate, DateOnly? toDate)
+    {
+        using var conn  = context.CreateConnection();
+        using var multi = await conn.QueryMultipleAsync(
+            "sp_Report_PaymentSummary",
+            new { FromDate = fromDate, ToDate = toDate },
+            commandType: CommandType.StoredProcedure);
+
+        var summary  = await multi.ReadSingleAsync<PaymentReportData>();
+        summary.MethodBreakdown = (await multi.ReadAsync<PaymentMethodBreakdownDto>()).ToList();
+        summary.StatusBreakdown = (await multi.ReadAsync<RawStatusBreakdown>()).ToList();
+        return summary;
     }
 }
