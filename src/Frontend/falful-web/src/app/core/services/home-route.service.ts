@@ -11,7 +11,7 @@ export class HomeRouteService {
     if (!user) return '/';
     switch (user.portalType) {
       case 'rider':    return '/rider/deliveries';
-      case 'customer': return '/';
+      case 'customer': return '/dashboard';
       case 'admin':
       default:         return '/admin';
     }

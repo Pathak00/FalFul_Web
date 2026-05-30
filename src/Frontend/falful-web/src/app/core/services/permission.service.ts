@@ -1,16 +1,15 @@
 import { Injectable, inject } from '@angular/core';
-import { PermKey } from '../constants/permissions';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class PermissionService {
   private user = inject(AuthService).currentUser;
 
-  can(key: PermKey): boolean {
+  can(key: string): boolean {
     return this.user()?.permissions.includes(key) ?? false;
   }
 
-  canAny(...keys: PermKey[]): boolean {
+  canAny(...keys: string[]): boolean {
     const perms = this.user()?.permissions ?? [];
     return keys.some(k => perms.includes(k));
   }

@@ -1,6 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 import { PermKey } from '../constants/permissions';
+import { AdminNavStore } from '../stores/admin-nav.store';
 import { AuthService } from '../services/auth.service';
 import { HomeRouteService } from '../services/home-route.service';
 import { PermissionService } from '../services/permission.service';
@@ -66,21 +68,19 @@ export const riderGuard: CanActivateFn = () => {
 };
 
 /**
- * Guards consumer/shop routes. Blocks users whose role's PortalType is 'rider' or 'admin'.
- * Guests are always allowed.
+ * DB-driven guard for admin and rider child routes.
+ *
+ * Looks up the required permission for the current URL from AdminNavStore
+ * (which is backed by AdminNavItems.RequiredPermission in the database).
+ * This means sidebar visibility and route access are always in sync:
+ * changing RequiredPermission in the DB updates both the nav item and the guard.
  */
-export const shopGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+export const dynamicNavGuard: CanActivateFn = (_route, state) => {
+  const store     = inject(AdminNavStore);
   const homeRoute = inject(HomeRouteService);
-  const router = inject(Router);
+  const router    = inject(Router);
 
-  if (!auth.isAuthenticated()) return true;
-
-  const portalType = auth.currentUser()?.portalType;
-  if (portalType === 'rider' || portalType === 'admin') {
-    router.navigate([homeRoute.route()]);
-    return false;
-  }
-
-  return true;
+  return store.canAccess(state.url).pipe(
+    map(allowed => allowed || router.createUrlTree([homeRoute.route()]))
+  );
 };

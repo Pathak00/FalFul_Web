@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription, switchMap } from 'rxjs';
 import { AdminNavItem } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AdminNavStore } from '../../../core/stores/admin-nav.store';
 import { ToastComponent } from '../../components/toast/toast';
 
 interface NavGroup { label: string; items: AdminNavItem[]; }
@@ -207,15 +208,17 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
   `]
 })
 export class AdminLayoutComponent implements OnInit, OnDestroy {
-  private authService = inject(AuthService);
+  private authService  = inject(AuthService);
   private adminService = inject(AdminService);
-  private router = inject(Router);
+  private navStore     = inject(AdminNavStore);
 
-  readonly user = this.authService.currentUser;
-  readonly initial = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'A';
+  readonly user        = this.authService.currentUser;
+  readonly initial     = () => this.user()?.fullName?.charAt(0)?.toUpperCase() ?? 'A';
   readonly sidebarOpen = signal(false);
-  readonly navItems = signal<AdminNavItem[]>([]);
-  readonly navLoading = signal(true);
+  readonly navLoading  = signal(true);
+
+  // Read nav items directly from the shared store (same source as the route guard).
+  readonly navItems = this.navStore.items;
 
   private navSub = new Subscription();
 
@@ -235,19 +238,32 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    this.loadNav();
-    // On permission change: refresh JWT first (updates permissions signal + route guards),
-    // then re-fetch nav so sidebar reflects the new permission set immediately.
+    // If the guard already loaded nav items for this session, skip the extra API call.
+    if (this.navStore.loaded()) {
+      this.navLoading.set(false);
+    } else {
+      this.loadNav();
+    }
+
+    // On permission change: refresh JWT (updates claims), then reload nav from DB.
     this.navSub = this.adminService.navRefresh$
       .pipe(switchMap(() => this.authService.refreshToken()))
-      .subscribe({ next: () => this.loadNav(), error: () => this.loadNav() });
+      .subscribe({ next: () => this.reloadNav(), error: () => this.reloadNav() });
   }
 
   ngOnDestroy(): void { this.navSub.unsubscribe(); }
 
   private loadNav(): void {
-    this.adminService.getAdminNav().subscribe({
-      next: items => { this.navItems.set(items); this.navLoading.set(false); },
+    this.navStore.load().subscribe({
+      next: () => this.navLoading.set(false),
+      error: () => this.navLoading.set(false)
+    });
+  }
+
+  private reloadNav(): void {
+    this.navLoading.set(true);
+    this.navStore.load().subscribe({
+      next: () => this.navLoading.set(false),
       error: () => this.navLoading.set(false)
     });
   }
