@@ -148,8 +148,9 @@ public class PaymentService(
             if (!result.IsSuccess)
                 return Result<InitiatePaymentResultDto>.Failure(result.ErrorMessage ?? "Gateway initiation failed.");
 
-            // Order awaits advance payment verification before admin can process it
-            await orders.UpdateStatusAsync(orderId, OrderStatus.AwaitingPayment);
+            // Order awaits advance payment verification before admin can process it.
+            // Non-fatal: gateway redirect proceeds even if this status update fails.
+            try { await orders.UpdateStatusAsync(orderId, OrderStatus.AwaitingPayment); } catch { }
 
             return Result<InitiatePaymentResultDto>.Success(new InitiatePaymentResultDto
             {
@@ -192,8 +193,9 @@ public class PaymentService(
             if (!result.IsSuccess)
                 return Result<InitiatePaymentResultDto>.Failure(result.ErrorMessage ?? "Gateway initiation failed.");
 
-            // Order awaits full payment verification before admin can process it
-            await orders.UpdateStatusAsync(orderId, OrderStatus.AwaitingPayment);
+            // Order awaits full payment verification before admin can process it.
+            // Non-fatal: gateway redirect proceeds even if this status update fails.
+            try { await orders.UpdateStatusAsync(orderId, OrderStatus.AwaitingPayment); } catch { }
 
             return Result<InitiatePaymentResultDto>.Success(new InitiatePaymentResultDto
             {

@@ -2,6 +2,7 @@ using FalFul.Application.DTOs.Payment;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -158,5 +159,5 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private int GetUserId()
-        => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        => int.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? "0");
 }
