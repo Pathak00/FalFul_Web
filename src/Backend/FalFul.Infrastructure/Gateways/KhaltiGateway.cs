@@ -31,9 +31,10 @@ public class KhaltiGateway(IOptions<KhaltiConfig> options, IHttpClientFactory ht
     {
         var client = httpClientFactory.CreateClient("Khalti");
 
+        var sep = request.ReturnUrl.Contains('?') ? '&' : '?';
         var body = new
         {
-            return_url    = $"{request.ReturnUrl}?payment_id={request.PaymentId}",
+            return_url    = $"{request.ReturnUrl}{sep}payment_id={request.PaymentId}",
             website_url   = "http://localhost:4200",
             amount        = (int)(request.Amount * 100), // Khalti uses paisa (1 NPR = 100 paisa)
             purchase_order_id   = $"FF-{request.PaymentId}",
