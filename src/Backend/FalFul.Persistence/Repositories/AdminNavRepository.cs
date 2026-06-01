@@ -42,7 +42,7 @@ public class AdminNavRepository : IAdminNavRepository
         using var conn = _context.CreateConnection();
         await conn.ExecuteAsync(
             "sp_AdminNavItem_Update",
-            new { item.Id, item.Label, item.Icon, item.GroupLabel, item.DisplayOrder, item.IsVisible },
+            new { item.Id, item.Label, item.Icon, item.GroupLabel, item.DisplayOrder, item.IsVisible, item.RequiredPermission, item.PortalScope },
             commandType: CommandType.StoredProcedure);
     }
 

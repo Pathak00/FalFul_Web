@@ -38,7 +38,7 @@ public class CmsService : ICmsService
     {
         try
         {
-            var item = new MenuItem { ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab };
+            var item = new MenuItem { ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab, RequiredPortalType = dto.RequiredPortalType };
             var id = await _menus.CreateAsync(item, adminId);
             await _menus.SetRolesAsync(id, dto.RequiredRoleIds);
             return Result<int>.Success(id);
@@ -50,7 +50,7 @@ public class CmsService : ICmsService
     {
         try
         {
-            var item = new MenuItem { Id = dto.Id, ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab };
+            var item = new MenuItem { Id = dto.Id, ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab, RequiredPortalType = dto.RequiredPortalType };
             await _menus.UpdateAsync(item, adminId);
             await _menus.SetRolesAsync(dto.Id, dto.RequiredRoleIds);
             return Result.Success();
@@ -71,7 +71,8 @@ public class CmsService : ICmsService
         RequiredRoleIds = string.IsNullOrEmpty(m.RequiredRoleIds)
             ? []
             : m.RequiredRoleIds.Split(',').Select(int.Parse).ToArray(),
-        OpenInNewTab = m.OpenInNewTab
+        OpenInNewTab = m.OpenInNewTab,
+        RequiredPortalType = m.RequiredPortalType
     };
 
     /* ---- Pages ---- */

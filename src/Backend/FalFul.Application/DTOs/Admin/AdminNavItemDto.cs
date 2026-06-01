@@ -18,12 +18,16 @@ public class AdminNavItemDto
 
 public class UpdateAdminNavItemDto
 {
-    public int     Id           { get; set; }
-    public string  Label        { get; set; } = string.Empty;
-    public string? Icon         { get; set; }
-    public string? GroupLabel   { get; set; }
-    public int     DisplayOrder { get; set; }
-    public bool    IsVisible    { get; set; }
+    public int     Id                 { get; set; }
+    public string  Label              { get; set; } = string.Empty;
+    public string? Icon               { get; set; }
+    public string? GroupLabel         { get; set; }
+    public int     DisplayOrder       { get; set; }
+    public bool    IsVisible          { get; set; }
+    /// <summary>Only applied when the item is not a system item (IsSystem = false).</summary>
+    public string? RequiredPermission { get; set; }
+    /// <summary>Only applied when the item is not a system item (IsSystem = false).</summary>
+    public string? PortalScope        { get; set; }
 }
 
 public class CreateAdminNavItemDto

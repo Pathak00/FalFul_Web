@@ -95,6 +95,20 @@ import { ToastService } from '../../../core/services/toast.service';
                         Visible in sidebar
                       </label>
                     </div>
+                    @if (!item.isSystem) {
+                      <div class="edit-row">
+                        <label>Permission</label>
+                        <input [(ngModel)]="editForm.requiredPermission" placeholder="e.g. reports (blank = no check)" />
+                      </div>
+                      <div class="edit-row">
+                        <label>Portal</label>
+                        <select [(ngModel)]="editForm.portalScope">
+                          <option value="">All portals</option>
+                          <option value="admin">Admin only</option>
+                          <option value="rider">Rider only</option>
+                        </select>
+                      </div>
+                    }
                     @if (saveError()) {
                       <p class="save-error">{{ saveError() }}</p>
                     }
@@ -360,7 +374,9 @@ export class AdminNavComponent implements OnInit {
       icon: item.icon ?? '',
       groupLabel: item.groupLabel ?? '',
       displayOrder: item.displayOrder,
-      isVisible: item.isVisible
+      isVisible: item.isVisible,
+      requiredPermission: item.requiredPermission ?? '',
+      portalScope: item.portalScope ?? ''
     };
   }
 
@@ -371,11 +387,13 @@ export class AdminNavComponent implements OnInit {
     this.saving.set(true);
     this.saveError.set('');
     const dto: UpdateAdminNavItemRequest = {
-      label:        this.editForm.label.trim(),
-      icon:         this.editForm.icon || undefined,
-      groupLabel:   this.editForm.groupLabel || undefined,
-      displayOrder: this.editForm.displayOrder,
-      isVisible:    this.editForm.isVisible
+      label:              this.editForm.label.trim(),
+      icon:               this.editForm.icon || undefined,
+      groupLabel:         this.editForm.groupLabel || undefined,
+      displayOrder:       this.editForm.displayOrder,
+      isVisible:          this.editForm.isVisible,
+      requiredPermission: this.editForm.requiredPermission || undefined,
+      portalScope:        this.editForm.portalScope || undefined
     };
     this.adminService.updateAdminNavItem(item.id, dto).subscribe({
       next: () => {
@@ -389,11 +407,13 @@ export class AdminNavComponent implements OnInit {
 
   toggleVisible(item: AdminNavItem): void {
     const dto: UpdateAdminNavItemRequest = {
-      label:        item.label,
-      icon:         item.icon,
-      groupLabel:   item.groupLabel,
-      displayOrder: item.displayOrder,
-      isVisible:    !item.isVisible
+      label:              item.label,
+      icon:               item.icon,
+      groupLabel:         item.groupLabel,
+      displayOrder:       item.displayOrder,
+      isVisible:          !item.isVisible,
+      requiredPermission: item.requiredPermission,
+      portalScope:        item.portalScope ?? undefined
     };
     this.adminService.updateAdminNavItem(item.id, dto).subscribe({
       next: () => this.items.update(list => list.map(i => i.id === item.id ? { ...i, isVisible: !i.isVisible } : i))
@@ -401,7 +421,7 @@ export class AdminNavComponent implements OnInit {
   }
 
   private emptyForm() {
-    return { id: 0, label: '', icon: '', groupLabel: '', displayOrder: 0, isVisible: true };
+    return { id: 0, label: '', icon: '', groupLabel: '', displayOrder: 0, isVisible: true, requiredPermission: '', portalScope: '' };
   }
 
   openCreate(): void {

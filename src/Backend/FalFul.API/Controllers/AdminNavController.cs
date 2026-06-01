@@ -54,12 +54,14 @@ public class AdminNavController : ControllerBase
     {
         await _nav.UpdateAsync(new AdminNavItem
         {
-            Id           = id,
-            Label        = dto.Label,
-            Icon         = dto.Icon,
-            GroupLabel   = dto.GroupLabel,
-            DisplayOrder = dto.DisplayOrder,
-            IsVisible    = dto.IsVisible
+            Id                 = id,
+            Label              = dto.Label,
+            Icon               = dto.Icon,
+            GroupLabel         = dto.GroupLabel,
+            DisplayOrder       = dto.DisplayOrder,
+            IsVisible          = dto.IsVisible,
+            RequiredPermission = dto.RequiredPermission,
+            PortalScope        = dto.PortalScope
         });
         return NoContent();
     }

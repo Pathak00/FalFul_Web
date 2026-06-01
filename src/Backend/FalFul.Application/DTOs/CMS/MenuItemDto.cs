@@ -13,6 +13,9 @@ public class MenuItemDto
     public int[] RequiredRoleIds { get; set; } = [];
     public bool OpenInNewTab { get; set; }
     public bool IsPortalShortcut { get; set; }
+    /// <summary>For portal shortcuts: show to users whose role's PortalType matches this value.
+    /// Null = use VisibleTo + MenuItemRoles logic instead.</summary>
+    public string? RequiredPortalType { get; set; }
 }
 
 public class CreateMenuItemDto
@@ -26,6 +29,7 @@ public class CreateMenuItemDto
     public int VisibleTo { get; set; }
     public int[] RequiredRoleIds { get; set; } = [];
     public bool OpenInNewTab { get; set; }
+    public string? RequiredPortalType { get; set; }
 }
 
 public class UpdateMenuItemDto : CreateMenuItemDto

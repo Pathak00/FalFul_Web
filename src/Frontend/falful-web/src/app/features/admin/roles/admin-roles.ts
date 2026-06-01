@@ -117,10 +117,17 @@ interface Permission {
                                (change)="togglePerm(perm.id)">
                         <span>
                           <strong>{{ perm.displayName }}</strong>
-                          @if (navByPerm().get(perm.name); as nav) {
+                          @let navs = navsByPerm().get(perm.name);
+                          @if (navs?.length) {
                             <small>
-                              <i class="bi {{ nav.icon }}"></i>
-                              Unlocks <em>{{ nav.label }}</em> in sidebar
+                              Unlocks:
+                              @for (nav of navs; track nav.id) {
+                                <span class="nav-hint">
+                                  <i class="bi {{ nav.icon }}"></i>
+                                  <em>{{ nav.label }}</em>
+                                  <span class="scope-tag">{{ portalScopeLabel(nav.portalScope) }}</span>
+                                </span>
+                              }
                             </small>
                           } @else {
                             <small>{{ perm.name }}</small>
@@ -211,8 +218,10 @@ interface Permission {
       input { width: 15px; height: 15px; flex-shrink: 0; accent-color: #16a34a; }
       span { display: flex; flex-direction: column; gap: 1px; }
       strong { font-size: .8rem; color: #1e293b; font-weight: 600; }
-      small { font-size: .7rem; color: #94a3b8; font-family: monospace; }
+      small { font-size: .7rem; color: #64748b; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; }
     }
+    .nav-hint { display: inline-flex; align-items: center; gap: .2rem; }
+    .scope-tag { font-size: .62rem; background: #f1f5f9; color: #64748b; padding: 0 5px; border-radius: 3px; font-family: monospace; }
 
     .btn-xs { font-size: .7rem; padding: .2rem .5rem; }
     .btn-danger-soft { background: #fef2f2; color: #dc2626; border-color: #fecaca; &:hover { background: #fee2e2; } &:disabled { opacity: .4; cursor: not-allowed; } }
@@ -250,14 +259,23 @@ export class AdminRolesComponent implements OnInit {
     return [...map.values()];
   });
 
-  /** Map of permissionName → AdminNavItem for the permission editor hint. */
-  readonly navByPerm = computed(() => {
-    const map = new Map<string, AdminNavItem>();
+  /** Map of permissionName → AdminNavItem[] — all nav items that require this permission.
+   *  Uses an array because multiple items may share a permission (e.g. receipts → 2 items). */
+  readonly navsByPerm = computed(() => {
+    const map = new Map<string, AdminNavItem[]>();
     for (const item of this.navItems()) {
-      if (item.requiredPermission) map.set(item.requiredPermission, item);
+      if (item.requiredPermission) {
+        const existing = map.get(item.requiredPermission) ?? [];
+        map.set(item.requiredPermission, [...existing, item]);
+      }
     }
     return map;
   });
+
+  portalScopeLabel(scope?: string | null): string {
+    if (!scope) return 'all portals';
+    return { admin: 'admin', rider: 'rider' }[scope] ?? scope;
+  }
 
   ngOnInit(): void {
     this.loadRoles();

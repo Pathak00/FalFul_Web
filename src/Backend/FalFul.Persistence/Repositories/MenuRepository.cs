@@ -32,7 +32,7 @@ public class MenuRepository : IMenuRepository
         using var conn = _context.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             "sp_MenuItem_Create",
-            new { item.ParentId, item.Label, item.Url, item.Icon, item.DisplayOrder, item.IsVisible, item.VisibleTo, item.OpenInNewTab, CreatedBy = createdBy },
+            new { item.ParentId, item.Label, item.Url, item.Icon, item.DisplayOrder, item.IsVisible, item.VisibleTo, item.OpenInNewTab, CreatedBy = createdBy, item.RequiredPortalType },
             commandType: System.Data.CommandType.StoredProcedure);
     }
 
@@ -41,7 +41,7 @@ public class MenuRepository : IMenuRepository
         using var conn = _context.CreateConnection();
         await conn.ExecuteAsync(
             "sp_MenuItem_Update",
-            new { item.Id, item.ParentId, item.Label, item.Url, item.Icon, item.DisplayOrder, item.IsVisible, item.VisibleTo, item.OpenInNewTab, UpdatedBy = updatedBy },
+            new { item.Id, item.ParentId, item.Label, item.Url, item.Icon, item.DisplayOrder, item.IsVisible, item.VisibleTo, item.OpenInNewTab, UpdatedBy = updatedBy, item.RequiredPortalType },
             commandType: System.Data.CommandType.StoredProcedure);
     }
 

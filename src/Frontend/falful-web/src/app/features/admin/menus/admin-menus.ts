@@ -107,7 +107,11 @@ const BASE_OPTIONS = [
                     @if (item.url) { <span class="menu-url">{{ item.url }}</span> }
                   </div>
                   <span class="badge badge-purple">Portal Shortcut</span>
-                  <span class="badge badge-blue">{{ visibilityLabel(item) }}</span>
+                  @if (item.requiredPortalType) {
+                    <span class="badge badge-portal-type">{{ item.requiredPortalType }} portal</span>
+                  } @else {
+                    <span class="badge badge-blue">{{ visibilityLabel(item) }}</span>
+                  }
                   @if (!item.isVisible) { <span class="badge badge-gray">Hidden</span> }
                 </div>
                 <div class="menu-row-actions">
@@ -314,7 +318,8 @@ const BASE_OPTIONS = [
     .menu-tree-portal { border-color: #e9d5ff; }
     .menu-row-portal { background: #faf5ff !important; &:hover { background: #f3e8ff !important; } }
     .portal-icon { color: #7c3aed; font-size: 1rem; flex-shrink: 0; width: 18px; text-align: center; }
-    .badge-purple { background: #ede9fe; color: #7c3aed; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+    .badge-purple      { background: #ede9fe; color: #7c3aed; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+    .badge-portal-type { background: #fef3c7; color: #b45309; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
 
     .role-picker {
       background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;

@@ -19,6 +19,10 @@ export interface UpdateAdminNavItemRequest {
   groupLabel?: string;
   displayOrder: number;
   isVisible: boolean;
+  /** Only applied by the server for custom (non-system) items. */
+  requiredPermission?: string;
+  /** Only applied by the server for custom (non-system) items. */
+  portalScope?: string;
 }
 
 export interface CreateAdminNavItemRequest {
