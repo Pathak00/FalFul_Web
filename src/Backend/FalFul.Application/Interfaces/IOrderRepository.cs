@@ -1,4 +1,5 @@
 using FalFul.Application.DTOs.Order;
+using FalFul.Application.DTOs.Receipt;
 using FalFul.Domain.Entities;
 using FalFul.Domain.Enums;
 
@@ -14,4 +15,5 @@ public interface IOrderRepository
     Task                     UpdateStatusAsync(int id, OrderStatus status, string? reason = null);
     Task                     CancelAsync(int id, int userId, string reason);
     Task<OrderReportDto>     GetReportAsync(DateOnly? fromDate, DateOnly? toDate);
+    Task<OrderReceiptDataDto?> GetReceiptDataAsync(int orderId);
 }

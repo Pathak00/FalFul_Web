@@ -55,7 +55,7 @@ export class OrderService {
     return this.api.get<OrderRating | null>(`/api/orders/${orderId}/rating`);
   }
 
-  submitRating(orderId: number, dto: { deliveryRating?: number; productQualityRating?: number; overallRating: number; comment?: string }): Observable<void> {
+  submitRating(orderId: number, dto: { deliveryRating?: number; productQualityRating?: number; overallRating: number; comment?: string; receiptAcknowledged?: boolean }): Observable<void> {
     return this.api.post<void>(`/api/orders/${orderId}/rating`, dto);
   }
 

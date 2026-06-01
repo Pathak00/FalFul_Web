@@ -2,6 +2,8 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RiderService } from '../../core/services/rider.service';
+import { ReceiptService } from '../../core/services/receipt.service';
+import { ToastService } from '../../core/services/toast.service';
 
 const STATUS_LABELS: Record<number, string> = {
   1: 'Awaiting Rider',
@@ -294,6 +296,17 @@ interface BowlDetails {
 
           <div class="modal-actions">
             <button class="btn-secondary" (click)="detail.set(null)">Close</button>
+            @if (detail()!.status === 5) {
+              <button class="btn-primary btn-receipt"
+                      (click)="printReceipt(detail()!.orderId)"
+                      [disabled]="printingReceiptId() === detail()!.orderId">
+                @if (printingReceiptId() === detail()!.orderId) {
+                  <span class="spinner-xs"></span> Loading…
+                } @else {
+                  <i class="bi bi-printer"></i> Print Receipt
+                }
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -760,6 +773,20 @@ interface BowlDetails {
         cursor: pointer;
         font-size: 0.875rem;
       }
+      .btn-receipt {
+        background: #f0fdf4;
+        color: #16a34a;
+        border-color: #bbf7d0;
+        &:hover:not(:disabled) { background: #dcfce7; }
+      }
+      .spinner-xs {
+        display: inline-block;
+        width: 12px; height: 12px;
+        border: 2px solid #bbf7d0;
+        border-top-color: #16a34a;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
       .form-error {
         color: #dc2626;
         font-size: 0.8rem;
@@ -874,6 +901,8 @@ interface BowlDetails {
 })
 export class RiderDeliveriesComponent implements OnInit {
   private riderService = inject(RiderService);
+  private receiptSvc   = inject(ReceiptService);
+  private toast        = inject(ToastService);
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_BADGE = STATUS_BADGE;
@@ -885,6 +914,7 @@ export class RiderDeliveriesComponent implements OnInit {
   loading = signal(true);
 
   detail = signal<any>(null);
+  printingReceiptId = signal<number | null>(null);
 
   completeTarget = signal<any>(null);
   completeSaving = signal(false);
@@ -918,6 +948,29 @@ export class RiderDeliveriesComponent implements OnInit {
   viewDetail(id: number) {
     this.riderService.getDeliveryDetail(id).subscribe({
       next: d => this.detail.set(d),
+    });
+  }
+
+  printReceipt(orderId: number) {
+    const win = window.open('', '_blank');
+    if (!win) { this.toast.warn('Allow popups to print receipts.'); return; }
+    this.printingReceiptId.set(orderId);
+    this.receiptSvc.adminGetReceipt(orderId).subscribe({
+      next: r => {
+        this.printingReceiptId.set(null);
+        const html = r.html.replace(
+          '</body>',
+          `<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</script></body>`
+        );
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      },
+      error: () => {
+        this.printingReceiptId.set(null);
+        win.close();
+        this.toast.error('Could not load receipt.');
+      }
     });
   }
 

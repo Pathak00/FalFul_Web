@@ -7,6 +7,7 @@ import { PaymentService } from '../../../core/services/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { OrderDetail, ORDER_STATUSES, DELIVERY_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
 import { PaymentDto } from '../../../core/models/payment.models';
+import { ReceiptService } from '../../../core/services/receipt.service';
 
 interface BowlDetails {
   container: string;
@@ -281,6 +282,15 @@ const DELIVERY_STEPS = [
               </div>
             }
 
+            <!-- Print receipt button (once delivered) -->
+            @if (order()!.delivery?.status === 5) {
+              <div class="od-card" style="padding:.75rem 1rem">
+                <button class="btn-print-receipt" (click)="openPrintReceipt()">
+                  <i class="bi bi-printer"></i> Print Receipt
+                </button>
+              </div>
+            }
+
             <!-- Rating section (delivered, not yet rated) -->
             @if (order()!.delivery?.status === 5 && !order()!.rating && !ratingSubmitted()) {
               <div class="od-card rating-card">
@@ -320,6 +330,10 @@ const DELIVERY_STEPS = [
                 </div>
                 <textarea [(ngModel)]="ratingForm.comment" placeholder="Leave a comment (optional)" rows="2"
                           style="width:100%;margin-top:.5rem;padding:.5rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem"></textarea>
+                <label class="ack-label">
+                  <input type="checkbox" [(ngModel)]="ratingForm.receiptAcknowledged" />
+                  <span>I have received the delivery receipt</span>
+                </label>
                 <button class="btn-submit-rating" (click)="submitRating()"
                         [disabled]="ratingForm.overallRating === 0 || submittingRating()">
                   @if (submittingRating()) { Submitting... } @else { Submit Rating }
@@ -516,6 +530,8 @@ const DELIVERY_STEPS = [
     .rating-display { display: flex; justify-content: space-between; align-items: center; }
     .stars-display { color: #f59e0b; font-size: 1rem; letter-spacing: .1em; }
     .cancel-policy-text { font-size: .72rem; color: #9ca3af; margin: .5rem 0 0; line-height: 1.4; }
+    .btn-print-receipt { display:flex; align-items:center; gap:.5rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:.5rem 1rem; font-size:.85rem; font-weight:600; color:#16a34a; cursor:pointer; width:100%; justify-content:center; &:hover { background:#dcfce7; } }
+    .ack-label { display:flex; align-items:center; gap:.5rem; margin:.5rem 0; font-size:.82rem; color:#475569; cursor:pointer; input[type=checkbox] { width:15px; height:15px; cursor:pointer; } }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
     .cancel-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
@@ -532,10 +548,11 @@ const DELIVERY_STEPS = [
   styleUrl: './order-detail.scss'
 })
 export class OrderDetailComponent implements OnInit {
-  private svc     = inject(OrderService);
-  private paySvc  = inject(PaymentService);
-  private route   = inject(ActivatedRoute);
-  private toast   = inject(ToastService);
+  private svc        = inject(OrderService);
+  private paySvc     = inject(PaymentService);
+  private route      = inject(ActivatedRoute);
+  private toast      = inject(ToastService);
+  private receiptSvc = inject(ReceiptService);
 
   order            = signal<OrderDetail | null>(null);
   payments         = signal<PaymentDto[]>([]);
@@ -555,7 +572,8 @@ export class OrderDetailComponent implements OnInit {
     overallRating:        0,
     deliveryRating:       undefined as number | undefined,
     productQualityRating: undefined as number | undefined,
-    comment:              ''
+    comment:              '',
+    receiptAcknowledged:  false
   };
 
   ngOnInit() {
@@ -639,6 +657,13 @@ export class OrderDetailComponent implements OnInit {
     });
   }
 
+  openPrintReceipt(): void {
+    const id = this.order()?.id;
+    if (!id) return;
+    window.open(`/orders/${id}/receipt`, '_blank');
+    this.receiptSvc.logPrint(id, { role: 'Customer' }).subscribe({ error: () => {} });
+  }
+
   submitRating(): void {
     const id = this.order()?.id;
     if (!id || this.ratingForm.overallRating === 0) return;
@@ -647,7 +672,8 @@ export class OrderDetailComponent implements OnInit {
       overallRating:        this.ratingForm.overallRating,
       deliveryRating:       this.ratingForm.deliveryRating,
       productQualityRating: this.ratingForm.productQualityRating,
-      comment:              this.ratingForm.comment || undefined
+      comment:              this.ratingForm.comment || undefined,
+      receiptAcknowledged:  this.ratingForm.receiptAcknowledged
     }).subscribe({
       next: () => { this.ratingSubmitted.set(true); this.submittingRating.set(false); },
       error: () => this.submittingRating.set(false)

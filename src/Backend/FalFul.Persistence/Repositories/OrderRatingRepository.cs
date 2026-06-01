@@ -29,7 +29,9 @@ public class OrderRatingRepository(DapperContext context) : IOrderRatingReposito
                 rating.DeliveryRating,
                 rating.ProductQualityRating,
                 rating.OverallRating,
-                rating.Comment
+                rating.Comment,
+                rating.ReceiptAcknowledged,
+                rating.ReceiptAcknowledgedAt
             },
             commandType: CommandType.StoredProcedure);
     }

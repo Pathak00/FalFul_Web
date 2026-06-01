@@ -39,6 +39,8 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IDiscountRepository, DiscountRepository>();
         services.AddScoped<INoticeRepository, NoticeRepository>();
+        services.AddScoped<IReceiptTemplateRepository, ReceiptTemplateRepository>();
+        services.AddScoped<IReceiptPrintLogRepository, ReceiptPrintLogRepository>();
         return services;
     }
 }

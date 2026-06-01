@@ -1,12 +1,14 @@
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_OrderRating_Create
-    @OrderId              INT,
-    @UserId               INT,
-    @DeliveryRating       TINYINT        = NULL,
-    @ProductQualityRating TINYINT        = NULL,
-    @OverallRating        TINYINT,
-    @Comment              NVARCHAR(1000) = NULL
+    @OrderId                INT,
+    @UserId                 INT,
+    @DeliveryRating         TINYINT        = NULL,
+    @ProductQualityRating   TINYINT        = NULL,
+    @OverallRating          TINYINT,
+    @Comment                NVARCHAR(1000) = NULL,
+    @ReceiptAcknowledged    BIT            = 0,
+    @ReceiptAcknowledgedAt  DATETIME2      = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -14,12 +16,23 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM OrderRatings WHERE OrderId = @OrderId AND UserId = @UserId)
         UPDATE OrderRatings
-        SET    DeliveryRating       = @DeliveryRating,
-               ProductQualityRating = @ProductQualityRating,
-               OverallRating        = @OverallRating,
-               Comment              = @Comment
+        SET    DeliveryRating         = @DeliveryRating,
+               ProductQualityRating   = @ProductQualityRating,
+               OverallRating          = @OverallRating,
+               Comment                = @Comment,
+               ReceiptAcknowledged    = @ReceiptAcknowledged,
+               ReceiptAcknowledgedAt  = CASE WHEN @ReceiptAcknowledged = 1
+                                             THEN ISNULL(@ReceiptAcknowledgedAt, dbo.fn_NepalNow())
+                                             ELSE NULL END
         WHERE  OrderId = @OrderId AND UserId = @UserId;
     ELSE
-        INSERT INTO OrderRatings (OrderId, UserId, DeliveryRating, ProductQualityRating, OverallRating, Comment)
-        VALUES (@OrderId, @UserId, @DeliveryRating, @ProductQualityRating, @OverallRating, @Comment);
+        INSERT INTO OrderRatings
+               (OrderId, UserId, DeliveryRating, ProductQualityRating, OverallRating,
+                Comment, ReceiptAcknowledged, ReceiptAcknowledgedAt, CreatedAt)
+        VALUES (@OrderId, @UserId, @DeliveryRating, @ProductQualityRating, @OverallRating,
+                @Comment, @ReceiptAcknowledged,
+                CASE WHEN @ReceiptAcknowledged = 1
+                     THEN ISNULL(@ReceiptAcknowledgedAt, dbo.fn_NepalNow())
+                     ELSE NULL END,
+                dbo.fn_NepalNow());
 END

@@ -1,5 +1,6 @@
 using Dapper;
 using FalFul.Application.DTOs.Order;
+using FalFul.Application.DTOs.Receipt;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Entities;
 using FalFul.Domain.Enums;
@@ -134,5 +135,21 @@ public class OrderRepository(DapperContext context) : IOrderRepository
         summary.StatusBreakdown  = statuses;
         summary.PaymentBreakdown = payments;
         return summary;
+    }
+
+    public async Task<OrderReceiptDataDto?> GetReceiptDataAsync(int orderId)
+    {
+        using var conn  = context.CreateConnection();
+        using var multi = await conn.QueryMultipleAsync(
+            "sp_Order_GetReceiptData",
+            new { OrderId = orderId },
+            commandType: CommandType.StoredProcedure);
+
+        var data = await multi.ReadSingleOrDefaultAsync<OrderReceiptDataDto>();
+        if (data is null) return null;
+
+        data.Items    = (await multi.ReadAsync<OrderReceiptItemDto>()).ToList();
+        data.Payments = (await multi.ReadAsync<OrderReceiptPaymentDto>()).ToList();
+        return data;
     }
 }

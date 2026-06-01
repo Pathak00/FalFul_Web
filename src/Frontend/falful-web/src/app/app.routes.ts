@@ -65,6 +65,11 @@ export const routes: Routes = [
         path: 'orders/:id',
         canActivate: [authGuard],
         loadComponent: () => import('./features/orders/order-detail/order-detail').then(m => m.OrderDetailComponent)
+      },
+      {
+        path: 'orders/:id/receipt',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/orders/receipt/receipt').then(m => m.ReceiptPrintComponent)
       }
     ]
   },
@@ -90,8 +95,10 @@ export const routes: Routes = [
       { path: 'price-config', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
       { path: 'settings',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
       { path: 'nav',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
-      { path: 'discounts',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
-      { path: 'notices',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
+      { path: 'discounts',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
+      { path: 'notices',            canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
+      { path: 'receipt-templates',  canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-templates').then(m => m.AdminReceiptTemplatesComponent) },
+      { path: 'receipt-logs',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-logs').then(m => m.AdminReceiptLogsComponent) },
       { path: '', loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent) }
     ]
   },
