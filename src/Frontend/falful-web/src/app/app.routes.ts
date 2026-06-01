@@ -44,6 +44,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/build-your-bowl/build-your-bowl').then(m => m.BuildYourBowlComponent)
       },
       {
+        path: 'notices',
+        loadComponent: () => import('./features/notices/notices-page').then(m => m.NoticesPageComponent)
+      },
+      {
         /* Everyone can browse checkout; auth + role enforced at "Place Order" by the API */
         path: 'checkout',
         loadComponent: () => import('./features/checkout/checkout').then(m => m.CheckoutComponent)
@@ -86,6 +90,8 @@ export const routes: Routes = [
       { path: 'price-config', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
       { path: 'settings',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
       { path: 'nav',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
+      { path: 'discounts',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
+      { path: 'notices',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
       { path: '', loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent) }
     ]
   },

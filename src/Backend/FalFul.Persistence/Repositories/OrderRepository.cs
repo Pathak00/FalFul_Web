@@ -58,6 +58,8 @@ public class OrderRepository(DapperContext context) : IOrderRepository
                 order.SubTotal,
                 order.DeliveryFee,
                 order.ServiceFee,
+                order.DiscountAmount,
+                order.DiscountCode,
                 order.TotalAmount,
                 PaymentMethod     = (byte)order.PaymentMethod,
                 order.DeliveryAddressId,

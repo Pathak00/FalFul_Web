@@ -12,7 +12,8 @@ public class OrderService(
     IDeliveryRepository    deliveries,
     IPriceRuleRepository   priceRules,
     IOrderRatingRepository ratings,
-    IAppSettingService     settings) : IOrderService
+    IAppSettingService     settings,
+    IDiscountRepository    discounts) : IOrderService
 {
     // ── Addresses ─────────────────────────────────────────────────────────────
 
@@ -134,7 +135,25 @@ public class OrderService(
             deliveryFee = 0;
 
         var serviceFee  = serviceFeePct > 0 ? Math.Round(subTotal * serviceFeePct / 100, 2) : 0;
-        var totalAmount = subTotal + deliveryFee + serviceFee;
+        var preTotalAmount = subTotal + deliveryFee + serviceFee;
+
+        // Apply discount code if provided
+        decimal discountAmount = 0;
+        string? discountCode   = null;
+        if (!string.IsNullOrWhiteSpace(dto.DiscountCode))
+        {
+            var d = await discounts.GetByCodeAsync(dto.DiscountCode.Trim().ToUpper());
+            if (d is not null && d.IsActive && preTotalAmount >= d.MinOrderAmount)
+            {
+                discountAmount = d.DiscountType == 1
+                    ? Math.Round(preTotalAmount * d.Value / 100, 2)
+                    : Math.Min(d.Value, preTotalAmount);
+                discountCode = d.Code;
+                // Usage increment is fire-and-forget; if it fails order still goes through
+                try { await discounts.IncrementUsageAsync(d.Code); } catch { }
+            }
+        }
+        var totalAmount = preTotalAmount - discountAmount;
 
         var order = new Order
         {
@@ -144,6 +163,8 @@ public class OrderService(
             SubTotal          = subTotal,
             DeliveryFee       = deliveryFee,
             ServiceFee        = serviceFee,
+            DiscountAmount    = discountAmount,
+            DiscountCode      = discountCode,
             TotalAmount       = totalAmount,
             PaymentMethod     = dto.PaymentMethod,
             PaymentStatus     = PaymentStatus.Pending,
@@ -315,6 +336,8 @@ public class OrderService(
         SubTotal            = o.SubTotal,
         DeliveryFee         = o.DeliveryFee,
         ServiceFee          = o.ServiceFee,
+        DiscountAmount      = o.DiscountAmount,
+        DiscountCode        = o.DiscountCode,
         TotalAmount         = o.TotalAmount,
         PaymentMethod       = o.PaymentMethod,
         PaymentStatus       = o.PaymentStatus,
@@ -337,6 +360,8 @@ public class OrderService(
         SubTotal         = o.SubTotal,
         DeliveryFee      = o.DeliveryFee,
         ServiceFee       = o.ServiceFee,
+        DiscountAmount   = o.DiscountAmount,
+        DiscountCode     = o.DiscountCode,
         TotalAmount      = o.TotalAmount,
         PaymentMethod    = o.PaymentMethod,
         PaymentStatus    = o.PaymentStatus,

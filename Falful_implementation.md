@@ -1090,6 +1090,7 @@ Payment abstraction
 Payment gateway integrations
 Transaction tracking
 Payment status management
+
 Phase 7 — Admin Dashboard
 Features
 Analytics

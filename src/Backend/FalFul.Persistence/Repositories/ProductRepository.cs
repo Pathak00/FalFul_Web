@@ -63,6 +63,7 @@ public class ProductRepository(DapperContext context) : IProductRepository
                 product.Description,
                 product.ShortDescription,
                 product.Price,
+                product.Mrp,
                 product.Unit,
                 product.Stock,
                 product.IsAvailable,
@@ -72,7 +73,8 @@ public class ProductRepository(DapperContext context) : IProductRepository
                 product.DisplayOrder,
                 product.MinOrderGrams,
                 product.GramStep,
-                product.CutFruitPrice
+                product.CutFruitPrice,
+                product.ShowInCatalog
             },
             commandType: CommandType.StoredProcedure);
     }
@@ -91,6 +93,7 @@ public class ProductRepository(DapperContext context) : IProductRepository
                 product.Description,
                 product.ShortDescription,
                 product.Price,
+                product.Mrp,
                 product.Unit,
                 product.Stock,
                 product.IsAvailable,
@@ -100,7 +103,8 @@ public class ProductRepository(DapperContext context) : IProductRepository
                 product.DisplayOrder,
                 product.MinOrderGrams,
                 product.GramStep,
-                product.CutFruitPrice
+                product.CutFruitPrice,
+                product.ShowInCatalog
             },
             commandType: CommandType.StoredProcedure);
     }

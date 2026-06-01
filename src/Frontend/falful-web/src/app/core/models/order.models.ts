@@ -232,6 +232,7 @@ export interface PlaceOrderRequest {
   deliveryDate: string;
   deliveryTimeSlot: string;
   paymentMethod: number;
+  discountCode?: string;
   notes?: string;
   deliveryLatitude?: number;
   deliveryLongitude?: number;

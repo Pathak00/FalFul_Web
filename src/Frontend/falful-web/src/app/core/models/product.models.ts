@@ -19,6 +19,7 @@ export interface ProductSummary {
   slug: string;
   shortDescription?: string;
   price: number;
+  mrp?: number;
   unit: string;
   stock: number;
   isAvailable: boolean;
@@ -29,6 +30,7 @@ export interface ProductSummary {
   minOrderGrams?: number;
   gramStep?: number;
   cutFruitPrice?: number;
+  showInCatalog?: boolean;
 }
 
 export interface Product extends ProductSummary {
@@ -57,6 +59,7 @@ export interface CreateProductRequest {
   description?: string;
   shortDescription?: string;
   price: number;
+  mrp?: number;
   unit: string;
   stock: number;
   isAvailable: boolean;
@@ -67,6 +70,7 @@ export interface CreateProductRequest {
   minOrderGrams?: number;
   gramStep?: number;
   cutFruitPrice?: number;
+  showInCatalog?: boolean;
 }
 
 export type UpdateProductRequest = CreateProductRequest;

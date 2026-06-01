@@ -147,8 +147,36 @@ textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 
     &.total { border-top: 1px solid #e5e7eb; padding-top: .5rem; margin-top: .25rem;
       font-weight: 800; font-size: 1rem; color: #111;
     }
+    &.st-discount { color: #16a34a; font-weight: 600; }
   }
 }
+
+// ── Discount code ────────────────────────────────────────────────────────────
+.discount-row { display: flex; gap: .5rem; margin-bottom: .4rem;
+  input { flex: 1; padding: .5rem .75rem; border: 1px solid #d1d5db; border-radius: 8px;
+    font-size: .875rem; text-transform: uppercase; letter-spacing: .05em;
+    &:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 2px rgba(22,163,74,.15); }
+  }
+  .btn-apply { background: #16a34a; color: #fff; border: none; border-radius: 8px;
+    padding: .5rem 1rem; font-size: .875rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; gap: .35rem;
+    &:hover:not(:disabled) { background: #15803d; }
+    &:disabled { opacity: .6; cursor: default; }
+  }
+}
+.discount-msg { font-size: .78rem; margin: 0; display: flex; align-items: center; gap: .3rem; }
+.discount-msg-ok  { color: #16a34a; }
+.discount-msg-err { color: #dc2626; }
+.discount-applied { display: flex; align-items: center; gap: .5rem; background: #f0fdf4;
+  border: 1px solid #86efac; border-radius: 8px; padding: .5rem .75rem; font-size: .85rem; color: #15803d;
+  i.bi-check-circle-fill { font-size: 1rem; }
+  span { flex: 1; }
+  .discount-remove { background: none; border: none; color: #6b7280; cursor: pointer; padding: 0 .25rem;
+    &:hover { color: #dc2626; }
+  }
+}
+.spinner-xs { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
 
 .co-error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: .625rem .875rem;
   font-size: .8rem; color: #dc2626; margin-bottom: .875rem; display: flex; align-items: center; gap: .4rem;

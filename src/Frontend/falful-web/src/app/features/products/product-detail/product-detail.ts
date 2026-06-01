@@ -63,10 +63,21 @@ import { Product } from '../../../core/models/product.models';
               <p class="detail-short-desc">{{ product()!.shortDescription }}</p>
             }
 
-            <!-- Per KG pricing (always) -->
-            <div class="detail-price-row">
-              <span class="detail-price">Rs. {{ product()!.price | number:'1.0-0' }}</span>
-              <span class="detail-unit">per {{ product()!.unit }}</span>
+            <!-- Pricing -->
+            <div class="detail-price-block">
+              @if (hasDiscount()) {
+                <span class="detail-price-badge">{{ discountPct() }}% OFF</span>
+              }
+              <div class="detail-price-row">
+                <span class="detail-price">Rs. {{ product()!.price | number:'1.0-0' }}</span>
+                <span class="detail-unit">per {{ product()!.unit }}</span>
+              </div>
+              @if (hasDiscount()) {
+                <div class="detail-price-meta">
+                  <span class="detail-mrp">Rs. {{ product()!.mrp | number:'1.0-0' }}</span>
+                  <span class="detail-save">Save Rs.&nbsp;{{ savedAmount() | number:'1.0-0' }}</span>
+                </div>
+              }
             </div>
 
             <!-- Cut fruit notice — directs to BYB -->
@@ -175,6 +186,23 @@ export class ProductDetailComponent implements OnInit {
     this.addedMsg.set(true);
     if (this.msgTimer) clearTimeout(this.msgTimer);
     this.msgTimer = setTimeout(() => this.addedMsg.set(false), 2000);
+  }
+
+  hasDiscount(): boolean {
+    const p = this.product();
+    return !!p?.mrp && p.mrp > p.price;
+  }
+
+  discountPct(): number {
+    const p = this.product();
+    if (!p?.mrp || p.mrp <= p.price) return 0;
+    return Math.round(((p.mrp - p.price) / p.mrp) * 100);
+  }
+
+  savedAmount(): number {
+    const p = this.product();
+    if (!p?.mrp) return 0;
+    return Math.max(0, p.mrp - p.price);
   }
 
   tagList(): string[] {

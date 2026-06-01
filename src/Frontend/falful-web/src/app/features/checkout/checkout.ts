@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { PaymentService } from '../../core/services/payment.service';
+import { DiscountService } from '../../core/services/discount.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PermissionService } from '../../core/services/permission.service';
 import {
@@ -296,6 +297,32 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
               <h3><i class="bi bi-chat-text"></i> Order Notes (optional)</h3>
               <textarea [(ngModel)]="form.notes" rows="2" placeholder="Special instructions..."></textarea>
             </section>
+
+            <!-- Discount Code -->
+            <section class="co-section">
+              <h3><i class="bi bi-tag"></i> Discount Code</h3>
+              @if (appliedCode()) {
+                <div class="discount-applied">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span><strong>{{ appliedCode() }}</strong> — Rs. {{ appliedDiscount() | number:'1.0-0' }} off applied!</span>
+                  <button class="discount-remove" (click)="removeDiscount()"><i class="bi bi-x-lg"></i></button>
+                </div>
+              } @else {
+                <div class="discount-row">
+                  <input type="text" [ngModel]="discountInput()" (ngModelChange)="discountInput.set($event)"
+                         placeholder="Enter discount code" (keydown.enter)="applyDiscount()" />
+                  <button class="btn-apply" (click)="applyDiscount()" [disabled]="discountApplying()">
+                    @if (discountApplying()) { <span class="spinner-xs"></span> } @else { Apply }
+                  </button>
+                </div>
+                @if (discountMsg()) {
+                  <p class="discount-msg" [class.discount-msg-ok]="discountSuccess()" [class.discount-msg-err]="!discountSuccess()">
+                    <i class="bi {{ discountSuccess() ? 'bi-check-circle' : 'bi-exclamation-circle' }}"></i>
+                    {{ discountMsg() }}
+                  </p>
+                }
+              }
+            </section>
           </div>
 
           <!-- Right: Summary -->
@@ -326,6 +353,12 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
                 <div class="st-row">
                   <span>Service Fee ({{ serviceFeePct() }}%)</span>
                   <span>Rs. {{ serviceFeeAmt() | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (appliedDiscount() > 0) {
+                <div class="st-row st-discount">
+                  <span><i class="bi bi-tag-fill"></i> Discount ({{ appliedCode() }})</span>
+                  <span>− Rs. {{ appliedDiscount() | number:'1.0-0' }}</span>
                 </div>
               }
               <div class="st-row total">
@@ -432,6 +465,7 @@ export class CheckoutComponent implements OnInit {
   readonly cart       = inject(CartService);
   private orderSvc    = inject(OrderService);
   private paySvc      = inject(PaymentService);
+  private discountSvc = inject(DiscountService);
   private authSvc     = inject(AuthService);
   private permSvc     = inject(PermissionService);
   private router      = inject(Router);
@@ -521,9 +555,20 @@ export class CheckoutComponent implements OnInit {
   readonly effectiveDeliveryFee = computed(() =>
     this.freeAbove() > 0 && this.cart.subTotal() >= this.freeAbove() ? 0 : this.deliveryFee()
   );
-  readonly totalAmount = computed(() =>
+  readonly preTotalAmount = computed(() =>
     this.cart.subTotal() + this.effectiveDeliveryFee() + this.serviceFeeAmt()
   );
+  readonly totalAmount = computed(() =>
+    Math.max(0, this.preTotalAmount() - this.appliedDiscount())
+  );
+
+  // ── Discount ──────────────────────────────────────────────────────────────
+  discountInput   = signal('');
+  discountMsg     = signal('');
+  discountSuccess = signal(false);
+  appliedDiscount = signal(0);
+  appliedCode     = signal('');
+  discountApplying = signal(false);
 
   form = {
     fullAddress:      '',
@@ -680,6 +725,40 @@ export class CheckoutComponent implements OnInit {
     this.form.advanceMethodId = undefined;
   }
 
+  applyDiscount(): void {
+    const code = this.discountInput().trim();
+    if (!code) { this.discountMsg.set('Enter a discount code.'); this.discountSuccess.set(false); return; }
+    this.discountApplying.set(true);
+    this.discountMsg.set('');
+    this.discountSvc.validateCode(code, this.preTotalAmount()).subscribe({
+      next: res => {
+        this.discountApplying.set(false);
+        this.discountMsg.set(res.message);
+        this.discountSuccess.set(res.isValid);
+        if (res.isValid) {
+          this.appliedDiscount.set(res.discountAmount);
+          this.appliedCode.set(code.toUpperCase());
+        } else {
+          this.appliedDiscount.set(0);
+          this.appliedCode.set('');
+        }
+      },
+      error: () => {
+        this.discountApplying.set(false);
+        this.discountMsg.set('Failed to validate code. Try again.');
+        this.discountSuccess.set(false);
+      }
+    });
+  }
+
+  removeDiscount(): void {
+    this.appliedDiscount.set(0);
+    this.appliedCode.set('');
+    this.discountInput.set('');
+    this.discountMsg.set('');
+    this.discountSuccess.set(false);
+  }
+
   methodIcon(code: string): string {
     return { cod: 'bi-cash-stack', esewa: 'bi-phone', khalti: 'bi-phone-fill' }[code] ?? 'bi-credit-card';
   }
@@ -787,6 +866,7 @@ export class CheckoutComponent implements OnInit {
       deliveryDate:      this.form.deliveryDate,
       deliveryTimeSlot:  this.form.deliveryTimeSlot,
       paymentMethod:     this.form.paymentMethodId,
+      discountCode:      this.appliedCode() || undefined,
       notes:             this.form.notes || undefined,
       deliveryLatitude:  this.userLatitude() ?? undefined,
       deliveryLongitude: this.userLongitude() ?? undefined,

@@ -4,12 +4,14 @@ import { NavbarComponent } from '../../components/navbar/navbar';
 import { FooterComponent } from '../../components/footer/footer';
 import { CartSidebarComponent } from '../../components/cart-sidebar/cart-sidebar';
 import { ToastComponent } from '../../components/toast/toast';
+import { NoticesBannerComponent } from '../../components/notices-banner/notices-banner';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, FooterComponent, CartSidebarComponent, ToastComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, CartSidebarComponent, ToastComponent, NoticesBannerComponent],
   template: `
+    <app-notices-banner />
     <app-navbar (cartOpen)="cartVisible.set(true)" />
     <main class="main-content">
       <router-outlet />

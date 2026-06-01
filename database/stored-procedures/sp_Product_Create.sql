@@ -16,7 +16,9 @@ CREATE OR ALTER PROCEDURE sp_Product_Create
     @DisplayOrder     INT            = 0,
     @MinOrderGrams    INT            = NULL,
     @GramStep         INT            = NULL,
-    @CutFruitPrice    DECIMAL(10,2)  = NULL
+    @CutFruitPrice    DECIMAL(10,2)  = NULL,
+    @Mrp              DECIMAL(10,2)  = NULL,
+    @ShowInCatalog    BIT            = 1
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -28,12 +30,12 @@ BEGIN
         RETURN;
     END
 
-    INSERT INTO Products (CategoryId, Name, Slug, Description, ShortDescription, Price, Unit,
+    INSERT INTO Products (CategoryId, Name, Slug, Description, ShortDescription, Price, Mrp, Unit,
                           Stock, IsAvailable, IsFeatured, ImageUrl, Tags, DisplayOrder,
-                          MinOrderGrams, GramStep, CutFruitPrice, CreatedAt)
-    VALUES (@CategoryId, @Name, @Slug, @Description, @ShortDescription, @Price, @Unit,
+                          MinOrderGrams, GramStep, CutFruitPrice, ShowInCatalog, CreatedAt)
+    VALUES (@CategoryId, @Name, @Slug, @Description, @ShortDescription, @Price, @Mrp, @Unit,
             @Stock, @IsAvailable, @IsFeatured, @ImageUrl, @Tags, @DisplayOrder,
-            @MinOrderGrams, @GramStep, @CutFruitPrice, dbo.fn_NepalNow());
+            @MinOrderGrams, @GramStep, @CutFruitPrice, @ShowInCatalog, dbo.fn_NepalNow());
 
     SELECT SCOPE_IDENTITY() AS Id;
 END

@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IDiscountService, DiscountService>();
+        services.AddScoped<INoticeService, NoticeService>();
         return services;
     }
 }

@@ -12,6 +12,8 @@ public class Order
     public decimal       SubTotal          { get; set; }
     public decimal       DeliveryFee       { get; set; }
     public decimal       ServiceFee        { get; set; }
+    public decimal       DiscountAmount    { get; set; }
+    public string?       DiscountCode      { get; set; }
     public decimal       TotalAmount       { get; set; }
     public decimal       AdvanceAmount     { get; set; }
     public PaymentMethod PaymentMethod     { get; set; }

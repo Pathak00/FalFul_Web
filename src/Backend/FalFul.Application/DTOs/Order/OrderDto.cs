@@ -32,6 +32,7 @@ public class PlaceOrderDto
     public string?                  Notes             { get; set; }
     public double?                  DeliveryLatitude  { get; set; }
     public double?                  DeliveryLongitude { get; set; }
+    public string?                  DiscountCode      { get; set; }
     public List<PlaceOrderItemDto>  Items             { get; set; } = [];
 }
 
@@ -87,6 +88,8 @@ public class OrderSummaryDto
     public decimal       SubTotal         { get; set; }
     public decimal       DeliveryFee      { get; set; }
     public decimal       ServiceFee       { get; set; }
+    public decimal       DiscountAmount   { get; set; }
+    public string?       DiscountCode     { get; set; }
     public decimal       TotalAmount      { get; set; }
     public decimal       AdvanceAmount    { get; set; }
     public PaymentMethod PaymentMethod    { get; set; }

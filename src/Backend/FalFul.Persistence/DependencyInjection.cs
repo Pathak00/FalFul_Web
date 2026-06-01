@@ -37,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IAdminNavRepository, AdminNavRepository>();
         services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IDiscountRepository, DiscountRepository>();
+        services.AddScoped<INoticeRepository, NoticeRepository>();
         return services;
     }
 }
