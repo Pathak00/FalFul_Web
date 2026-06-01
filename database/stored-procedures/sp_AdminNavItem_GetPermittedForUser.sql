@@ -1,9 +1,10 @@
 SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;
 GO
--- Returns every AdminNavItem the user has permission to access,
--- regardless of IsVisible. Used by the client-side route guard so that
--- hidden items still enforce their RequiredPermission.
--- (Compare with sp_AdminNavItem_GetForUser which also requires IsVisible = 1.)
+-- Returns every AdminNavItem the user has permission to access (regardless of IsVisible).
+-- Used by the client-side route guard so hidden items still enforce RequiredPermission.
+--
+-- PortalScope supports comma-separated portal types (e.g. 'admin,rider').
+-- Same filtering logic as sp_AdminNavItem_GetForUser.
 CREATE OR ALTER PROCEDURE sp_AdminNavItem_GetPermittedForUser
     @UserId INT
 AS
@@ -18,8 +19,6 @@ BEGIN
     JOIN   Roles r ON r.Id = ur.RoleId
     WHERE  ur.UserId = @UserId;
 
-    -- Returns all items the user has permission for (regardless of IsVisible).
-    -- Used by the route guard — same portal-scope filtering as GetForUser.
     SELECT Id, Label, Route, Icon, ParentId, GroupLabel, DisplayOrder, IsVisible,
            RequiredPermission, IsSystem, PortalScope
     FROM   AdminNavItems
@@ -35,7 +34,10 @@ BEGIN
            )
       AND  (
                PortalScope IS NULL
-           OR  PortalScope = @PortalType
+           OR  EXISTS (
+                   SELECT 1 FROM STRING_SPLIT(PortalScope, ',')
+                   WHERE  TRIM(value) = @PortalType
+               )
            )
     ORDER BY DisplayOrder;
 END

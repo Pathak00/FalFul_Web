@@ -274,7 +274,9 @@ export class AdminRolesComponent implements OnInit {
 
   portalScopeLabel(scope?: string | null): string {
     if (!scope) return 'all portals';
-    return { admin: 'admin', rider: 'rider' }[scope] ?? scope;
+    const portals = scope.split(',').map(p => p.trim()).filter(Boolean);
+    if (portals.length === 0) return 'all portals';
+    return portals.join('+');
   }
 
   ngOnInit(): void {

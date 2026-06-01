@@ -100,13 +100,23 @@ import { ToastService } from '../../../core/services/toast.service';
                         <label>Permission</label>
                         <input [(ngModel)]="editForm.requiredPermission" placeholder="e.g. reports (blank = no check)" />
                       </div>
-                      <div class="edit-row">
-                        <label>Portal</label>
-                        <select [(ngModel)]="editForm.portalScope">
-                          <option value="">All portals</option>
-                          <option value="admin">Admin only</option>
-                          <option value="rider">Rider only</option>
-                        </select>
+                      <div class="edit-row portal-row">
+                        <label>Portals</label>
+                        <div class="portal-checks">
+                          <label class="portal-check-lbl">
+                            <input type="checkbox"
+                                   [checked]="editPortals.has('admin')"
+                                   (change)="toggleEditPortal('admin')" />
+                            Admin
+                          </label>
+                          <label class="portal-check-lbl">
+                            <input type="checkbox"
+                                   [checked]="editPortals.has('rider')"
+                                   (change)="toggleEditPortal('rider')" />
+                            Rider
+                          </label>
+                        </div>
+                        <span class="hint-xs">Uncheck all = no portal restriction</span>
                       </div>
                     }
                     @if (saveError()) {
@@ -179,12 +189,21 @@ import { ToastService } from '../../../core/services/toast.service';
               <input [(ngModel)]="createForm.requiredPermission" placeholder="e.g. reports" />
             </div>
             <div class="fg">
-              <label>Portal Scope <span class="hint">(which portal shows this item)</span></label>
-              <select [(ngModel)]="createForm.portalScope" style="border:1px solid #e2e8f0;border-radius:6px;padding:.375rem .625rem;font-size:.85rem">
-                <option value="admin">Admin portal only</option>
-                <option value="rider">Rider portal only</option>
-                <option value="">All portals (admin + rider)</option>
-              </select>
+              <label>Portals <span class="hint">(which portals show this item — uncheck all = no restriction)</span></label>
+              <div class="portal-checks" style="flex-direction:row;gap:.75rem;margin-top:.25rem">
+                <label class="portal-check-lbl">
+                  <input type="checkbox"
+                         [checked]="createPortals.has('admin')"
+                         (change)="toggleCreatePortal('admin')" />
+                  Admin
+                </label>
+                <label class="portal-check-lbl">
+                  <input type="checkbox"
+                         [checked]="createPortals.has('rider')"
+                         (change)="toggleCreatePortal('rider')" />
+                  Rider
+                </label>
+              </div>
             </div>
             <label class="toggle-lbl">
               <input type="checkbox" [(ngModel)]="createForm.isVisible" />
@@ -274,8 +293,13 @@ import { ToastService } from '../../../core/services/toast.service';
       font-size: .65rem; padding: 1px 6px; border-radius: 3px; font-weight: 600;
       &.scope-admin  { background: #fef3c7; color: #b45309; }
       &.scope-rider  { background: #dbeafe; color: #1d4ed8; }
+      &.scope-both   { background: #d1fae5; color: #065f46; }
       &.scope-all    { background: #f1f5f9; color: #64748b; }
     }
+    .portal-row { align-items: flex-start !important; }
+    .portal-checks { display: flex; flex-direction: column; gap: .3rem; }
+    .portal-check-lbl { display: flex; align-items: center; gap: .35rem; cursor: pointer; font-size: .8rem; color: #374151; input { width: 14px; height: 14px; accent-color: #16a34a; cursor: pointer; } }
+    .hint-xs { font-size: .68rem; color: #94a3b8; margin-top: .2rem; }
 
     .nav-row-actions { display: flex; flex-direction: column; gap: .375rem; align-items: flex-end; flex-shrink: 0; }
 
@@ -368,6 +392,7 @@ export class AdminNavComponent implements OnInit {
   startEdit(item: AdminNavItem): void {
     this.editing.set(item);
     this.saveError.set('');
+    this.editPortals = this.parsePortals(item.portalScope);
     this.editForm = {
       id: item.id,
       label: item.label,
@@ -393,7 +418,7 @@ export class AdminNavComponent implements OnInit {
       displayOrder:       this.editForm.displayOrder,
       isVisible:          this.editForm.isVisible,
       requiredPermission: this.editForm.requiredPermission || undefined,
-      portalScope:        this.editForm.portalScope || undefined
+      portalScope:        this.stringifyPortals(this.editPortals)
     };
     this.adminService.updateAdminNavItem(item.id, dto).subscribe({
       next: () => {
@@ -426,6 +451,7 @@ export class AdminNavComponent implements OnInit {
 
   openCreate(): void {
     this.createForm = this.blankCreateForm();
+    this.createPortals = new Set(['admin']); // default: admin only
     this.createError.set('');
     this.showCreate.set(true);
   }
@@ -436,8 +462,9 @@ export class AdminNavComponent implements OnInit {
     this.creatingItem.set(true);
     this.adminService.createAdminNavItem({
       ...this.createForm,
-      label: this.createForm.label.trim(),
-      route: this.createForm.route.trim()
+      label:       this.createForm.label.trim(),
+      route:       this.createForm.route.trim(),
+      portalScope: this.stringifyPortals(this.createPortals) ?? 'admin'
     }).subscribe({
       next: () => {
         this.toast.success('Nav item created.');
@@ -480,14 +507,50 @@ export class AdminNavComponent implements OnInit {
     });
   }
 
+  /** Parses a comma-separated PortalScope string into a Set of portal names. */
+  private parsePortals(scope?: string | null): Set<string> {
+    if (!scope) return new Set();
+    return new Set(scope.split(',').map(p => p.trim()).filter(Boolean));
+  }
+
+  /** Converts the Set back to a comma-separated string (or undefined for "all portals"). */
+  private stringifyPortals(portals: Set<string>): string | undefined {
+    if (portals.size === 0) return undefined;
+    return [...portals].sort().join(',');
+  }
+
+  // ── Per-item portal selection (edit form) ─────────────────────────────────
+  editPortals = new Set<string>();
+
+  toggleEditPortal(portal: string): void {
+    if (this.editPortals.has(portal)) this.editPortals.delete(portal);
+    else this.editPortals.add(portal);
+    this.editPortals = new Set(this.editPortals); // trigger Angular change detection
+  }
+
+  // ── Per-item portal selection (create form) ───────────────────────────────
+  createPortals = new Set<string>(['admin']);
+
+  toggleCreatePortal(portal: string): void {
+    if (this.createPortals.has(portal)) this.createPortals.delete(portal);
+    else this.createPortals.add(portal);
+    this.createPortals = new Set(this.createPortals);
+  }
+
   portalScopeLabel(scope?: string | null): string {
     if (!scope) return 'all portals';
-    return { admin: 'admin only', rider: 'rider only' }[scope] ?? scope;
+    const portals = scope.split(',').map(p => p.trim()).filter(Boolean);
+    if (portals.length === 0) return 'all portals';
+    return portals.join(' + ');
   }
 
   portalScopeClass(scope?: string | null): string {
     if (!scope) return 'scope-all';
-    return { admin: 'scope-admin', rider: 'scope-rider' }[scope] ?? 'scope-all';
+    const portals = scope.split(',').map(p => p.trim()).filter(Boolean);
+    if (portals.includes('admin') && portals.includes('rider')) return 'scope-both';
+    if (portals.includes('admin')) return 'scope-admin';
+    if (portals.includes('rider')) return 'scope-rider';
+    return 'scope-all';
   }
 
   private blankCreateForm(): CreateAdminNavItemRequest {
