@@ -19,6 +19,16 @@ export interface UpdateAdminNavItemRequest {
   isVisible: boolean;
 }
 
+export interface CreateAdminNavItemRequest {
+  label: string;
+  route: string;
+  icon?: string;
+  groupLabel?: string;
+  displayOrder: number;
+  isVisible: boolean;
+  requiredPermission?: string;
+}
+
 export interface AdminUser {
   id: number;
   fullName: string;

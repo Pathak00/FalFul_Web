@@ -8,6 +8,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab,
+           ISNULL(m.IsPortalShortcut, 0) AS IsPortalShortcut,
            ISNULL(STRING_AGG(CAST(mr.RoleId AS NVARCHAR), ','), '') AS RequiredRoleIds
     FROM MenuItems m
     LEFT JOIN MenuItemRoles mr ON mr.MenuItemId = m.Id
@@ -24,7 +25,7 @@ BEGIN
                  WHERE ur.UserId = @UserId AND mr2.MenuItemId = m.Id
              ))
       )
-    GROUP BY m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab
+    GROUP BY m.Id, m.ParentId, m.Label, m.Url, m.Icon, m.DisplayOrder, m.IsVisible, m.VisibleTo, m.OpenInNewTab, m.IsPortalShortcut
     ORDER BY ISNULL(m.ParentId, m.Id), m.ParentId, m.DisplayOrder;
 END
 GO

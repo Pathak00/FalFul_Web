@@ -23,3 +23,14 @@ public class UpdateAdminNavItemDto
     public int     DisplayOrder { get; set; }
     public bool    IsVisible    { get; set; }
 }
+
+public class CreateAdminNavItemDto
+{
+    public string  Label              { get; set; } = string.Empty;
+    public string  Route              { get; set; } = string.Empty;
+    public string? Icon               { get; set; }
+    public string? GroupLabel         { get; set; }
+    public int     DisplayOrder       { get; set; }
+    public bool    IsVisible          { get; set; } = true;
+    public string? RequiredPermission { get; set; }
+}

@@ -79,6 +79,10 @@ export interface MenuItem {
   visibleTo: number;
   requiredRoleIds: number[];
   openInNewTab: boolean;
+  /** True for portal shortcut links (Dashboard, My Orders, Admin). These link into a
+   *  role-specific portal and are shown separately in the admin UI to prevent
+   *  content editors from accidentally treating them as regular public nav items. */
+  isPortalShortcut: boolean;
   children?: MenuItem[];
 }
 
@@ -92,6 +96,7 @@ export interface CreateMenuItemRequest {
   visibleTo: number;
   requiredRoleIds: number[];
   openInNewTab: boolean;
+  isPortalShortcut?: boolean;
 }
 
 export interface UpdateMenuItemRequest extends CreateMenuItemRequest {

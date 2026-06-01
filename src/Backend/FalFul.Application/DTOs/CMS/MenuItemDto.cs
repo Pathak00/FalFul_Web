@@ -12,6 +12,7 @@ public class MenuItemDto
     public int VisibleTo { get; set; }
     public int[] RequiredRoleIds { get; set; } = [];
     public bool OpenInNewTab { get; set; }
+    public bool IsPortalShortcut { get; set; }
 }
 
 public class CreateMenuItemDto

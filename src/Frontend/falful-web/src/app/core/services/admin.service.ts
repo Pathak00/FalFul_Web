@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import {
   AdminCreateUserRequest, AdminNavItem, AdminResetPasswordRequest, AdminStats, AdminUser,
-  SetUserActiveRequest, SetUserTypeRequest, UpdateAdminNavItemRequest
+  CreateAdminNavItemRequest, SetUserActiveRequest, SetUserTypeRequest, UpdateAdminNavItemRequest
 } from '../models/admin.models';
 import { ApiService } from './api.service';
 
@@ -86,9 +86,14 @@ export class AdminService {
 
   /* ── Admin navigation items ──────────────────────────────────────────── */
 
-  /** Returns sidebar items accessible to the current user. */
+  /** Returns sidebar items accessible to the current user (IsVisible=1 + has permission). */
   getAdminNav(): Observable<AdminNavItem[]> {
     return this.api.get<AdminNavItem[]>('/api/admin/nav');
+  }
+
+  /** Returns all items the user has permission to access, regardless of visibility. Used for route guard. */
+  getPermittedAdminNav(): Observable<AdminNavItem[]> {
+    return this.api.get<AdminNavItem[]>('/api/admin/nav/permitted');
   }
 
   /** Returns ALL items — for the Navigation management screen (system only). */
@@ -98,5 +103,13 @@ export class AdminService {
 
   updateAdminNavItem(id: number, dto: UpdateAdminNavItemRequest): Observable<void> {
     return this.api.put<void>(`/api/admin/nav/${id}`, dto);
+  }
+
+  createAdminNavItem(dto: CreateAdminNavItemRequest): Observable<{ id: number }> {
+    return this.api.post<{ id: number }>('/api/admin/nav', dto);
+  }
+
+  deleteAdminNavItem(id: number): Observable<void> {
+    return this.api.delete<void>(`/api/admin/nav/${id}`);
   }
 }
