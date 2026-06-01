@@ -11,7 +11,7 @@ CREATE OR ALTER PROCEDURE sp_AdminNavItem_Create
     @DisplayOrder       INT            = 0,
     @IsVisible          BIT            = 1,
     @RequiredPermission NVARCHAR(50)   = NULL,
-    @PortalScope        NVARCHAR(20)   = 'admin'
+    @PortalScope        NVARCHAR(200)  = 'admin'
 AS
 BEGIN
     SET NOCOUNT ON;

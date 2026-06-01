@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminNavItem, CreateAdminNavItemRequest, UpdateAdminNavItemRequest } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
@@ -8,7 +8,7 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-admin-nav',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TitleCasePipe],
   styleUrl: '../admin-shared.scss',
   template: `
     <div class="admin-page">
@@ -100,25 +100,21 @@ import { ToastService } from '../../../core/services/toast.service';
                         <label>Permission</label>
                         <input [(ngModel)]="editForm.requiredPermission" placeholder="e.g. reports (blank = no check)" />
                       </div>
-                      <div class="edit-row portal-row">
-                        <label>Portals</label>
-                        <div class="portal-checks">
-                          <label class="portal-check-lbl">
-                            <input type="checkbox"
-                                   [checked]="editPortals.has('admin')"
-                                   (change)="toggleEditPortal('admin')" />
-                            Admin
-                          </label>
-                          <label class="portal-check-lbl">
-                            <input type="checkbox"
-                                   [checked]="editPortals.has('rider')"
-                                   (change)="toggleEditPortal('rider')" />
-                            Rider
-                          </label>
-                        </div>
-                        <span class="hint-xs">Uncheck all = no portal restriction</span>
-                      </div>
                     }
+                    <div class="edit-row portal-row">
+                      <label>Portals</label>
+                      <div class="portal-checks">
+                        @for (pt of portalTypes(); track pt) {
+                          <label class="portal-check-lbl">
+                            <input type="checkbox"
+                                   [checked]="editPortals.has(pt)"
+                                   (change)="toggleEditPortal(pt)" />
+                            {{ pt | titlecase }}
+                          </label>
+                        }
+                      </div>
+                      <span class="hint-xs">Uncheck all = visible in all portals</span>
+                    </div>
                     @if (saveError()) {
                       <p class="save-error">{{ saveError() }}</p>
                     }
@@ -189,20 +185,16 @@ import { ToastService } from '../../../core/services/toast.service';
               <input [(ngModel)]="createForm.requiredPermission" placeholder="e.g. reports" />
             </div>
             <div class="fg">
-              <label>Portals <span class="hint">(which portals show this item — uncheck all = no restriction)</span></label>
-              <div class="portal-checks" style="flex-direction:row;gap:.75rem;margin-top:.25rem">
-                <label class="portal-check-lbl">
-                  <input type="checkbox"
-                         [checked]="createPortals.has('admin')"
-                         (change)="toggleCreatePortal('admin')" />
-                  Admin
-                </label>
-                <label class="portal-check-lbl">
-                  <input type="checkbox"
-                         [checked]="createPortals.has('rider')"
-                         (change)="toggleCreatePortal('rider')" />
-                  Rider
-                </label>
+              <label>Portals <span class="hint">(uncheck all = no portal restriction)</span></label>
+              <div class="portal-checks" style="flex-direction:row;flex-wrap:wrap;gap:.5rem .75rem;margin-top:.25rem">
+                @for (pt of portalTypes(); track pt) {
+                  <label class="portal-check-lbl">
+                    <input type="checkbox"
+                           [checked]="createPortals.has(pt)"
+                           (change)="toggleCreatePortal(pt)" />
+                    {{ pt | titlecase }}
+                  </label>
+                }
               </div>
             </div>
             <label class="toggle-lbl">
@@ -378,6 +370,13 @@ export class AdminNavComponent implements OnInit {
   createError  = signal('');
   deleteTarget = signal<AdminNavItem | null>(null);
 
+  /** Distinct portal types derived from all Roles.PortalType values.
+   *  Grows automatically as new roles with new portal types are created. */
+  private readonly allRoles = signal<{portalType: string; name: string}[]>([]);
+  readonly portalTypes = computed(() =>
+    [...new Set(this.allRoles().map(r => r.portalType))].sort()
+  );
+
   createForm: CreateAdminNavItemRequest = this.blankCreateForm();
 
   editForm: UpdateAdminNavItemRequest & { id: number } = this.emptyForm();
@@ -386,6 +385,10 @@ export class AdminNavComponent implements OnInit {
     this.adminService.getAllAdminNav().subscribe({
       next: items => { this.items.set(items); this.loading.set(false); },
       error: () => this.loading.set(false)
+    });
+    this.adminService.getRoles().subscribe({
+      next: roles => this.allRoles.set(roles),
+      error: () => {}
     });
   }
 
