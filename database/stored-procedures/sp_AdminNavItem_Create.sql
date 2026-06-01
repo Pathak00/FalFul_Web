@@ -6,17 +6,18 @@ GO
 CREATE OR ALTER PROCEDURE sp_AdminNavItem_Create
     @Label              NVARCHAR(100),
     @Route              NVARCHAR(500),
-    @Icon               NVARCHAR(50)  = NULL,
-    @GroupLabel         NVARCHAR(100) = NULL,
-    @DisplayOrder       INT           = 0,
-    @IsVisible          BIT           = 1,
-    @RequiredPermission NVARCHAR(50)  = NULL
+    @Icon               NVARCHAR(50)   = NULL,
+    @GroupLabel         NVARCHAR(100)  = NULL,
+    @DisplayOrder       INT            = 0,
+    @IsVisible          BIT            = 1,
+    @RequiredPermission NVARCHAR(50)   = NULL,
+    @PortalScope        NVARCHAR(20)   = 'admin'
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO AdminNavItems (Label, Route, Icon, GroupLabel, DisplayOrder, IsVisible, RequiredPermission, IsSystem)
-    VALUES (@Label, @Route, @Icon, @GroupLabel, @DisplayOrder, @IsVisible, @RequiredPermission, 0);
+    INSERT INTO AdminNavItems (Label, Route, Icon, GroupLabel, DisplayOrder, IsVisible, RequiredPermission, IsSystem, PortalScope)
+    VALUES (@Label, @Route, @Icon, @GroupLabel, @DisplayOrder, @IsVisible, @RequiredPermission, 0, @PortalScope);
 
     SELECT SCOPE_IDENTITY() AS Id;
 END

@@ -12,6 +12,8 @@ public class AdminNavItemDto
     public bool    IsVisible          { get; set; }
     public string? RequiredPermission { get; set; }
     public bool    IsSystem           { get; set; }
+    /// <summary>null=all portals, 'admin'=admin only, 'rider'=rider only.</summary>
+    public string? PortalScope        { get; set; }
 }
 
 public class UpdateAdminNavItemDto
@@ -33,4 +35,6 @@ public class CreateAdminNavItemDto
     public int     DisplayOrder       { get; set; }
     public bool    IsVisible          { get; set; } = true;
     public string? RequiredPermission { get; set; }
+    /// <summary>null=all portals, 'admin'=admin only, 'rider'=rider only.</summary>
+    public string  PortalScope        { get; set; } = "admin";
 }

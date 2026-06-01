@@ -10,10 +10,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @RoleId INT;
-    SELECT TOP 1 @RoleId = RoleId FROM UserRoles WHERE UserId = @UserId;
+    DECLARE @RoleId     INT;
+    DECLARE @PortalType NVARCHAR(20);
 
-    SELECT Id, Label, Route, Icon, ParentId, GroupLabel, DisplayOrder, IsVisible, RequiredPermission, IsSystem
+    SELECT TOP 1 @RoleId = ur.RoleId, @PortalType = r.PortalType
+    FROM   UserRoles ur
+    JOIN   Roles r ON r.Id = ur.RoleId
+    WHERE  ur.UserId = @UserId;
+
+    -- Returns all items the user has permission for (regardless of IsVisible).
+    -- Used by the route guard — same portal-scope filtering as GetForUser.
+    SELECT Id, Label, Route, Icon, ParentId, GroupLabel, DisplayOrder, IsVisible,
+           RequiredPermission, IsSystem, PortalScope
     FROM   AdminNavItems
     WHERE  (
                RequiredPermission IS NULL
@@ -24,6 +32,10 @@ BEGIN
                    WHERE  p.Name    = RequiredPermission
                      AND  rp.RoleId = @RoleId
                )
+           )
+      AND  (
+               PortalScope IS NULL
+           OR  PortalScope = @PortalType
            )
     ORDER BY DisplayOrder;
 END

@@ -54,7 +54,8 @@ public class AdminNavRepository : IAdminNavRepository
             new
             {
                 item.Label, item.Route, item.Icon, item.GroupLabel,
-                item.DisplayOrder, item.IsVisible, item.RequiredPermission
+                item.DisplayOrder, item.IsVisible, item.RequiredPermission,
+                item.PortalScope
             },
             commandType: CommandType.StoredProcedure);
     }

@@ -9,6 +9,8 @@ export interface AdminNavItem {
   isVisible: boolean;
   requiredPermission?: string;
   isSystem: boolean;
+  /** null=all portals, 'admin'=admin portal only, 'rider'=rider portal only */
+  portalScope?: string | null;
 }
 
 export interface UpdateAdminNavItemRequest {
@@ -27,6 +29,8 @@ export interface CreateAdminNavItemRequest {
   displayOrder: number;
   isVisible: boolean;
   requiredPermission?: string;
+  /** null=all portals, 'admin'=admin portal only, 'rider'=rider portal only */
+  portalScope: string;
 }
 
 export interface AdminUser {

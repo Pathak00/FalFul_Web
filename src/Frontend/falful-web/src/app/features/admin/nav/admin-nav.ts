@@ -52,8 +52,11 @@ import { ToastService } from '../../../core/services/toast.service';
                   @if (item.requiredPermission) {
                     <span class="meta-perm">{{ item.requiredPermission }}</span>
                   } @else {
-                    <span class="meta-perm meta-perm-open">always visible</span>
+                    <span class="meta-perm meta-perm-open">no permission</span>
                   }
+                  <span class="meta-scope" [class]="portalScopeClass(item.portalScope)">
+                    {{ portalScopeLabel(item.portalScope) }}
+                  </span>
                   @if (item.groupLabel) {
                     <span class="meta-group">{{ item.groupLabel }}</span>
                   }
@@ -158,8 +161,16 @@ import { ToastService } from '../../../core/services/toast.service';
               </div>
             </div>
             <div class="fg">
-              <label>Required Permission <span class="hint">(leave blank = always show to any portal user)</span></label>
+              <label>Required Permission <span class="hint">(leave blank = no permission check)</span></label>
               <input [(ngModel)]="createForm.requiredPermission" placeholder="e.g. reports" />
+            </div>
+            <div class="fg">
+              <label>Portal Scope <span class="hint">(which portal shows this item)</span></label>
+              <select [(ngModel)]="createForm.portalScope" style="border:1px solid #e2e8f0;border-radius:6px;padding:.375rem .625rem;font-size:.85rem">
+                <option value="admin">Admin portal only</option>
+                <option value="rider">Rider portal only</option>
+                <option value="">All portals (admin + rider)</option>
+              </select>
             </div>
             <label class="toggle-lbl">
               <input type="checkbox" [(ngModel)]="createForm.isVisible" />
@@ -244,6 +255,12 @@ import { ToastService } from '../../../core/services/toast.service';
     .meta-group {
       font-size: .65rem; background: #eff6ff; color: #1d4ed8;
       padding: 1px 6px; border-radius: 3px; font-weight: 600;
+    }
+    .meta-scope {
+      font-size: .65rem; padding: 1px 6px; border-radius: 3px; font-weight: 600;
+      &.scope-admin  { background: #fef3c7; color: #b45309; }
+      &.scope-rider  { background: #dbeafe; color: #1d4ed8; }
+      &.scope-all    { background: #f1f5f9; color: #64748b; }
     }
 
     .nav-row-actions { display: flex; flex-direction: column; gap: .375rem; align-items: flex-end; flex-shrink: 0; }
@@ -443,7 +460,17 @@ export class AdminNavComponent implements OnInit {
     });
   }
 
+  portalScopeLabel(scope?: string | null): string {
+    if (!scope) return 'all portals';
+    return { admin: 'admin only', rider: 'rider only' }[scope] ?? scope;
+  }
+
+  portalScopeClass(scope?: string | null): string {
+    if (!scope) return 'scope-all';
+    return { admin: 'scope-admin', rider: 'scope-rider' }[scope] ?? 'scope-all';
+  }
+
   private blankCreateForm(): CreateAdminNavItemRequest {
-    return { label: '', route: '/admin/', icon: '', groupLabel: '', displayOrder: 0, isVisible: true, requiredPermission: '' };
+    return { label: '', route: '/admin/', icon: '', groupLabel: '', displayOrder: 0, isVisible: true, requiredPermission: '', portalScope: 'admin' };
   }
 }

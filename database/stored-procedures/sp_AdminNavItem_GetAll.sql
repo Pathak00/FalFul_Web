@@ -4,7 +4,8 @@ CREATE OR ALTER PROCEDURE sp_AdminNavItem_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT Id, Label, Route, Icon, ParentId, GroupLabel, DisplayOrder, IsVisible, RequiredPermission, IsSystem
+    SELECT Id, Label, Route, Icon, ParentId, GroupLabel, DisplayOrder, IsVisible,
+           RequiredPermission, IsSystem, PortalScope
     FROM   AdminNavItems
     ORDER  BY DisplayOrder;
 END

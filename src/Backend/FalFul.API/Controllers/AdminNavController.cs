@@ -80,7 +80,8 @@ public class AdminNavController : ControllerBase
             GroupLabel         = dto.GroupLabel,
             DisplayOrder       = dto.DisplayOrder,
             IsVisible          = dto.IsVisible,
-            RequiredPermission = dto.RequiredPermission
+            RequiredPermission = dto.RequiredPermission,
+            PortalScope        = dto.PortalScope
         });
         return Ok(new { id });
     }
@@ -105,7 +106,8 @@ public class AdminNavController : ControllerBase
         DisplayOrder       = m.DisplayOrder,
         IsVisible          = m.IsVisible,
         RequiredPermission = m.RequiredPermission,
-        IsSystem           = m.IsSystem
+        IsSystem           = m.IsSystem,
+        PortalScope        = m.PortalScope
     };
 
     private int? GetUserId()
