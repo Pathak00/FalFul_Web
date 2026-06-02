@@ -11,7 +11,7 @@
 
 /* ── Left brand panel ──────────────────────────────────────────────────── */
 .auth-brand {
-  background: var(--color-soil);
+  background: var(--color-forest);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -132,6 +132,6 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: var(--color-chalk);
+  background: var(--color-cream);
   overflow-y: auto;
 }

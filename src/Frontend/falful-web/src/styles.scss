@@ -35,47 +35,51 @@
   --gray-700: #3f3f46;
   --gray-900: #18181b;
 
-  /* ── Earth-tone cinematic palette (UI_Optimize) ── */
-  --color-soil:      #2C1A0E;   /* Deep earthy brown — cinematic dark */
-  --color-bark:      #5C3D1E;   /* Mid bark brown */
-  --color-moss:      #3D5A2B;   /* Forest moss green */
-  --color-grove:     #5A7A3A;   /* Grove green */
-  --color-leaf:      #7BAD4E;   /* Fresh leaf */
-  --color-citrus:    #F4A51A;   /* Ripe orange-yellow */
-  --color-mango:     #FF7130;   /* Mango sunset accent */
-  --color-berry:     #C0392B;   /* Berry red */
-  --color-cream:     #F9F4EC;   /* Warm cream canvas */
-  --color-parchment: #EDE3D0;   /* Parchment tan */
-  --color-chalk:     #FDFAF5;   /* Near-white chalk */
+  /* ── Vibrant fruit-fresh palette ── */
+  --color-forest:    #0B3D20;   /* Deep forest green  — dark sections (was soil brown) */
+  --color-pine:      #145A30;   /* Pine green         — mid dark (was bark brown) */
+  --color-moss:      #1A7A42;   /* Moss green         — medium green */
+  --color-grove:     #16A34A;   /* Grove green        — primary vibrant green */
+  --color-leaf:      #22C55E;   /* Fresh leaf         — lighter vibrant green */
+  --color-citrus:    #F59E0B;   /* Citrus amber       — warm accent */
+  --color-mango:     #F97316;   /* Mango orange       — vibrant accent */
+  --color-berry:     #EF4444;   /* Berry red          — error / alert */
+  --color-cream:     #F0FDF4;   /* Fresh mint-white   — light section bg */
+  --color-parchment: #DCFCE7;   /* Light green wash   — card borders / bg */
+  --color-chalk:     #FFFFFF;   /* Pure white */
+
+  /* Keep backward-compat aliases */
+  --color-soil:  var(--color-forest);
+  --color-bark:  var(--color-pine);
 
   /* ── Semantic aliases ── */
-  --color-primary:       var(--green-500);
-  --color-primary-light: var(--green-400);
-  --color-primary-dark:  var(--green-700);
-  --color-accent:        var(--amber-500);
-  --color-text:          var(--gray-900);
-  --color-text-muted:    var(--gray-500);
-  --color-border:        var(--gray-200);
-  --color-surface:       var(--gray-50);
+  --color-primary:       var(--color-grove);
+  --color-primary-light: var(--color-leaf);
+  --color-primary-dark:  var(--color-moss);
+  --color-accent:        var(--color-citrus);
+  --color-text:          #0F172A;
+  --color-text-muted:    #475569;
+  --color-border:        #E2E8F0;
+  --color-surface:       #F8FAFC;
   --color-white:         #ffffff;
 
-  /* ── Cinematic semantic tokens ── */
-  --bg-primary:    var(--color-chalk);
-  --bg-card:       var(--color-parchment);
-  --bg-dark:       var(--color-soil);
-  --text-earth:    var(--color-soil);
+  /* ── Fresh semantic tokens ── */
+  --bg-primary:    #FFFFFF;
+  --bg-card:       var(--color-cream);
+  --bg-dark:       var(--color-forest);
+  --text-dark:     var(--color-forest);
   --text-accent:   var(--color-mango);
   --brand-primary: var(--color-grove);
   --brand-glow:    var(--color-leaf);
 
   /* ── Gradients ── */
-  --gradient-hero:      linear-gradient(160deg, var(--color-soil) 0%, #3D2410 50%, var(--color-bark) 100%);
-  --gradient-grove:     linear-gradient(135deg, var(--color-moss), var(--color-grove));
-  --gradient-card:      linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
-  --gradient-green:     linear-gradient(135deg, var(--green-500), var(--green-400));
-  --gradient-text:      linear-gradient(135deg, var(--green-400), var(--amber-400));
-  --gradient-earth:     linear-gradient(135deg, var(--color-citrus), var(--color-mango));
-  --gradient-parchment: linear-gradient(160deg, var(--color-chalk) 0%, var(--color-parchment) 100%);
+  --gradient-hero:    linear-gradient(160deg, var(--color-forest) 0%, #1A5C35 50%, var(--color-pine) 100%);
+  --gradient-grove:   linear-gradient(135deg, var(--color-moss), var(--color-grove));
+  --gradient-card:    linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+  --gradient-green:   linear-gradient(135deg, var(--color-grove), var(--color-leaf));
+  --gradient-text:    linear-gradient(135deg, var(--color-grove), var(--color-citrus));
+  --gradient-vibrant: linear-gradient(135deg, var(--color-citrus), var(--color-mango));
+  --gradient-fresh:   linear-gradient(160deg, var(--color-cream) 0%, var(--color-parchment) 100%);
 
   /* ── Typography ── */
   --font-display:   'Playfair Display', Georgia, serif;
@@ -145,7 +149,7 @@ html, body { height: 100%; }
 body {
   font-family: var(--font-body);
   color: var(--color-text);
-  background: var(--color-white);
+  background: #ffffff;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -442,14 +446,16 @@ h1, h2, h3, h4, h5, h6 {
 /* ── Cinematic utility classes ── */
 .font-display   { font-family: var(--font-display) !important; }
 .font-editorial { font-family: var(--font-editorial) !important; }
-.text-soil      { color: var(--color-soil); }
-.text-cream     { color: var(--color-cream); }
+.text-forest    { color: var(--color-forest); }
+.text-grove     { color: var(--color-grove); }
+.text-cream     { color: var(--color-chalk); }
+.text-citrus    { color: var(--color-citrus); }
 .text-mango     { color: var(--color-mango); }
 .text-leaf      { color: var(--color-leaf); }
-.bg-soil        { background: var(--color-soil); }
-.bg-cream       { background: var(--color-cream); }
-.bg-parchment   { background: var(--color-parchment); }
-.earth-section  { background: var(--color-soil); color: var(--color-cream); }
+.bg-forest      { background: var(--color-forest); }
+.bg-fresh       { background: var(--color-cream); }
+.bg-grove       { background: var(--color-grove); }
+.dark-section   { background: var(--color-forest); color: var(--color-chalk); }
 
 /* ============================================================
    RESPONSIVE SYSTEM

@@ -11,13 +11,13 @@
     font-family: 'Playfair Display', serif;
     font-size: 1.9rem;
     font-weight: 800;
-    color: var(--color-soil);
+    color: var(--color-forest);
     margin-bottom: 0.25rem;
     letter-spacing: -0.01em;
   }
 
   .subtitle {
-    color: var(--color-bark);
+    color: #475569;
     opacity: 0.65;
     margin-bottom: 1.75rem;
     font-size: 0.9375rem;
@@ -46,7 +46,7 @@
   align-items: center;
   gap: 0.75rem;
   margin: 1.25rem 0;
-  color: var(--color-parchment);
+  color: #E2E8F0;
   font-size: 0.8rem;
   color: rgba(92,61,30,0.4);
 
@@ -54,7 +54,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--color-parchment);
+    background: #E2E8F0;
   }
 
   span { white-space: nowrap; }
@@ -68,7 +68,7 @@
     display: block;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--color-bark);
+    color: #475569;
     margin-bottom: 0.4rem;
     letter-spacing: 0.01em;
   }
@@ -76,14 +76,14 @@
   input {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 1.5px solid var(--color-parchment);
+    border: 1.5px solid #E2E8F0;
     border-radius: 10px;
     font-size: 0.9375rem;
     font-family: inherit;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
-    color: var(--color-soil);
+    color: var(--color-forest);
     background: white;
 
     &::placeholder { color: rgba(92,61,30,0.3); }
@@ -153,8 +153,8 @@
 .btn-submit {
   width: 100%;
   padding: 0.9rem;
-  background: linear-gradient(135deg, var(--color-citrus), var(--color-mango));
-  color: var(--color-soil);
+  background: var(--gradient-green);
+  color: var(--color-forest);
   border: none;
   border-radius: 10px;
   font-size: 0.9375rem;
@@ -171,7 +171,7 @@
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(244,165,26,0.4);
+    box-shadow: 0 8px 28px rgba(22,163,74,0.35);
   }
 
   &:disabled { opacity: 0.65; cursor: not-allowed; }
@@ -181,7 +181,7 @@
 .spinner {
   width: 16px; height: 16px;
   border: 2px solid rgba(44,26,14,0.2);
-  border-top-color: var(--color-soil);
+  border-top-color: var(--color-forest);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;

@@ -1,12 +1,12 @@
 /* ─── Page shell ─── */
 .products-page {
   min-height: 100vh;
-  background: var(--color-chalk);
+  background: #FFFFFF;
 }
 
 /* ─── Hero banner ─── */
 .products-hero {
-  background: var(--color-soil);
+  background: var(--color-forest);
   padding: 4rem 2rem 3rem;
   text-align: center;
   position: relative;
@@ -80,7 +80,7 @@
     background: white;
     box-sizing: border-box;
     transition: border-color .2s, box-shadow .2s;
-    color: var(--color-soil);
+    color: var(--color-forest);
 
     &::placeholder { color: rgba(92,61,30,.35); }
 
@@ -106,13 +106,13 @@
 
   .byb-banner-text {
     display: flex; align-items: center; gap: .5rem;
-    font-size: .9rem; color: var(--color-bark); font-weight: 600;
+    font-size: .9rem; color: #475569; font-weight: 600;
     i { font-size: 1rem; }
   }
 
   .byb-banner-link {
     background: linear-gradient(135deg, var(--color-citrus), var(--color-mango));
-    color: var(--color-soil);
+    color: var(--color-forest);
     padding: .4rem 1rem; border-radius: 8px;
     font-size: .82rem; font-weight: 700;
     text-decoration: none;
@@ -140,12 +140,12 @@
 /* ─── Sidebar ─── */
 .category-sidebar {
   padding-right: 1.5rem;
-  border-right: 1.5px solid var(--color-parchment);
+  border-right: 1.5px solid #E2E8F0;
 
   @media (max-width: 768px) {
     padding-right: 0;
     border-right: none;
-    border-bottom: 1.5px solid var(--color-parchment);
+    border-bottom: 1.5px solid #E2E8F0;
     padding-bottom: 1rem;
     margin-bottom: 1rem;
   }
@@ -156,7 +156,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--color-bark);
+  color: #475569;
   opacity: .5;
   margin: 0 0 .75rem;
 }
@@ -167,7 +167,7 @@
   display: flex; align-items: center; gap: .5rem;
   width: 100%; padding: .55rem .75rem;
   background: none; border: none; border-radius: 8px;
-  cursor: pointer; font-size: .875rem; color: var(--color-bark);
+  cursor: pointer; font-size: .875rem; color: #475569;
   font-weight: 500; text-align: left;
   transition: all var(--dur-fast) var(--ease-grove);
 
@@ -175,7 +175,7 @@
 
   .cat-count {
     margin-left: auto; font-size: .68rem;
-    background: var(--color-parchment); color: var(--color-bark);
+    background: #E2E8F0; color: #475569;
     opacity: .6; padding: 1px 6px; border-radius: 10px;
   }
 
@@ -199,12 +199,12 @@
 }
 
 .result-count {
-  font-size: .875rem; color: var(--color-bark); opacity: .6;
+  font-size: .875rem; color: #475569; opacity: .6;
 }
 
 .featured-toggle {
   display: flex; align-items: center; gap: .35rem;
-  font-size: .8rem; color: var(--color-bark); cursor: pointer;
+  font-size: .8rem; color: #475569; cursor: pointer;
   input { accent-color: var(--color-grove); }
 }
 
@@ -224,7 +224,7 @@
 .product-card {
   background: white;
   border-radius: 16px;
-  border: 1.5px solid var(--color-parchment);
+  border: 1.5px solid #E2E8F0;
   text-decoration: none;
   display: flex;
   flex-direction: column;
@@ -243,7 +243,7 @@
 .card-image {
   position: relative;
   height: 185px;
-  background: var(--color-chalk);
+  background: #FFFFFF;
   overflow: hidden;
 
   img {
@@ -256,13 +256,13 @@
 .card-image-placeholder {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
-  color: var(--color-parchment); font-size: 2.75rem;
-  background: linear-gradient(135deg, var(--color-chalk), var(--color-parchment));
+  color: #E2E8F0; font-size: 2.75rem;
+  background: linear-gradient(135deg, #FFFFFF, #E2E8F0);
 }
 
 .featured-tag {
   position: absolute; top: .5rem; left: .5rem;
-  background: rgba(244,165,26,.9); color: var(--color-soil);
+  background: rgba(244,165,26,.9); color: var(--color-forest);
   font-size: .65rem; font-weight: 800; padding: 3px 8px;
   border-radius: 20px; display: flex; align-items: center; gap: .25rem;
   i { font-size: .6rem; }
@@ -290,11 +290,11 @@
 .card-name {
   font-family: var(--font-display);
   font-size: .9375rem; font-weight: 700;
-  color: var(--color-soil); margin: 0 0 .35rem; line-height: 1.3;
+  color: var(--color-forest); margin: 0 0 .35rem; line-height: 1.3;
 }
 
 .card-desc {
-  font-size: .78rem; color: var(--color-bark); opacity: .55;
+  font-size: .78rem; color: #475569; opacity: .55;
   margin: 0 0 .75rem; line-height: 1.5;
   display: -webkit-box; -webkit-line-clamp: 2;
   -webkit-box-orient: vertical; overflow: hidden; flex: 1;
@@ -303,14 +303,14 @@
 .card-footer {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: auto; padding-top: .625rem;
-  border-top: 1px solid var(--color-parchment);
+  border-top: 1px solid #E2E8F0;
 }
 
 .card-price { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
 
 .price-badge {
   display: inline-flex; align-self: flex-start;
-  background: rgba(244,165,26,.12); color: var(--color-bark);
+  background: rgba(244,165,26,.12); color: #475569;
   font-size: .63rem; font-weight: 800; letter-spacing: .04em;
   padding: 2px 7px; border-radius: 20px; margin-bottom: .05rem;
 }
@@ -323,12 +323,12 @@
   color: var(--color-grove); line-height: 1;
 }
 
-.price-unit { font-size: .7rem; color: var(--color-bark); opacity: .5; }
+.price-unit { font-size: .7rem; color: #475569; opacity: .5; }
 
 .price-meta { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
 
 .price-mrp {
-  font-size: .75rem; color: var(--color-bark); opacity: .4;
+  font-size: .75rem; color: #475569; opacity: .4;
   text-decoration: line-through;
 }
 
@@ -361,7 +361,7 @@
 
 .product-skeleton {
   height: 300px; border-radius: 16px;
-  background: linear-gradient(90deg, var(--color-chalk) 25%, var(--color-parchment) 50%, var(--color-chalk) 75%);
+  background: linear-gradient(90deg, #FFFFFF 25%, #E2E8F0 50%, #FFFFFF 75%);
   background-size: 400px 100%;
   animation: shimmer-earth 1.4s infinite;
 }
@@ -369,9 +369,9 @@
 /* ─── Empty state ─── */
 .no-products {
   text-align: center; padding: 5rem 2rem;
-  color: var(--color-bark); opacity: .5;
+  color: #475569; opacity: .5;
 
   i { font-size: 3rem; display: block; margin-bottom: 1rem; }
-  h3 { font-size: 1.1rem; font-weight: 700; color: var(--color-soil); margin: 0 0 .5rem; opacity: 1; }
+  h3 { font-size: 1.1rem; font-weight: 700; color: var(--color-forest); margin: 0 0 .5rem; opacity: 1; }
   p  { margin: 0; font-size: .9rem; }
 }

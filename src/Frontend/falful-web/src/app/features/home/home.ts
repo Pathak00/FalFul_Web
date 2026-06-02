@@ -10,7 +10,6 @@ import { HowItWorksComponent } from './sections/how-it-works/how-it-works';
 import { ProductShowcaseComponent } from './sections/product-showcase/product-showcase';
 import { PromoSectionComponent } from './sections/promo-section/promo-section';
 import { StatsSectionComponent } from './sections/stats-section/stats-section';
-import { MarqueeSectionComponent } from './sections/marquee-section/marquee-section';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -24,12 +23,10 @@ import { environment } from '../../../environments/environment';
     HowItWorksComponent,
     StatsSectionComponent,
     PromoSectionComponent,
-    MarqueeSectionComponent,
   ],
   template: `
     @if (show('hero'))     { <app-hero-section     [sectionData]="get('hero')"     /> }
     @if (show('features')) { <app-features-section [sectionData]="get('features')" /> }
-    <app-marquee-section />
     @if (show('products')) { <app-product-showcase [sectionData]="get('products')" /> }
     @if (show('how'))      { <app-how-it-works     [sectionData]="get('how')"      /> }
     @if (show('stats'))    { <app-stats-section    [sectionData]="get('stats')"    /> }

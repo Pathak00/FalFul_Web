@@ -84,7 +84,7 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
 
     /* ── Sidebar ─────────────────────────────────────────────────────────── */
     .admin-sidebar {
-      width: 220px; min-height: 100vh; background: #0a2218;
+      width: 220px; min-height: 100vh; background: #0B3D20;
       display: flex; flex-direction: column; flex-shrink: 0;
       position: sticky; top: 0; height: 100vh;
       transition: transform .3s cubic-bezier(.4,0,.2,1);
@@ -97,7 +97,7 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
       .brand-logo {
         color: #fff; text-decoration: none; font-weight: 800; font-size: 1rem;
         display: flex; align-items: center; gap: .4rem;
-        i { color: #4ade80; font-size: 1.1rem; }
+        i { color: #22C55E; font-size: 1.1rem; }
       }
       .admin-badge {
         font-size: .6rem; background: #22c55e; color: #fff;
@@ -113,7 +113,7 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
       display: flex; justify-content: center; padding: 1.5rem;
       .nav-spinner {
         width: 20px; height: 20px; border-radius: 50%;
-        border: 2px solid rgba(255,255,255,.15); border-top-color: #4ade80;
+        border: 2px solid rgba(255,255,255,.15); border-top-color: #22C55E;
         animation: spin .7s linear infinite;
       }
     }
@@ -130,8 +130,8 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
       border: none; background: none; width: 100%; cursor: pointer; text-align: left;
       position: relative;
       &:hover { background: rgba(255,255,255,.06); color: #fff; }
-      &.active { background: rgba(34,197,94,.15); color: #4ade80;
-        &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #4ade80; border-radius: 0 2px 2px 0; }
+      &.active { background: rgba(34,197,94,.15); color: #22C55E;
+        &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #22C55E; border-radius: 0 2px 2px 0; }
       }
       .nav-icon { font-size: 1rem; flex-shrink: 0; width: 16px; text-align: center; }
     }
@@ -153,7 +153,7 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
     }
 
     .topbar-avatar {
-      width: 30px; height: 30px; border-radius: 50%; background: #dcfce7; color: #16a34a;
+      width: 30px; height: 30px; border-radius: 50%; background: #dcfce7; color: #16A34A;
       font-size: .8rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
@@ -164,8 +164,8 @@ interface NavGroup { label: string; items: AdminNavItem[]; }
       width: 34px; height: 34px; border-radius: 7px;
       align-items: center; justify-content: center;
       cursor: pointer; font-size: 1rem; transition: all .15s; flex-shrink: 0;
-      &:hover { border-color: #16a34a; color: #16a34a; }
-      &.is-open { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+      &:hover { border-color: #16A34A; color: #16A34A; }
+      &.is-open { border-color: #16A34A; color: #16A34A; background: #f0fdf4; }
     }
 
     .admin-content { flex: 1; padding: 1.75rem; overflow-y: auto; }
