@@ -40,6 +40,10 @@
       }
     </div>
 
+    <div class="forgot-link">
+      <a routerLink="/auth/forgot-password">Forgot Password?</a>
+    </div>
+
     <button type="submit" class="btn-submit" [disabled]="form.invalid || isLoading()">
       @if (isLoading()) { <span class="spinner"></span> Signing in... }
       @else { Sign In }

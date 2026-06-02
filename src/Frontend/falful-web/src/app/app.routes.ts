@@ -149,6 +149,9 @@ export const routes: Routes = [
       { path: 'login',                 loadComponent: () => import('./features/auth/login/login').then(m => m.LoginComponent) },
       { path: 'register',              loadComponent: () => import('./features/auth/register/register').then(m => m.RegisterComponent) },
       { path: 'register-organization', loadComponent: () => import('./features/auth/register-organization/register-organization').then(m => m.RegisterOrganizationComponent) },
+      { path: 'forgot-password',       loadComponent: () => import('./features/auth/forgot-password/forgot-password').then(m => m.ForgotPasswordComponent) },
+      { path: 'verify-otp',            loadComponent: () => import('./features/auth/verify-otp/verify-otp').then(m => m.VerifyOtpComponent) },
+      { path: 'reset-password',        loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPasswordComponent) },
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   },
