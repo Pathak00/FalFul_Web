@@ -14,6 +14,9 @@ public interface IUserRepository
     Task<bool> ExistsByPhoneAsync(string phone);
     Task<int> GetOrCreateByGoogleAsync(string googleId, string email, string fullName, string? profileImageUrl);
 
+    /* Password reset (self-service) */
+    Task UpdatePasswordAsync(int userId, string passwordHash);
+
     /* Admin operations */
     Task<IEnumerable<User>> GetAllAsync();
     Task SetActiveAsync(int userId, bool isActive, int? updatedBy);

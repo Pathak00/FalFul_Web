@@ -145,6 +145,15 @@ public class UserRepository : IUserRepository
             commandType: System.Data.CommandType.StoredProcedure);
     }
 
+    public async Task UpdatePasswordAsync(int userId, string passwordHash)
+    {
+        using var conn = _context.CreateConnection();
+        await conn.ExecuteAsync(
+            "sp_User_UpdatePassword",
+            new { UserId = userId, PasswordHash = passwordHash },
+            commandType: System.Data.CommandType.StoredProcedure);
+    }
+
     public async Task SoftDeleteAsync(int userId, int? deletedBy)
     {
         using var conn = _context.CreateConnection();

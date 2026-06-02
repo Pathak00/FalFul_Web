@@ -41,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<INoticeRepository, NoticeRepository>();
         services.AddScoped<IReceiptTemplateRepository, ReceiptTemplateRepository>();
         services.AddScoped<IReceiptPrintLogRepository, ReceiptPrintLogRepository>();
+        services.AddScoped<IPasswordResetOtpRepository,   PasswordResetOtpRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         return services;
     }
 }
