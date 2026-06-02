@@ -46,6 +46,42 @@ public class SettingsController(IAppSettingService settings) : ControllerBase
         });
     }
 
+    private static readonly Dictionary<string, string> StatDefaults = new()
+    {
+        ["homepage_stat_1_value"]  = "2400",
+        ["homepage_stat_1_suffix"] = "+",
+        ["homepage_stat_1_label"]  = "Happy Customers",
+        ["homepage_stat_2_value"]  = "15",
+        ["homepage_stat_2_suffix"] = "k+",
+        ["homepage_stat_2_label"]  = "Orders Delivered",
+        ["homepage_stat_3_value"]  = "50",
+        ["homepage_stat_3_suffix"] = "+",
+        ["homepage_stat_3_label"]  = "Fruit Varieties",
+        ["homepage_stat_4_value"]  = "5",
+        ["homepage_stat_4_suffix"] = "",
+        ["homepage_stat_4_label"]  = "Cities Covered",
+    };
+
+    [HttpGet("homepage-stats")]
+    public async Task<IActionResult> GetHomepageStats()
+    {
+        var all = (await settings.GetAllAsync())
+            .ToDictionary(s => s.Key, s => s.Value);
+
+        string Get(string key) =>
+            all.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)
+                ? v : StatDefaults[key];
+
+        var stats = Enumerable.Range(1, 4).Select(i => new
+        {
+            value  = int.TryParse(Get($"homepage_stat_{i}_value"), out var n) ? n : 0,
+            suffix = Get($"homepage_stat_{i}_suffix"),
+            label  = Get($"homepage_stat_{i}_label"),
+        });
+
+        return Ok(stats);
+    }
+
     private static double Parse(string? v, double def)
         => double.TryParse(v, System.Globalization.NumberStyles.Any,
             System.Globalization.CultureInfo.InvariantCulture, out var r) ? r : def;

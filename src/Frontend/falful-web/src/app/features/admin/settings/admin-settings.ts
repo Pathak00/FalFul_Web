@@ -66,12 +66,87 @@ const SETTING_META: Record<string, { label: string; description: string; multili
     multiline:   false,
     category:    'Delivery Radius',
   },
+
+  // ── Homepage Stats ──────────────────────────────────────────────────────────
+  homepage_stat_1_value: {
+    label:       'Stat 1 – Value',
+    description: 'Numeric value for the first stat counter (e.g. 2400). Used for the count-up animation.',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_1_suffix: {
+    label:       'Stat 1 – Suffix',
+    description: 'Text appended after the number (e.g. "+", "k+", or leave blank).',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_1_label: {
+    label:       'Stat 1 – Label',
+    description: 'Descriptive label shown below the number (e.g. "Happy Customers").',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_2_value: {
+    label:       'Stat 2 – Value',
+    description: 'Numeric value for the second stat counter (e.g. 15).',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_2_suffix: {
+    label:       'Stat 2 – Suffix',
+    description: 'Text appended after the number (e.g. "k+").',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_2_label: {
+    label:       'Stat 2 – Label',
+    description: 'Descriptive label (e.g. "Orders Delivered").',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_3_value: {
+    label:       'Stat 3 – Value',
+    description: 'Numeric value for the third stat counter (e.g. 50).',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_3_suffix: {
+    label:       'Stat 3 – Suffix',
+    description: 'Text appended after the number (e.g. "+").',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_3_label: {
+    label:       'Stat 3 – Label',
+    description: 'Descriptive label (e.g. "Fruit Varieties").',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_4_value: {
+    label:       'Stat 4 – Value',
+    description: 'Numeric value for the fourth stat counter (e.g. 5).',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_4_suffix: {
+    label:       'Stat 4 – Suffix',
+    description: 'Text appended after the number (leave blank if none).',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
+  homepage_stat_4_label: {
+    label:       'Stat 4 – Label',
+    description: 'Descriptive label (e.g. "Cities Covered").',
+    multiline:   false,
+    category:    'Homepage Stats',
+  },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
   'Policies':        'bi-file-text',
   'Scheduling':      'bi-clock',
   'Delivery Radius': 'bi-geo-alt',
+  'Homepage Stats':  'bi-bar-chart-line',
 };
 
 @Component({

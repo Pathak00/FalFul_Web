@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RiderService } from '../../core/services/rider.service';
 import { ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ApiService } from '../../core/services/api.service';
+import { environment } from '../../../environments/environment';
 
 const STATUS_LABELS: Record<number, string> = {
   1: 'Awaiting Rider',
@@ -339,9 +341,38 @@ interface BowlDetails {
           </div>
 
           <div class="form-group">
-            <label>Proof Photo URL (optional)</label>
-            <input type="url" [(ngModel)]="completeForm.proofPhotoUrl"
-                   placeholder="https://… receipt or proof photo link" />
+            <label>Proof of Delivery (optional)</label>
+
+            @if (completeForm.proofPhotoUrl) {
+              <div class="proof-preview">
+                @if (isPdfProof(completeForm.proofPhotoUrl)) {
+                  <div class="proof-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> File attached</div>
+                } @else {
+                  <img [src]="completeForm.proofPhotoUrl" alt="Proof of delivery" />
+                }
+                <button type="button" class="proof-remove" (click)="removeProof()" title="Remove">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </div>
+            } @else if (uploadingProof()) {
+              <div class="proof-uploading"><span class="proof-spinner"></span> Uploading…</div>
+            } @else {
+              <div class="proof-actions">
+                <button type="button" class="proof-btn" (click)="proofCamera.click()">
+                  <i class="bi bi-camera-fill"></i> Take Photo
+                </button>
+                <button type="button" class="proof-btn" (click)="proofFile.click()">
+                  <i class="bi bi-upload"></i> Upload File
+                </button>
+              </div>
+              <span class="proof-hint">Photo or file showing the delivered order (optional).</span>
+            }
+
+            <!-- Hidden inputs: camera uses capture; upload allows image or PDF -->
+            <input #proofCamera type="file" accept="image/*" capture="environment"
+                   class="proof-input-hidden" (change)="onProofSelected($event)" />
+            <input #proofFile type="file" accept="image/*,.pdf"
+                   class="proof-input-hidden" (change)="onProofSelected($event)" />
           </div>
 
           <div class="form-group">
@@ -629,6 +660,53 @@ interface BowlDetails {
         background: #16a34a;
       }
 
+      /* Proof of delivery */
+      .proof-input-hidden { display: none; }
+      .proof-actions { display: flex; gap: .5rem; margin-bottom: .35rem; }
+      .proof-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center; gap: .35rem;
+        padding: .5rem .75rem;
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+        &:hover { border-color: #94a3b8; background: #f1f5f9; }
+      }
+      .proof-hint { font-size: .72rem; color: #94a3b8; }
+      .proof-uploading {
+        display: flex; align-items: center; gap: .5rem;
+        font-size: .82rem; color: #64748b; padding: .5rem 0;
+      }
+      .proof-spinner {
+        display: inline-block; width: 14px; height: 14px;
+        border: 2px solid #e2e8f0; border-top-color: #3b82f6;
+        border-radius: 50%; animation: spin .7s linear infinite;
+      }
+      .proof-preview {
+        position: relative; border-radius: 8px; overflow: hidden;
+        border: 1.5px solid #e2e8f0;
+        img { width: 100%; display: block; max-height: 200px; object-fit: cover; }
+      }
+      .proof-pdf {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .75rem 1rem; background: #fef9c3; color: #713f12;
+        font-size: .85rem; font-weight: 600;
+        i { font-size: 1.25rem; color: #dc2626; }
+      }
+      .proof-remove {
+        position: absolute; top: .4rem; right: .4rem;
+        background: rgba(0,0,0,.55); border: none; border-radius: 50%;
+        color: #fff; font-size: 1rem; line-height: 1;
+        width: 24px; height: 24px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        &:hover { background: rgba(0,0,0,.75); }
+      }
+
       .badge {
         display: inline-flex;
         align-items: center;
@@ -903,6 +981,7 @@ export class RiderDeliveriesComponent implements OnInit {
   private riderService = inject(RiderService);
   private receiptSvc   = inject(ReceiptService);
   private toast        = inject(ToastService);
+  private api          = inject(ApiService);
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_BADGE = STATUS_BADGE;
@@ -919,6 +998,7 @@ export class RiderDeliveriesComponent implements OnInit {
   completeTarget = signal<any>(null);
   completeSaving = signal(false);
   completeError = signal('');
+  uploadingProof = signal(false);
   completeForm = this.emptyCompleteForm();
 
   attemptTarget = signal<any>(null);
@@ -1047,6 +1127,35 @@ export class RiderDeliveriesComponent implements OnInit {
 
   bowlTotalGrams(bowl: BowlDetails): number {
     return bowl.totalGrams ?? bowl.fruits.reduce((s, f) => s + f.grams, 0);
+  }
+
+  isPdfProof(url: string): boolean {
+    return url.toLowerCase().endsWith('.pdf');
+  }
+
+  removeProof() {
+    this.completeForm.proofPhotoUrl = '';
+  }
+
+  onProofSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+
+    const form = new FormData();
+    form.append('file', file);
+    this.uploadingProof.set(true);
+    this.api.upload<{ url: string }>('/api/upload', form).subscribe({
+      next: r => {
+        this.uploadingProof.set(false);
+        this.completeForm.proofPhotoUrl = environment.apiUrl + r.url;
+      },
+      error: () => {
+        this.uploadingProof.set(false);
+        this.toast.error('Upload failed. Please try again.');
+      },
+    });
   }
 
   private emptyCompleteForm() {

@@ -1,38 +1,53 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 import { HomepageSection } from '../../../../core/models/cms.models';
 import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-animate.directive';
-
-interface Product {
-  emoji: string;
-  name: string;
-  tag: string;
-  tagColor: string;
-  price: string;
-  unit: string;
-  rating: number;
-  reviews: number;
-}
+import { ProductService } from '../../../../core/services/product.service';
+import { ProductSummary } from '../../../../core/models/product.models';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-product-showcase',
   standalone: true,
-  imports: [RouterLink, ScrollAnimateDirective],
+  imports: [RouterLink, ScrollAnimateDirective, DecimalPipe],
   templateUrl: './product-showcase.html',
   styleUrl: './product-showcase.scss'
 })
-export class ProductShowcaseComponent {
+export class ProductShowcaseComponent implements OnInit {
   @Input() sectionData: HomepageSection | undefined;
-  products: Product[] = [
-    { emoji: '🍎', name: 'Fuji Apples',      tag: 'Best Seller', tagColor: 'amber', price: '220', unit: '/kg',  rating: 5, reviews: 128 },
-    { emoji: '🥭', name: 'Alphonso Mango',   tag: 'Seasonal',    tagColor: 'green', price: '380', unit: '/kg',  rating: 5, reviews: 94  },
-    { emoji: '🍓', name: 'Fresh Strawberry', tag: 'New',         tagColor: 'red',   price: '450', unit: '/box', rating: 4, reviews: 67  },
-    { emoji: '🍱', name: 'Mixed Fruit Box',  tag: 'Popular',     tagColor: 'blue',  price: '650', unit: '/box', rating: 5, reviews: 210 },
-    { emoji: '🍊', name: 'Nagpur Oranges',   tag: 'Fresh Today', tagColor: 'green', price: '180', unit: '/kg',  rating: 4, reviews: 85  },
-    { emoji: '🍇', name: 'Black Grapes',     tag: 'Organic',     tagColor: 'purple',price: '320', unit: '/kg',  rating: 5, reviews: 52  },
-  ];
 
-  starsArray(n: number): number[] {
-    return Array(n).fill(0);
+  private productService = inject(ProductService);
+
+  products: ProductSummary[] = [];
+  loading = true;
+
+  ngOnInit(): void {
+    this.productService.getPublicProducts().subscribe({
+      next: list => {
+        this.products = list.slice(0, 6);
+        this.loading = false;
+      },
+      error: () => { this.loading = false; },
+    });
+  }
+
+  imageUrl(url: string | undefined): string {
+    if (!url) return '';
+    return url.startsWith('http') ? url : environment.apiUrl + url;
+  }
+
+  firstTag(tags: string | undefined): string {
+    return tags?.split(',')[0]?.trim() ?? '';
+  }
+
+  tagColor(tag: string): string {
+    const t = tag.toLowerCase();
+    if (t.includes('new'))      return 'red';
+    if (t.includes('popular') || t.includes('best')) return 'amber';
+    if (t.includes('organic'))  return 'green';
+    if (t.includes('season'))   return 'green';
+    if (t.includes('featured')) return 'blue';
+    return 'gray';
   }
 }
