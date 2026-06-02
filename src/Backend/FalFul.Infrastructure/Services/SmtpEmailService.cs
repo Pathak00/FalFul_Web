@@ -16,8 +16,10 @@ public class SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> l
         var port    = int.TryParse(section["SmtpPort"], out var p) ? p : 587;
         var user    = section["Username"];
         var pass    = section["Password"];
-        var from    = section["FromAddress"] ?? user ?? "noreply@falfulfresh.com";
-        var name    = section["FromName"]    ?? "FalFul Fresh Fruits";
+        // Brevo requires the From address to be a verified sender in your Brevo account.
+        // If FromAddress is not verified, fall back to the SMTP username (always allowed).
+        var from    = section["FromAddress"] is { Length: > 0 } fa ? fa : (user ?? "noreply@falfulfresh.com");
+        var name    = section["FromName"] ?? "FalFul Fresh Fruits";
 
         // Dev fallback — log OTP to console if SMTP is not configured
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(user))
@@ -33,12 +35,14 @@ public class SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> l
         message.Subject = subject;
         message.Body    = new TextPart("html") { Text = htmlBody };
 
+        logger.LogDebug("SMTP connecting to {Host}:{Port} as {User}, From={From}", host, port, user, from);
+
         using var client = new SmtpClient();
         await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
         await client.AuthenticateAsync(user, pass ?? string.Empty);
         await client.SendAsync(message);
         await client.DisconnectAsync(quit: true);
 
-        logger.LogInformation("Email sent to {To} — {Subject}", to, subject);
+        logger.LogInformation("Email delivered to {To}", to);
     }
 }

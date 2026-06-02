@@ -4,6 +4,7 @@ using FalFul.Application.DTOs.Auth;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Common;
 using FalFul.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace FalFul.Application.Services;
 
@@ -14,7 +15,8 @@ public class PasswordResetService(
     IRefreshTokenRepository       refreshTokens,
     IPasswordHasher               hasher,
     IEmailService                 email,
-    ISmsService                   sms) : IPasswordResetService
+    ISmsService                   sms,
+    ILogger<PasswordResetService> logger) : IPasswordResetService
 {
     private const int OtpExpiryMinutes   = 10;
     private const int TokenExpiryMinutes = 15;
@@ -190,6 +192,9 @@ public class PasswordResetService(
 
     private async Task SendEmailOtp(string to, string name, string otp)
     {
+        // Always log plaintext OTP so devs can test without email delivery
+        logger.LogWarning("━━━ OTP for {Email} ━━━ CODE: {Otp} ━━━ (expires in {Min} min)", to, otp, OtpExpiryMinutes);
+
         var subject = "FalFul — Your Password Reset OTP";
         var body    = $"""
             <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e2e8f0;border-radius:12px">
@@ -202,21 +207,31 @@ public class PasswordResetService(
               <p style="color:#64748b;font-size:0.85rem">If you did not request this, you can safely ignore this email.</p>
             </div>
             """;
-        try   { await email.SendAsync(to, subject, body); }
+
+        try
+        {
+            await email.SendAsync(to, subject, body);
+            logger.LogInformation("OTP email delivered to {Email}", to);
+        }
         catch (Exception ex)
         {
-            // Log but do not rethrow — OTP is stored, user can retry
-            Console.WriteLine($"[EMAIL-ERROR] Failed to send OTP email to {to}: {ex.Message}");
+            logger.LogError(ex, "SMTP failed for {Email}: {Error}", to, ex.Message);
         }
     }
 
     private async Task SendSmsOtp(string phone, string otp)
     {
+        logger.LogWarning("━━━ OTP for {Phone} ━━━ CODE: {Otp} ━━━ (expires in {Min} min)", phone, otp, OtpExpiryMinutes);
+
         var message = $"Your FalFul password reset OTP is: {otp}. Valid for {OtpExpiryMinutes} minutes. Do not share this code.";
-        try   { await sms.SendAsync(phone, message); }
+        try
+        {
+            await sms.SendAsync(phone, message);
+            logger.LogInformation("OTP SMS delivered to {Phone}", phone);
+        }
         catch (Exception ex)
         {
-            Console.WriteLine($"[SMS-ERROR] Failed to send OTP SMS to {phone}: {ex.Message}");
+            logger.LogError(ex, "SMS failed for {Phone}: {Error}", phone, ex.Message);
         }
     }
 }
