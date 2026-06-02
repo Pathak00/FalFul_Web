@@ -1,8 +1,9 @@
-using System.Net;
-using System.Net.Mail;
 using FalFul.Application.Interfaces;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 
 namespace FalFul.Infrastructure.Services;
 
@@ -18,27 +19,26 @@ public class SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> l
         var from    = section["FromAddress"] ?? user ?? "noreply@falfulfresh.com";
         var name    = section["FromName"]    ?? "FalFul Fresh Fruits";
 
-        // Dev fallback: if no SMTP credentials configured, just log the OTP
+        // Dev fallback — log OTP to console if SMTP is not configured
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(user))
         {
-            logger.LogWarning(
-                "[DEV] Email not configured. Would have sent to {To} | Subject: {Subject} | Body: {Body}",
+            logger.LogWarning("[DEV-EMAIL] To: {To} | Subject: {Subject} | Body: {Body}",
                 to, subject, htmlBody);
             return;
         }
 
-        using var client  = new SmtpClient(host, port);
-        client.EnableSsl   = true;
-        client.Credentials = new NetworkCredential(user, pass);
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(name, from));
+        message.To.Add(MailboxAddress.Parse(to));
+        message.Subject = subject;
+        message.Body    = new TextPart("html") { Text = htmlBody };
 
-        using var message     = new MailMessage();
-        message.From          = new MailAddress(from, name);
-        message.To.Add(to);
-        message.Subject       = subject;
-        message.Body          = htmlBody;
-        message.IsBodyHtml    = true;
+        using var client = new SmtpClient();
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+        await client.AuthenticateAsync(user, pass ?? string.Empty);
+        await client.SendAsync(message);
+        await client.DisconnectAsync(quit: true);
 
-        await client.SendMailAsync(message);
         logger.LogInformation("Email sent to {To} — {Subject}", to, subject);
     }
 }

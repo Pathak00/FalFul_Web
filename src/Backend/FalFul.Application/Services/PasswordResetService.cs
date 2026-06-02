@@ -202,12 +202,21 @@ public class PasswordResetService(
               <p style="color:#64748b;font-size:0.85rem">If you did not request this, you can safely ignore this email.</p>
             </div>
             """;
-        await email.SendAsync(to, subject, body);
+        try   { await email.SendAsync(to, subject, body); }
+        catch (Exception ex)
+        {
+            // Log but do not rethrow — OTP is stored, user can retry
+            Console.WriteLine($"[EMAIL-ERROR] Failed to send OTP email to {to}: {ex.Message}");
+        }
     }
 
     private async Task SendSmsOtp(string phone, string otp)
     {
         var message = $"Your FalFul password reset OTP is: {otp}. Valid for {OtpExpiryMinutes} minutes. Do not share this code.";
-        await sms.SendAsync(phone, message);
+        try   { await sms.SendAsync(phone, message); }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SMS-ERROR] Failed to send OTP SMS to {phone}: {ex.Message}");
+        }
     }
 }
