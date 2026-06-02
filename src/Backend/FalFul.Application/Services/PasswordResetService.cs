@@ -48,7 +48,7 @@ public class PasswordResetService(
 
         // Generate + hash OTP
         var plainOtp = Random.Shared.Next(100_000, 1_000_000).ToString();
-        var otpHash  = BCrypt.Net.BCrypt.HashPassword(plainOtp, workFactor: 8);
+        var otpHash  = hasher.Hash(plainOtp);
 
         var record = new PasswordResetOtp
         {
@@ -56,11 +56,9 @@ public class PasswordResetService(
             OtpHash     = otpHash,
             Channel     = isEmail ? (byte)1 : (byte)2,
             Destination = isEmail ? user.Email! : user.PhoneNumber!,
-            ExpiresAt   = DateTime.UtcNow.AddMinutes(OtpExpiryMinutes + 345 / 60.0), // Nepal offset stored
+            ExpiresAt   = DateTime.UtcNow.AddMinutes(345).AddMinutes(OtpExpiryMinutes),
             IpAddress   = ipAddress,
         };
-        // Correct Nepal time: use same pattern as DB (UTC + 345 min)
-        record.ExpiresAt = DateTime.UtcNow.AddMinutes(345).AddMinutes(OtpExpiryMinutes);
 
         await otpRepo.CreateAsync(record);
 
@@ -103,7 +101,7 @@ public class PasswordResetService(
             return Result<VerifyOtpResponseDto>.Failure("Too many incorrect attempts. Please request a new OTP.");
         }
 
-        if (!BCrypt.Net.BCrypt.Verify(otp.Trim(), record.OtpHash))
+        if (!hasher.Verify(otp.Trim(), record.OtpHash))
         {
             await otpRepo.IncrementAttemptAsync(record.Id);
             var remaining = MaxOtpAttempts - (record.AttemptCount + 1);
