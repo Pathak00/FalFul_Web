@@ -1,5 +1,5 @@
-import { Component, HostListener, inject, output, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, HostListener, OnInit, inject, output, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { MenuStore } from '../../../core/stores/menu.store';
@@ -174,11 +174,12 @@ import { MenuStore } from '../../../core/stores/menu.store';
   `,
   styleUrl: './navbar.scss'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
-  readonly cart        = inject(CartService);
-  readonly menuStore   = inject(MenuStore);
-  readonly cartOpen    = output<void>();
+  private router      = inject(Router);
+  readonly cart       = inject(CartService);
+  readonly menuStore  = inject(MenuStore);
+  readonly cartOpen   = output<void>();
 
   readonly isAuthenticated = this.authService.isAuthenticated;
   readonly user = this.authService.currentUser;
@@ -187,8 +188,23 @@ export class NavbarComponent {
   activeDropdown = signal<number | null>(null);
   mobileMenuOpen = signal(false);
 
+  ngOnInit(): void {
+    // On non-home pages start in scrolled (opaque) state immediately
+    this.updateScrolled();
+
+    // Re-evaluate on every route change (e.g. navigating home → products)
+    this.router.events.subscribe(e => {
+      if (e instanceof NavigationEnd) this.updateScrolled();
+    });
+  }
+
   @HostListener('window:scroll')
-  onScroll() { this.scrolled.set(window.scrollY > 60); }
+  onScroll() { this.updateScrolled(); }
+
+  private updateScrolled(): void {
+    const onHome = this.router.url === '/' || this.router.url === '';
+    this.scrolled.set(!onHome || window.scrollY > 60);
+  }
 
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
 

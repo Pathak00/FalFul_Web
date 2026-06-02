@@ -9,63 +9,129 @@
   }
 }
 
+/* ── Left brand panel ──────────────────────────────────────────────────── */
 .auth-brand {
-  background: linear-gradient(135deg, #1a5c2a 0%, #2d9348 50%, #48c774 100%);
+  background: var(--color-soil);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 3rem;
-  color: white;
+  padding: 3.5rem 3rem;
+  color: var(--color-cream);
   position: relative;
   overflow: hidden;
+}
 
-  &::before {
-    content: '🍎🍊🍋🍇🍓🥭🍍';
-    position: absolute;
-    font-size: 8rem;
-    opacity: 0.05;
-    top: -2rem;
-    right: -2rem;
-    letter-spacing: 1rem;
-  }
+.auth-brand-grain {
+  position: absolute;
+  inset: -50%;
+  width: 200%; height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
   margin-bottom: 3rem;
+  position: relative;
 
-  span:first-child { font-size: 2rem; }
+  .logo-leaf { font-size: 1.75rem; }
 
   .logo-text {
+    font-family: 'Playfair Display', serif;
     font-size: 2rem;
-    font-weight: 800;
-    color: white;
+    font-weight: 900;
+    color: var(--color-cream);
+    letter-spacing: -0.01em;
   }
 }
 
 .brand-tagline {
-  h1 {
-    font-size: 2.8rem;
-    font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 1rem;
-  }
+  position: relative;
+  margin-bottom: 2.5rem;
+}
 
-  p {
-    font-size: 1.1rem;
-    opacity: 0.85;
-    line-height: 1.6;
-    max-width: 380px;
+.brand-overline {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-leaf);
+  margin-bottom: 1rem;
+}
+
+.brand-tagline h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--color-cream);
+  margin: 0 0 1.25rem;
+
+  em {
+    font-style: italic;
+    color: var(--color-citrus);
   }
 }
 
+.brand-desc {
+  font-size: 1rem;
+  color: rgba(249,244,236,0.55);
+  line-height: 1.7;
+  max-width: 360px;
+}
+
+.brand-fruits {
+  font-size: 1.5rem;
+  letter-spacing: 0.5rem;
+  opacity: 0.25;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+/* Stat row */
+.brand-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.brand-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-cream);
+    line-height: 1;
+  }
+
+  span {
+    font-size: 0.75rem;
+    color: rgba(249,244,236,0.45);
+    font-weight: 500;
+  }
+}
+
+.brand-stat-div {
+  width: 1px;
+  height: 32px;
+  background: rgba(255,255,255,0.12);
+}
+
+/* ── Right content panel ────────────────────────────────────────────────── */
 .auth-content {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: #f9f9f9;
+  background: var(--color-chalk);
+  overflow-y: auto;
 }
