@@ -29,19 +29,43 @@ public class TwilioSmsService(IConfiguration config, ILogger<TwilioSmsService> l
 
         TwilioClient.Init(accountSid, authToken);
 
+        logger.LogInformation("Twilio → sending to {To} from {From}", to, fromNumber);
+
         var result = await MessageResource.CreateAsync(
             body: message,
             from: new Twilio.Types.PhoneNumber(fromNumber),
             to:   new Twilio.Types.PhoneNumber(to));
 
+        // Log everything useful for diagnosing delivery issues
+        logger.LogInformation(
+            "Twilio response — SID: {Sid} | Status: {Status} | ErrorCode: {ErrorCode} | ErrorMessage: {ErrorMessage} | To: {To}",
+            result.Sid, result.Status, result.ErrorCode, result.ErrorMessage, result.To);
+
         if (result.ErrorCode is not null)
         {
-            logger.LogError("Twilio send failed to {Phone}: [{Code}] {Error}",
-                to, result.ErrorCode, result.ErrorMessage);
+            var hint = result.ErrorCode == 21608
+                ? " (Trial account: recipient number must be verified in Twilio console → Verified Caller IDs)"
+                : string.Empty;
+            logger.LogError("Twilio error [{Code}] {Error}{Hint}", result.ErrorCode, result.ErrorMessage, hint);
+            return;
+        }
+
+        var failedStatuses = new[]
+        {
+            MessageResource.StatusEnum.Failed,
+            MessageResource.StatusEnum.Undelivered,
+            MessageResource.StatusEnum.Canceled,
+        };
+
+        if (Array.Exists(failedStatuses, s => s == result.Status))
+        {
+            logger.LogError("Twilio message {Sid} ended with status {Status} — check https://console.twilio.com/us1/monitor/logs/sms",
+                result.Sid, result.Status);
         }
         else
         {
-            logger.LogInformation("SMS sent to {Phone} (SID: {Sid})", to, result.Sid);
+            logger.LogInformation("Twilio message {Sid} accepted with status {Status} → check console for delivery confirmation",
+                result.Sid, result.Status);
         }
     }
 
