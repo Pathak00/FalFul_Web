@@ -1,0 +1,109 @@
+.marquee-section {
+  background: var(--color-parchment);
+  padding: 4rem 0;
+  overflow: hidden;
+  position: relative;
+
+  /* Edge fade masks */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 160px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, var(--color-parchment), transparent);
+  }
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, var(--color-parchment), transparent);
+  }
+}
+
+.marquee-label {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-bark);
+  opacity: 0.45;
+  margin-bottom: 2rem;
+}
+
+/* ── Track ───────────────────────────────────────────────────────────────── */
+.marquee-track-wrap {
+  overflow: hidden;
+  margin-bottom: 0.875rem;
+  &:last-child { margin-bottom: 0; }
+}
+
+.marquee-track {
+  display: flex;
+  gap: 0.75rem;
+  width: max-content;
+  animation: marquee-ltr 28s linear infinite;
+
+  &.marquee-rtl { animation: marquee-rtl 32s linear infinite; }
+  &.paused      { animation-play-state: paused; }
+}
+
+/* ── Fruit tag ───────────────────────────────────────────────────────────── */
+.fruit-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.125rem;
+  background: white;
+  border: 1.5px solid rgba(44,26,14,0.07);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  cursor: default;
+  transition: background var(--dur-fast) var(--ease-grove),
+              border-color var(--dur-fast) var(--ease-grove),
+              transform var(--dur-fast) var(--ease-grove),
+              box-shadow var(--dur-fast) var(--ease-grove);
+
+  &:hover {
+    background: var(--color-soil);
+    border-color: var(--color-soil);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(44,26,14,0.2);
+
+    .fruit-tag-name   { color: var(--color-cream); }
+    .fruit-tag-origin { color: rgba(249,244,236,0.5); }
+  }
+
+  &.fruit-tag-alt {
+    background: rgba(44,26,14,0.04);
+    border-color: rgba(44,26,14,0.06);
+
+    &:hover {
+      background: var(--color-grove);
+      border-color: var(--color-grove);
+      .fruit-tag-name   { color: white; }
+      .fruit-tag-origin { color: rgba(255,255,255,0.6); }
+    }
+  }
+}
+
+.fruit-tag-emoji  { font-size: 1.125rem; flex-shrink: 0; }
+
+.fruit-tag-name {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-soil);
+  transition: color var(--dur-fast);
+}
+
+.fruit-tag-origin {
+  font-size: 0.6875rem;
+  color: var(--color-bark);
+  opacity: 0.6;
+  transition: color var(--dur-fast), opacity var(--dur-fast);
+}

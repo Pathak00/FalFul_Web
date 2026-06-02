@@ -1,15 +1,15 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, HostListener, inject, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
-import { MenuNode, MenuStore } from '../../../core/stores/menu.store';
+import { MenuStore } from '../../../core/stores/menu.store';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <nav class="navbar">
+    <nav class="navbar" [class.scrolled]="scrolled()">
       <div class="navbar-brand">
         <a routerLink="/" class="logo">
           <i class="bi bi-basket2-fill logo-icon"></i>
@@ -183,8 +183,12 @@ export class NavbarComponent {
   readonly isAuthenticated = this.authService.isAuthenticated;
   readonly user = this.authService.currentUser;
 
+  scrolled       = signal(false);
   activeDropdown = signal<number | null>(null);
   mobileMenuOpen = signal(false);
+
+  @HostListener('window:scroll')
+  onScroll() { this.scrolled.set(window.scrollY > 60); }
 
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
 
