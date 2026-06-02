@@ -12,7 +12,8 @@ public class OrderService(
     IDeliveryRepository    deliveries,
     IPriceRuleRepository   priceRules,
     IOrderRatingRepository ratings,
-    IAppSettingService     settings) : IOrderService
+    IAppSettingService     settings,
+    IDiscountRepository    discounts) : IOrderService
 {
     // ── Addresses ─────────────────────────────────────────────────────────────
 
@@ -91,13 +92,13 @@ public class OrderService(
 
     // ── Orders ────────────────────────────────────────────────────────────────
 
-    public async Task<Result<string>> PlaceOrderAsync(int userId, string customerName, PlaceOrderDto dto)
+    public async Task<Result<PlaceOrderResultDto>> PlaceOrderAsync(int userId, string customerName, PlaceOrderDto dto)
     {
-        if (dto.Items.Count == 0)                            return Result<string>.Failure("Cart is empty.");
-        if (string.IsNullOrWhiteSpace(dto.FullAddress))      return Result<string>.Failure("Delivery address is required.");
-        if (string.IsNullOrWhiteSpace(dto.DeliveryPhone))    return Result<string>.Failure("Delivery phone is required.");
-        if (string.IsNullOrWhiteSpace(dto.DeliveryTimeSlot)) return Result<string>.Failure("Delivery time slot is required.");
-        if (dto.DeliveryDate == default)                     return Result<string>.Failure("Delivery date is required.");
+        if (dto.Items.Count == 0)                            return Result<PlaceOrderResultDto>.Failure("Cart is empty.");
+        if (string.IsNullOrWhiteSpace(dto.FullAddress))      return Result<PlaceOrderResultDto>.Failure("Delivery address is required.");
+        if (string.IsNullOrWhiteSpace(dto.DeliveryPhone))    return Result<PlaceOrderResultDto>.Failure("Delivery phone is required.");
+        if (string.IsNullOrWhiteSpace(dto.DeliveryTimeSlot)) return Result<PlaceOrderResultDto>.Failure("Delivery time slot is required.");
+        if (dto.DeliveryDate == default)                     return Result<PlaceOrderResultDto>.Failure("Delivery date is required.");
 
         var rules        = (await priceRules.GetAllAsync()).ToDictionary(r => r.RuleKey, r => r);
         var subTotal     = dto.Items.Sum(i => i.TotalPrice);
@@ -107,7 +108,7 @@ public class OrderService(
         var freeAbove    = GetRuleValue(rules, "free_delivery_above");
 
         if (minOrder > 0 && subTotal < minOrder)
-            return Result<string>.Failure($"Minimum order amount is Rs. {minOrder}.");
+            return Result<PlaceOrderResultDto>.Failure($"Minimum order amount is Rs. {minOrder}.");
 
         // Cut-fruit radius validation
         bool hasCutFruits = dto.Items.Any(i => i.IsCustomBuild);
@@ -117,14 +118,14 @@ public class OrderService(
             if (radiusKm > 0)
             {
                 if (!dto.DeliveryLatitude.HasValue || !dto.DeliveryLongitude.HasValue)
-                    return Result<string>.Failure("Your location is required for cut-fruit orders. Please allow location access at checkout.");
+                    return Result<PlaceOrderResultDto>.Failure("Your location is required for cut-fruit orders. Please allow location access at checkout.");
 
                 var storeLat = ParseSetting(await settings.GetValueAsync("store_latitude"),  27.7172);
                 var storeLng = ParseSetting(await settings.GetValueAsync("store_longitude"), 85.3240);
                 var distKm   = HaversineKm(dto.DeliveryLatitude.Value, dto.DeliveryLongitude.Value, storeLat, storeLng);
 
                 if (distKm > radiusKm)
-                    return Result<string>.Failure(
+                    return Result<PlaceOrderResultDto>.Failure(
                         $"Cut-fruit delivery is only available within {radiusKm:F0} km of our store. " +
                         $"Your location is approximately {distKm:F1} km away.");
             }
@@ -134,7 +135,25 @@ public class OrderService(
             deliveryFee = 0;
 
         var serviceFee  = serviceFeePct > 0 ? Math.Round(subTotal * serviceFeePct / 100, 2) : 0;
-        var totalAmount = subTotal + deliveryFee + serviceFee;
+        var preTotalAmount = subTotal + deliveryFee + serviceFee;
+
+        // Apply discount code if provided
+        decimal discountAmount = 0;
+        string? discountCode   = null;
+        if (!string.IsNullOrWhiteSpace(dto.DiscountCode))
+        {
+            var d = await discounts.GetByCodeAsync(dto.DiscountCode.Trim().ToUpper());
+            if (d is not null && d.IsActive && preTotalAmount >= d.MinOrderAmount)
+            {
+                discountAmount = d.DiscountType == 1
+                    ? Math.Round(preTotalAmount * d.Value / 100, 2)
+                    : Math.Min(d.Value, preTotalAmount);
+                discountCode = d.Code;
+                // Usage increment is fire-and-forget; if it fails order still goes through
+                try { await discounts.IncrementUsageAsync(d.Code); } catch { }
+            }
+        }
+        var totalAmount = preTotalAmount - discountAmount;
 
         var order = new Order
         {
@@ -144,6 +163,8 @@ public class OrderService(
             SubTotal          = subTotal,
             DeliveryFee       = deliveryFee,
             ServiceFee        = serviceFee,
+            DiscountAmount    = discountAmount,
+            DiscountCode      = discountCode,
             TotalAmount       = totalAmount,
             PaymentMethod     = dto.PaymentMethod,
             PaymentStatus     = PaymentStatus.Pending,
@@ -185,9 +206,9 @@ public class OrderService(
             // Delivery record is NOT created at order placement.
             // It is created when admin transitions the order to ReadyForDelivery(4).
 
-            return Result<string>.Success(orderNumber);
+            return Result<PlaceOrderResultDto>.Success(new PlaceOrderResultDto { OrderId = orderId, OrderNumber = orderNumber });
         }
-        catch (Exception ex) { return Result<string>.Failure(ex.Message); }
+        catch (Exception ex) { return Result<PlaceOrderResultDto>.Failure(ex.Message); }
     }
 
     public async Task<IEnumerable<OrderSummaryDto>> GetUserOrdersAsync(int userId)
@@ -315,6 +336,8 @@ public class OrderService(
         SubTotal            = o.SubTotal,
         DeliveryFee         = o.DeliveryFee,
         ServiceFee          = o.ServiceFee,
+        DiscountAmount      = o.DiscountAmount,
+        DiscountCode        = o.DiscountCode,
         TotalAmount         = o.TotalAmount,
         PaymentMethod       = o.PaymentMethod,
         PaymentStatus       = o.PaymentStatus,
@@ -337,6 +360,8 @@ public class OrderService(
         SubTotal         = o.SubTotal,
         DeliveryFee      = o.DeliveryFee,
         ServiceFee       = o.ServiceFee,
+        DiscountAmount   = o.DiscountAmount,
+        DiscountCode     = o.DiscountCode,
         TotalAmount      = o.TotalAmount,
         PaymentMethod    = o.PaymentMethod,
         PaymentStatus    = o.PaymentStatus,

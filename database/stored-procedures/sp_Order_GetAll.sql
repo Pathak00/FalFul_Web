@@ -5,7 +5,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT o.Id, o.UserId, o.OrderNumber, o.Status, o.SubTotal, o.DeliveryFee, o.ServiceFee,
-           o.TotalAmount, o.PaymentMethod, o.PaymentStatus, o.DeliveryAddressId,
+           o.TotalAmount, o.AdvanceAmount, o.PaymentMethod, o.PaymentStatus, o.DeliveryAddressId,
            o.DeliveryDate, o.DeliveryTimeSlot, o.Notes, o.CancelReason, o.CreatedAt, o.UpdatedAt,
            COALESCE(a.FullAddress, o.FullAddress)   AS FullAddress,
            COALESCE(a.City,        o.City)           AS City,

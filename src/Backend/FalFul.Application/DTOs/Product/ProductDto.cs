@@ -10,6 +10,7 @@ public class ProductDto
     public string?  Description      { get; set; }
     public string?  ShortDescription { get; set; }
     public decimal  Price            { get; set; }
+    public decimal? Mrp              { get; set; }
     public string   Unit             { get; set; } = "KG";
     public decimal  Stock            { get; set; }
     public bool     IsAvailable      { get; set; }
@@ -20,6 +21,7 @@ public class ProductDto
     public int?     MinOrderGrams    { get; set; }
     public int?     GramStep         { get; set; }
     public decimal? CutFruitPrice    { get; set; }
+    public bool     ShowInCatalog    { get; set; } = true;
     public DateTime CreatedAt        { get; set; }
     public DateTime? UpdatedAt       { get; set; }
 }
@@ -33,6 +35,7 @@ public class ProductSummaryDto
     public string   Slug             { get; set; } = string.Empty;
     public string?  ShortDescription { get; set; }
     public decimal  Price            { get; set; }
+    public decimal? Mrp              { get; set; }
     public string   Unit             { get; set; } = "KG";
     public decimal  Stock            { get; set; }
     public bool     IsAvailable      { get; set; }
@@ -43,6 +46,7 @@ public class ProductSummaryDto
     public int?     MinOrderGrams    { get; set; }
     public int?     GramStep         { get; set; }
     public decimal? CutFruitPrice    { get; set; }
+    public bool     ShowInCatalog    { get; set; } = true;
 }
 
 public class CreateProductDto
@@ -53,6 +57,7 @@ public class CreateProductDto
     public string?  Description      { get; set; }
     public string?  ShortDescription { get; set; }
     public decimal  Price            { get; set; }
+    public decimal? Mrp              { get; set; }
     public string   Unit             { get; set; } = "KG";
     public decimal  Stock            { get; set; }
     public bool     IsAvailable      { get; set; } = true;
@@ -63,6 +68,7 @@ public class CreateProductDto
     public int?     MinOrderGrams    { get; set; }
     public int?     GramStep         { get; set; }
     public decimal? CutFruitPrice    { get; set; }
+    public bool     ShowInCatalog    { get; set; } = true;
 }
 
 public class UpdateProductDto
@@ -73,6 +79,7 @@ public class UpdateProductDto
     public string?  Description      { get; set; }
     public string?  ShortDescription { get; set; }
     public decimal  Price            { get; set; }
+    public decimal? Mrp              { get; set; }
     public string   Unit             { get; set; } = "KG";
     public decimal  Stock            { get; set; }
     public bool     IsAvailable      { get; set; }
@@ -83,6 +90,7 @@ public class UpdateProductDto
     public int?     MinOrderGrams    { get; set; }
     public int?     GramStep         { get; set; }
     public decimal? CutFruitPrice    { get; set; }
+    public bool     ShowInCatalog    { get; set; } = true;
 }
 
 public class SetProductAvailabilityDto

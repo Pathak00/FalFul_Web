@@ -117,6 +117,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
             Description      = dto.Description?.Trim(),
             ShortDescription = dto.ShortDescription?.Trim(),
             Price            = dto.Price,
+            Mrp              = dto.Mrp > 0 ? dto.Mrp : null,
             Unit             = dto.Unit.Trim(),
             Stock            = dto.Stock,
             IsAvailable      = dto.IsAvailable,
@@ -126,7 +127,8 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
             DisplayOrder     = dto.DisplayOrder,
             MinOrderGrams    = dto.MinOrderGrams > 0 ? dto.MinOrderGrams : null,
             GramStep         = dto.GramStep > 0 ? dto.GramStep : null,
-            CutFruitPrice    = dto.CutFruitPrice > 0 ? dto.CutFruitPrice : null
+            CutFruitPrice    = dto.CutFruitPrice > 0 ? dto.CutFruitPrice : null,
+            ShowInCatalog    = dto.ShowInCatalog
         };
 
         try { var id = await products.CreateAsync(entity); return Result<int>.Success(id); }
@@ -149,6 +151,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         existing.Description      = dto.Description?.Trim();
         existing.ShortDescription = dto.ShortDescription?.Trim();
         existing.Price            = dto.Price;
+        existing.Mrp              = dto.Mrp > 0 ? dto.Mrp : null;
         existing.Unit             = dto.Unit.Trim();
         existing.Stock            = dto.Stock;
         existing.IsAvailable      = dto.IsAvailable;
@@ -159,6 +162,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         existing.MinOrderGrams    = dto.MinOrderGrams > 0 ? dto.MinOrderGrams : null;
         existing.GramStep         = dto.GramStep > 0 ? dto.GramStep : null;
         existing.CutFruitPrice    = dto.CutFruitPrice > 0 ? dto.CutFruitPrice : null;
+        existing.ShowInCatalog    = dto.ShowInCatalog;
 
         try { await products.UpdateAsync(existing); return Result.Success(); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
@@ -195,20 +199,21 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
     {
         Id = p.Id, CategoryId = p.CategoryId, CategoryName = p.CategoryName,
         Name = p.Name, Slug = p.Slug, Description = p.Description,
-        ShortDescription = p.ShortDescription, Price = p.Price, Unit = p.Unit,
+        ShortDescription = p.ShortDescription, Price = p.Price, Mrp = p.Mrp, Unit = p.Unit,
         Stock = p.Stock, IsAvailable = p.IsAvailable, IsFeatured = p.IsFeatured,
         ImageUrl = p.ImageUrl, Tags = p.Tags, DisplayOrder = p.DisplayOrder,
         MinOrderGrams = p.MinOrderGrams, GramStep = p.GramStep, CutFruitPrice = p.CutFruitPrice,
-        CreatedAt = p.CreatedAt, UpdatedAt = p.UpdatedAt
+        ShowInCatalog = p.ShowInCatalog, CreatedAt = p.CreatedAt, UpdatedAt = p.UpdatedAt
     };
 
     private static ProductSummaryDto MapSummary(Product p) => new()
     {
         Id = p.Id, CategoryId = p.CategoryId, CategoryName = p.CategoryName,
         Name = p.Name, Slug = p.Slug, ShortDescription = p.ShortDescription,
-        Price = p.Price, Unit = p.Unit, Stock = p.Stock,
+        Price = p.Price, Mrp = p.Mrp, Unit = p.Unit, Stock = p.Stock,
         IsAvailable = p.IsAvailable, IsFeatured = p.IsFeatured,
         ImageUrl = p.ImageUrl, Tags = p.Tags, DisplayOrder = p.DisplayOrder,
-        MinOrderGrams = p.MinOrderGrams, GramStep = p.GramStep, CutFruitPrice = p.CutFruitPrice
+        MinOrderGrams = p.MinOrderGrams, GramStep = p.GramStep, CutFruitPrice = p.CutFruitPrice,
+        ShowInCatalog = p.ShowInCatalog
     };
 }

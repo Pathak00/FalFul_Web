@@ -109,6 +109,24 @@
   line-height: 1.6;
 }
 
+.detail-price-block {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.detail-price-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
 .detail-price-row {
   display: flex;
   align-items: baseline;
@@ -125,6 +143,25 @@
 .detail-unit {
   font-size: .9rem;
   color: #94a3b8;
+}
+
+.detail-price-meta {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.detail-mrp {
+  font-size: .9rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  text-decoration-color: #cbd5e1;
+}
+
+.detail-save {
+  font-size: .85rem;
+  font-weight: 700;
+  color: #16a34a;
 }
 
 .detail-avail {

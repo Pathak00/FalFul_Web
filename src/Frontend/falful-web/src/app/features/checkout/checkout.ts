@@ -4,11 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
+import { PaymentService } from '../../core/services/payment.service';
+import { DiscountService } from '../../core/services/discount.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PermissionService } from '../../core/services/permission.service';
 import {
   Address, CheckoutConfig, PriceRule, PlaceOrderRequest, PAYMENT_METHODS
 } from '../../core/models/order.models';
+import { PaymentMethodDto, PaymentSettingsDto, InitiatePaymentDto } from '../../core/models/payment.models';
 
 // ── Nepal time helpers ────────────────────────────────────────────────────────
 
@@ -249,24 +252,76 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
             <!-- Payment -->
             <section class="co-section">
               <h3><i class="bi bi-credit-card"></i> Payment Method</h3>
-              <div class="payment-options">
-                @for (pm of paymentMethods; track pm.value) {
-                  <label class="payment-card" [class.selected]="form.paymentMethod === pm.value">
-                    <input type="radio" name="payment" [value]="pm.value" [(ngModel)]="form.paymentMethod" />
-                    <i class="bi {{ pm.icon }}"></i>
-                    <span>{{ pm.label }}</span>
-                    @if (pm.value !== 1) {
-                      <span class="soon-tag">Soon</span>
-                    }
-                  </label>
+              @if (paymentMethodsLoading()) {
+                <div style="color:#94a3b8;font-size:.875rem"><i class="bi bi-arrow-repeat spin"></i> Loading methods…</div>
+              } @else if (paymentMethods().length === 0) {
+                <p style="color:#dc2626;font-size:.875rem">No payment methods available. Please contact support.</p>
+              } @else {
+                <div class="payment-options">
+                  @for (pm of paymentMethods(); track pm.id) {
+                    <label class="payment-card" [class.selected]="form.paymentMethodId === pm.id">
+                      <input type="radio" name="payment" [value]="pm.id" [(ngModel)]="form.paymentMethodId" (change)="onPaymentMethodChange()" />
+                      <i class="bi {{ methodIcon(pm.code) }}"></i>
+                      <span>{{ pm.name }}</span>
+                      @if (pm.description) {
+                        <span class="pm-desc">{{ pm.description }}</span>
+                      }
+                    </label>
+                  }
+                </div>
+
+                <!-- Advance method selector: shown when COD selected + advance enabled + order meets threshold -->
+                @if (showAdvanceMethodSelector()) {
+                  <div class="advance-selector">
+                    <p class="advance-note">
+                      <i class="bi bi-info-circle"></i>
+                      Advance payment required: <strong>Rs. {{ advanceAmount() | number:'1.0-0' }}</strong>
+                      ({{ paymentSettings()!.advancePercent }}% of order). Select an online method for the advance:
+                    </p>
+                    <div class="payment-options" style="margin-top:.5rem">
+                      @for (pm of onlinePaymentMethods(); track pm.id) {
+                        <label class="payment-card payment-card-sm" [class.selected]="form.advanceMethodId === pm.id">
+                          <input type="radio" name="advance-payment" [value]="pm.id" [(ngModel)]="form.advanceMethodId" />
+                          <i class="bi {{ methodIcon(pm.code) }}"></i>
+                          <span>{{ pm.name }}</span>
+                        </label>
+                      }
+                    </div>
+                  </div>
                 }
-              </div>
+              }
             </section>
 
             <!-- Notes -->
             <section class="co-section">
               <h3><i class="bi bi-chat-text"></i> Order Notes (optional)</h3>
               <textarea [(ngModel)]="form.notes" rows="2" placeholder="Special instructions..."></textarea>
+            </section>
+
+            <!-- Discount Code -->
+            <section class="co-section">
+              <h3><i class="bi bi-tag"></i> Discount Code</h3>
+              @if (appliedCode()) {
+                <div class="discount-applied">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span><strong>{{ appliedCode() }}</strong> — Rs. {{ appliedDiscount() | number:'1.0-0' }} off applied!</span>
+                  <button class="discount-remove" (click)="removeDiscount()"><i class="bi bi-x-lg"></i></button>
+                </div>
+              } @else {
+                <div class="discount-row">
+                  <input type="text" [ngModel]="discountInput()" (ngModelChange)="discountInput.set($event)"
+                         placeholder="Enter discount code" (keydown.enter)="applyDiscount()" />
+                  <button class="btn-apply" (click)="applyDiscount()" [disabled]="discountApplying()">
+                    @if (discountApplying()) { <span class="spinner-xs"></span> } @else { Apply }
+                  </button>
+                </div>
+                @if (discountMsg()) {
+                  <p class="discount-msg" [class.discount-msg-ok]="discountSuccess()" [class.discount-msg-err]="!discountSuccess()">
+                    <i class="bi {{ discountSuccess() ? 'bi-check-circle' : 'bi-exclamation-circle' }}"></i>
+                    {{ discountMsg() }}
+                  </p>
+                }
+              }
             </section>
           </div>
 
@@ -300,11 +355,33 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
                   <span>Rs. {{ serviceFeeAmt() | number:'1.0-0' }}</span>
                 </div>
               }
+              @if (appliedDiscount() > 0) {
+                <div class="st-row st-discount">
+                  <span><i class="bi bi-tag-fill"></i> Discount ({{ appliedCode() }})</span>
+                  <span>− Rs. {{ appliedDiscount() | number:'1.0-0' }}</span>
+                </div>
+              }
               <div class="st-row total">
                 <span>Total</span>
                 <span>Rs. {{ totalAmount() | number:'1.0-0' }}</span>
               </div>
             </div>
+
+            <!-- Advance breakdown when applicable -->
+            @if (showAdvanceMethodSelector() && advanceAmount() > 0) {
+              <div class="advance-breakdown">
+                <div class="ab-row ab-now">
+                  <i class="bi bi-lightning-charge-fill"></i>
+                  <span>Pay now (advance)</span>
+                  <span class="ab-amt">Rs. {{ advanceAmount() | number:'1.0-0' }}</span>
+                </div>
+                <div class="ab-row ab-later">
+                  <i class="bi bi-house-door"></i>
+                  <span>Pay on delivery</span>
+                  <span class="ab-amt">Rs. {{ (totalAmount() - advanceAmount()) | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            }
 
             @if (error()) {
               <div class="co-error"><i class="bi bi-exclamation-circle"></i> {{ error() }}</div>
@@ -387,6 +464,8 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 export class CheckoutComponent implements OnInit {
   readonly cart       = inject(CartService);
   private orderSvc    = inject(OrderService);
+  private paySvc      = inject(PaymentService);
+  private discountSvc = inject(DiscountService);
   private authSvc     = inject(AuthService);
   private permSvc     = inject(PermissionService);
   private router      = inject(Router);
@@ -396,7 +475,10 @@ export class CheckoutComponent implements OnInit {
 
   authGateModal = signal<'none' | 'unauthenticated' | 'non-customer'>('none');
 
-  addresses         = signal<Address[]>([]);
+  addresses              = signal<Address[]>([]);
+  paymentMethods         = signal<PaymentMethodDto[]>([]);
+  paymentSettings        = signal<PaymentSettingsDto | null>(null);
+  paymentMethodsLoading  = signal(true);
   selectedAddressId = signal<number | null>(null);
   selectedAddrId    = 0;
   useManual         = signal(false);
@@ -473,9 +555,20 @@ export class CheckoutComponent implements OnInit {
   readonly effectiveDeliveryFee = computed(() =>
     this.freeAbove() > 0 && this.cart.subTotal() >= this.freeAbove() ? 0 : this.deliveryFee()
   );
-  readonly totalAmount = computed(() =>
+  readonly preTotalAmount = computed(() =>
     this.cart.subTotal() + this.effectiveDeliveryFee() + this.serviceFeeAmt()
   );
+  readonly totalAmount = computed(() =>
+    Math.max(0, this.preTotalAmount() - this.appliedDiscount())
+  );
+
+  // ── Discount ──────────────────────────────────────────────────────────────
+  discountInput   = signal('');
+  discountMsg     = signal('');
+  discountSuccess = signal(false);
+  appliedDiscount = signal(0);
+  appliedCode     = signal('');
+  discountApplying = signal(false);
 
   form = {
     fullAddress:      '',
@@ -484,15 +577,31 @@ export class CheckoutComponent implements OnInit {
     landmark:         '',
     deliveryDate:     '',
     deliveryTimeSlot: '',
-    paymentMethod:    1,
+    paymentMethodId:  0,
+    advanceMethodId:  undefined as number | undefined,
     notes:            '',
   };
 
-  readonly paymentMethods = [
-    { value: 1, label: 'Cash on Delivery', icon: 'bi-cash-stack' },
-    { value: 2, label: 'eSewa',            icon: 'bi-phone' },
-    { value: 3, label: 'Khalti',           icon: 'bi-phone-fill' },
-  ];
+  readonly onlinePaymentMethods = computed(() =>
+    this.paymentMethods().filter(m => m.code !== 'cod')
+  );
+
+  readonly selectedMethod = computed(() =>
+    this.paymentMethods().find(m => m.id === this.form.paymentMethodId) ?? null
+  );
+
+  readonly advanceAmount = computed(() => {
+    const settings = this.paymentSettings();
+    if (!settings?.advanceEnabled) return 0;
+    const total = this.totalAmount();
+    if (total < settings.minAdvanceAmount) return 0;
+    return Math.round(total * settings.advancePercent / 100);
+  });
+
+  readonly showAdvanceMethodSelector = computed(() => {
+    const method = this.selectedMethod();
+    return method?.code === 'cod' && this.advanceAmount() > 0;
+  });
 
   get minDate(): string {
     // Only past dates are disabled — today and all future dates are always allowed.
@@ -521,6 +630,21 @@ export class CheckoutComponent implements OnInit {
 
     this.orderSvc.getSetting('cancellation_policy_text').subscribe({
       next: s => this.cancelPolicy.set(s.value),
+      error: () => {}
+    });
+
+    this.paySvc.getEnabledMethods().subscribe({
+      next: list => {
+        this.paymentMethods.set(list);
+        this.paymentMethodsLoading.set(false);
+        if (list.length > 0 && this.form.paymentMethodId === 0)
+          this.form.paymentMethodId = list[0].id;
+      },
+      error: () => this.paymentMethodsLoading.set(false),
+    });
+
+    this.paySvc.getPaymentSettings().subscribe({
+      next: s => this.paymentSettings.set(s),
       error: () => {}
     });
 
@@ -597,6 +721,48 @@ export class CheckoutComponent implements OnInit {
     );
   }
 
+  onPaymentMethodChange(): void {
+    this.form.advanceMethodId = undefined;
+  }
+
+  applyDiscount(): void {
+    const code = this.discountInput().trim();
+    if (!code) { this.discountMsg.set('Enter a discount code.'); this.discountSuccess.set(false); return; }
+    this.discountApplying.set(true);
+    this.discountMsg.set('');
+    this.discountSvc.validateCode(code, this.preTotalAmount()).subscribe({
+      next: res => {
+        this.discountApplying.set(false);
+        this.discountMsg.set(res.message);
+        this.discountSuccess.set(res.isValid);
+        if (res.isValid) {
+          this.appliedDiscount.set(res.discountAmount);
+          this.appliedCode.set(code.toUpperCase());
+        } else {
+          this.appliedDiscount.set(0);
+          this.appliedCode.set('');
+        }
+      },
+      error: () => {
+        this.discountApplying.set(false);
+        this.discountMsg.set('Failed to validate code. Try again.');
+        this.discountSuccess.set(false);
+      }
+    });
+  }
+
+  removeDiscount(): void {
+    this.appliedDiscount.set(0);
+    this.appliedCode.set('');
+    this.discountInput.set('');
+    this.discountMsg.set('');
+    this.discountSuccess.set(false);
+  }
+
+  methodIcon(code: string): string {
+    return { cod: 'bi-cash-stack', esewa: 'bi-phone', khalti: 'bi-phone-fill' }[code] ?? 'bi-credit-card';
+  }
+
   resetLocation(): void {
     this.locationStatus.set('idle');
     this.userLatitude.set(null);
@@ -671,6 +837,7 @@ export class CheckoutComponent implements OnInit {
     if (!this.form.deliveryPhone.trim())  { this.error.set('Phone number is required.'); return; }
     if (!this.form.deliveryDate)          { this.error.set('Delivery date is required.'); return; }
     if (!this.form.deliveryTimeSlot)      { this.error.set('Delivery time slot is required.'); return; }
+    if (this.form.paymentMethodId === 0)  { this.error.set('Please select a payment method.'); return; }
 
     const cfg = this.checkoutConfig();
     if (this.hasCutFruits() && cfg && cfg.cutFruitRadiusKm > 0) {
@@ -687,6 +854,9 @@ export class CheckoutComponent implements OnInit {
       }
     }
 
+    const method = this.selectedMethod();
+    if (!method) { this.error.set('Please select a payment method.'); return; }
+
     const dto: PlaceOrderRequest = {
       deliveryAddressId: this.selectedAddressId() ?? 0,
       fullAddress:       this.form.fullAddress,
@@ -695,7 +865,8 @@ export class CheckoutComponent implements OnInit {
       landmark:          this.form.landmark || undefined,
       deliveryDate:      this.form.deliveryDate,
       deliveryTimeSlot:  this.form.deliveryTimeSlot,
-      paymentMethod:     this.form.paymentMethod,
+      paymentMethod:     this.form.paymentMethodId,
+      discountCode:      this.appliedCode() || undefined,
       notes:             this.form.notes || undefined,
       deliveryLatitude:  this.userLatitude() ?? undefined,
       deliveryLongitude: this.userLongitude() ?? undefined,
@@ -716,13 +887,63 @@ export class CheckoutComponent implements OnInit {
     this.placing.set(true);
     this.orderSvc.placeOrder(dto).subscribe({
       next: res => {
-        this.cart.clearCart();
-        this.router.navigate(['/orders'], { queryParams: { placed: res.orderNumber } });
+        const orderId     = (res as { orderId: number; orderNumber: string }).orderId;
+        const orderNumber = (res as { orderId: number; orderNumber: string }).orderNumber;
+
+        const baseUrl  = window.location.origin;
+        const payDto: InitiatePaymentDto = {
+          paymentMethodId: this.form.paymentMethodId,
+          advanceMethodId: this.form.advanceMethodId,
+          returnUrl:       `${baseUrl}/payment/callback?gateway=${method.code}`,
+          failureUrl:      `${baseUrl}/payment/callback?gateway=${method.code}&failed=1`,
+        };
+
+        this.paySvc.initiatePayment(orderId, payDto).subscribe({
+          next: payResult => {
+            this.cart.clearCart();
+            if (!payResult.requiresRedirect) {
+              // COD no advance — go straight to orders
+              this.router.navigate(['/orders'], { queryParams: { placed: orderNumber } });
+              return;
+            }
+            // eSewa: formFields means a browser form POST
+            if (payResult.formFields && payResult.redirectUrl) {
+              this.submitGatewayForm(payResult.redirectUrl, payResult.formFields);
+            } else if (payResult.redirectUrl) {
+              // Khalti: direct redirect
+              window.location.href = payResult.redirectUrl;
+            } else {
+              this.router.navigate(['/orders'], { queryParams: { placed: orderNumber } });
+            }
+          },
+          error: e => {
+            // Order placed but payment initiation failed — still go to orders
+            this.cart.clearCart();
+            this.error.set(e.error?.message ?? 'Order placed but payment initiation failed.');
+            this.placing.set(false);
+            this.router.navigate(['/orders'], { queryParams: { placed: orderNumber } });
+          }
+        });
       },
       error: e => {
         this.error.set(e.error?.message ?? 'Failed to place order. Please try again.');
         this.placing.set(false);
       }
     });
+  }
+
+  private submitGatewayForm(action: string, fields: Record<string, string>): void {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = action;
+    Object.entries(fields).forEach(([key, value]) => {
+      const input = document.createElement('input');
+      input.type  = 'hidden';
+      input.name  = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
   }
 }

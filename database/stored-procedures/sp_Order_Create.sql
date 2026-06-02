@@ -1,11 +1,13 @@
-﻿SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON
 GO
 CREATE OR ALTER PROCEDURE sp_Order_Create
     @UserId            INT,
     @SubTotal          DECIMAL(10,2),
     @DeliveryFee       DECIMAL(10,2),
     @ServiceFee        DECIMAL(10,2),
+    @DiscountAmount    DECIMAL(10,2) = 0,
     @TotalAmount       DECIMAL(10,2),
+    @DiscountCode      NVARCHAR(50)  = NULL,
     @PaymentMethod     TINYINT,
     @DeliveryAddressId INT           = NULL,
     @FullAddress       NVARCHAR(300),
@@ -27,13 +29,13 @@ BEGIN
     DECLARE @OrderNumber NVARCHAR(20);
 
     INSERT INTO Orders (UserId, OrderNumber, Status, SubTotal, DeliveryFee, ServiceFee,
-                        TotalAmount, PaymentMethod, PaymentStatus, DeliveryAddressId,
-                        FullAddress, City, DeliveryPhone, AddressLabel, Landmark,
+                        DiscountCode, DiscountAmount, TotalAmount, PaymentMethod, PaymentStatus,
+                        DeliveryAddressId, FullAddress, City, DeliveryPhone, AddressLabel, Landmark,
                         DeliveryDate, DeliveryTimeSlot, Notes,
                         DeliveryLatitude, DeliveryLongitude)
     VALUES (@UserId, 'TEMP', 1, @SubTotal, @DeliveryFee, @ServiceFee,
-            @TotalAmount, @PaymentMethod, 1, @DeliveryAddressId,
-            @FullAddress, @City, @DeliveryPhone, @AddressLabel, @Landmark,
+            @DiscountCode, @DiscountAmount, @TotalAmount, @PaymentMethod, 1,
+            @DeliveryAddressId, @FullAddress, @City, @DeliveryPhone, @AddressLabel, @Landmark,
             @DeliveryDate, @DeliveryTimeSlot, @Notes,
             @DeliveryLatitude, @DeliveryLongitude);
 
@@ -44,4 +46,3 @@ BEGIN
 
     SELECT @NewId AS Id, @OrderNumber AS OrderNumber;
 END
-

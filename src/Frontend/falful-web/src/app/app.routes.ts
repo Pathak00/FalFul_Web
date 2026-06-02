@@ -44,6 +44,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/build-your-bowl/build-your-bowl').then(m => m.BuildYourBowlComponent)
       },
       {
+        path: 'notices',
+        loadComponent: () => import('./features/notices/notices-page').then(m => m.NoticesPageComponent)
+      },
+      {
         /* Everyone can browse checkout; auth + role enforced at "Place Order" by the API */
         path: 'checkout',
         loadComponent: () => import('./features/checkout/checkout').then(m => m.CheckoutComponent)
@@ -54,9 +58,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/orders/order-list/order-list').then(m => m.OrderListComponent)
       },
       {
+        path: 'payment/callback',
+        loadComponent: () => import('./features/payment-callback/payment-callback').then(m => m.PaymentCallbackComponent)
+      },
+      {
         path: 'orders/:id',
         canActivate: [authGuard],
         loadComponent: () => import('./features/orders/order-detail/order-detail').then(m => m.OrderDetailComponent)
+      },
+      {
+        path: 'orders/:id/receipt',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/orders/receipt/receipt').then(m => m.ReceiptPrintComponent)
       }
     ]
   },
@@ -78,31 +91,51 @@ export const routes: Routes = [
       { path: 'orders',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
       { path: 'deliveries',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/deliveries/admin-deliveries').then(m => m.AdminDeliveriesComponent) },
       { path: 'reports',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
+      { path: 'payments',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/payments/admin-payments').then(m => m.AdminPaymentsComponent) },
       { path: 'price-config', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
       { path: 'settings',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
       { path: 'nav',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
+      { path: 'discounts',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
+      { path: 'notices',            canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
+      { path: 'receipt-templates',  canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-templates').then(m => m.AdminReceiptTemplatesComponent) },
+      { path: 'receipt-logs',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-logs').then(m => m.AdminReceiptLogsComponent) },
       { path: '', loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent) }
     ]
   },
 
   /* ── Rider portal ────────────────────────────────────────────────────────── */
+  /* Every admin feature route is mirrored here under /rider/* so that any
+   * permission granted to a rider role (via Roles & Permissions) automatically
+   * has a working route. The dynamicNavGuard normalises /rider/* → /admin/*
+   * before looking up the RequiredPermission, so access control is enforced
+   * identically. Adding new admin features only requires registering the route
+   * once in the admin section above — copy it here too. */
   {
     path: 'rider',
     canActivate: [authGuard, riderGuard],
     loadComponent: () => import('./features/rider/rider-layout').then(m => m.RiderLayoutComponent),
     children: [
-      { path: 'deliveries',   loadComponent: () => import('./features/rider/rider-deliveries').then(m => m.RiderDeliveriesComponent) },
-      { path: 'orders',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
-      { path: 'products',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent) },
-      { path: 'categories',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/categories/admin-categories').then(m => m.AdminCategoriesComponent) },
-      { path: 'reports',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
-      { path: 'users',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent) },
-      { path: 'settings',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
-      { path: 'price-config', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
-      { path: 'menus',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/menus/admin-menus').then(m => m.AdminMenusComponent) },
-      { path: 'pages',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent) },
-      { path: 'banners',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/banners/admin-banners').then(m => m.AdminBannersComponent) },
-      { path: 'sections',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent) },
+      // Rider-specific delivery view (replaces admin-deliveries for riders)
+      { path: 'deliveries',        loadComponent: () => import('./features/rider/rider-deliveries').then(m => m.RiderDeliveriesComponent) },
+      // All admin features — guarded by dynamicNavGuard (checks permission via /admin/* mapping)
+      { path: 'orders',            canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
+      { path: 'products',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent) },
+      { path: 'categories',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/categories/admin-categories').then(m => m.AdminCategoriesComponent) },
+      { path: 'reports',           canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
+      { path: 'payments',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/payments/admin-payments').then(m => m.AdminPaymentsComponent) },
+      { path: 'discounts',         canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
+      { path: 'notices',           canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
+      { path: 'users',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent) },
+      { path: 'roles',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/roles/admin-roles').then(m => m.AdminRolesComponent) },
+      { path: 'settings',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
+      { path: 'price-config',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
+      { path: 'menus',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/menus/admin-menus').then(m => m.AdminMenusComponent) },
+      { path: 'pages',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent) },
+      { path: 'banners',           canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/banners/admin-banners').then(m => m.AdminBannersComponent) },
+      { path: 'sections',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent) },
+      { path: 'nav',               canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
+      { path: 'receipt-templates', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-templates').then(m => m.AdminReceiptTemplatesComponent) },
+      { path: 'receipt-logs',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-logs').then(m => m.AdminReceiptLogsComponent) },
       { path: '', redirectTo: 'deliveries', pathMatch: 'full' }
     ]
   },

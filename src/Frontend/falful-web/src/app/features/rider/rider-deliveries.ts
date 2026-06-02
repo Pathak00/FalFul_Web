@@ -2,6 +2,10 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RiderService } from '../../core/services/rider.service';
+import { ReceiptService } from '../../core/services/receipt.service';
+import { ToastService } from '../../core/services/toast.service';
+import { ApiService } from '../../core/services/api.service';
+import { environment } from '../../../environments/environment';
 
 const STATUS_LABELS: Record<number, string> = {
   1: 'Awaiting Rider',
@@ -108,7 +112,7 @@ interface BowlDetails {
                     </button>
                   }
                   @if (d.status === 4) {
-                    <button class="btn-action btn-delivered" (click)="quickStatus(d.id, 5)">
+                    <button class="btn-action btn-delivered" (click)="openComplete(d)">
                       Mark Delivered
                     </button>
                     <button class="btn-action btn-attempt" (click)="openAttempt(d)">
@@ -142,7 +146,12 @@ interface BowlDetails {
               </div>
 
               <div class="card-footer">
-                <span class="amount">Rs {{ d.totalAmount | number }}</span>
+                <div class="footer-amounts">
+                  <span class="amount">Rs {{ d.remainingBalance | number:'1.0-0' }}</span>
+                  @if (d.advanceAmount > 0) {
+                    <span class="advance-note">to collect · Rs {{ d.advanceAmount | number:'1.0-0' }} advance paid</span>
+                  }
+                </div>
                 <span class="payment">{{ d.paymentMethod ?? 'Cash on Delivery' }}</span>
               </div>
             </div>
@@ -289,6 +298,98 @@ interface BowlDetails {
 
           <div class="modal-actions">
             <button class="btn-secondary" (click)="detail.set(null)">Close</button>
+            @if (detail()!.status === 5) {
+              <button class="btn-primary btn-receipt"
+                      (click)="printReceipt(detail()!.orderId)"
+                      [disabled]="printingReceiptId() === detail()!.orderId">
+                @if (printingReceiptId() === detail()!.orderId) {
+                  <span class="spinner-xs"></span> Loading…
+                } @else {
+                  <i class="bi bi-printer"></i> Print Receipt
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delivery Completion Modal -->
+    @if (completeTarget()) {
+      <div class="modal-overlay" (click)="completeTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Complete Delivery</h2>
+              <p class="modal-sub">#{{ completeTarget()!.orderNumber }}</p>
+            </div>
+            <button class="btn-close" (click)="completeTarget.set(null)">✕</button>
+          </div>
+
+          <div class="collect-banner">
+            <div class="collect-label">Amount to Collect</div>
+            <div class="collect-amount">Rs {{ completeTarget()!.remainingBalance | number:'1.0-0' }}</div>
+            @if (completeTarget()!.advanceAmount > 0) {
+              <div class="collect-note">Advance of Rs {{ completeTarget()!.advanceAmount | number:'1.0-0' }} already paid</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Collected Amount (Rs) *</label>
+            <input type="number" [(ngModel)]="completeForm.collectedAmount"
+                   [placeholder]="completeTarget()!.remainingBalance" min="0" step="1" />
+          </div>
+
+          <div class="form-group">
+            <label>Proof of Delivery (optional)</label>
+
+            @if (completeForm.proofPhotoUrl) {
+              <div class="proof-preview">
+                @if (isPdfProof(completeForm.proofPhotoUrl)) {
+                  <div class="proof-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> File attached</div>
+                } @else {
+                  <img [src]="completeForm.proofPhotoUrl" alt="Proof of delivery" />
+                }
+                <button type="button" class="proof-remove" (click)="removeProof()" title="Remove">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </div>
+            } @else if (uploadingProof()) {
+              <div class="proof-uploading"><span class="proof-spinner"></span> Uploading…</div>
+            } @else {
+              <div class="proof-actions">
+                <button type="button" class="proof-btn" (click)="proofCamera.click()">
+                  <i class="bi bi-camera-fill"></i> Take Photo
+                </button>
+                <button type="button" class="proof-btn" (click)="proofFile.click()">
+                  <i class="bi bi-upload"></i> Upload File
+                </button>
+              </div>
+              <span class="proof-hint">Photo or file showing the delivered order (optional).</span>
+            }
+
+            <!-- Hidden inputs: camera uses capture; upload allows image or PDF -->
+            <input #proofCamera type="file" accept="image/*" capture="environment"
+                   class="proof-input-hidden" (change)="onProofSelected($event)" />
+            <input #proofFile type="file" accept="image/*,.pdf"
+                   class="proof-input-hidden" (change)="onProofSelected($event)" />
+          </div>
+
+          <div class="form-group">
+            <label>Remarks (optional)</label>
+            <textarea [(ngModel)]="completeForm.collectionRemarks" rows="2"
+                      placeholder="Any notes about the delivery or collection…"></textarea>
+          </div>
+
+          @if (completeError()) {
+            <div class="form-error">{{ completeError() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="completeTarget.set(null)">Cancel</button>
+            <button class="btn-primary btn-green" (click)="submitComplete()" [disabled]="completeSaving()">
+              {{ completeSaving() ? 'Saving…' : 'Confirm Delivery' }}
+            </button>
           </div>
         </div>
       </div>
@@ -520,15 +621,90 @@ interface BowlDetails {
         justify-content: space-between;
         padding: 0.5rem 1rem;
         border-top: 1px solid #f1f5f9;
+        .footer-amounts { display: flex; flex-direction: column; gap: 0.1rem; }
         .amount {
           font-weight: 700;
           font-size: 0.95rem;
           color: #0f172a;
         }
+        .advance-note { font-size: 0.68rem; color: #94a3b8; }
         .payment {
           font-size: 0.75rem;
           color: #64748b;
         }
+      }
+
+      .collect-banner {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+      .collect-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #16a34a; margin-bottom: 0.2rem; }
+      .collect-amount { font-size: 1.5rem; font-weight: 800; color: #15803d; }
+      .collect-note { font-size: 0.72rem; color: #6b7280; margin-top: 0.2rem; }
+
+      .form-group input[type=number],
+      .form-group input[type=url] {
+        width: 100%;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        outline: none;
+        box-sizing: border-box;
+      }
+      .btn-green {
+        background: #16a34a;
+      }
+
+      /* Proof of delivery */
+      .proof-input-hidden { display: none; }
+      .proof-actions { display: flex; gap: .5rem; margin-bottom: .35rem; }
+      .proof-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center; gap: .35rem;
+        padding: .5rem .75rem;
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+        &:hover { border-color: #94a3b8; background: #f1f5f9; }
+      }
+      .proof-hint { font-size: .72rem; color: #94a3b8; }
+      .proof-uploading {
+        display: flex; align-items: center; gap: .5rem;
+        font-size: .82rem; color: #64748b; padding: .5rem 0;
+      }
+      .proof-spinner {
+        display: inline-block; width: 14px; height: 14px;
+        border: 2px solid #e2e8f0; border-top-color: #3b82f6;
+        border-radius: 50%; animation: spin .7s linear infinite;
+      }
+      .proof-preview {
+        position: relative; border-radius: 8px; overflow: hidden;
+        border: 1.5px solid #e2e8f0;
+        img { width: 100%; display: block; max-height: 200px; object-fit: cover; }
+      }
+      .proof-pdf {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .75rem 1rem; background: #fef9c3; color: #713f12;
+        font-size: .85rem; font-weight: 600;
+        i { font-size: 1.25rem; color: #dc2626; }
+      }
+      .proof-remove {
+        position: absolute; top: .4rem; right: .4rem;
+        background: rgba(0,0,0,.55); border: none; border-radius: 50%;
+        color: #fff; font-size: 1rem; line-height: 1;
+        width: 24px; height: 24px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        &:hover { background: rgba(0,0,0,.75); }
       }
 
       .badge {
@@ -675,6 +851,20 @@ interface BowlDetails {
         cursor: pointer;
         font-size: 0.875rem;
       }
+      .btn-receipt {
+        background: #f0fdf4;
+        color: #16a34a;
+        border-color: #bbf7d0;
+        &:hover:not(:disabled) { background: #dcfce7; }
+      }
+      .spinner-xs {
+        display: inline-block;
+        width: 12px; height: 12px;
+        border: 2px solid #bbf7d0;
+        border-top-color: #16a34a;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
       .form-error {
         color: #dc2626;
         font-size: 0.8rem;
@@ -789,6 +979,9 @@ interface BowlDetails {
 })
 export class RiderDeliveriesComponent implements OnInit {
   private riderService = inject(RiderService);
+  private receiptSvc   = inject(ReceiptService);
+  private toast        = inject(ToastService);
+  private api          = inject(ApiService);
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_BADGE = STATUS_BADGE;
@@ -800,6 +993,13 @@ export class RiderDeliveriesComponent implements OnInit {
   loading = signal(true);
 
   detail = signal<any>(null);
+  printingReceiptId = signal<number | null>(null);
+
+  completeTarget = signal<any>(null);
+  completeSaving = signal(false);
+  completeError = signal('');
+  uploadingProof = signal(false);
+  completeForm = this.emptyCompleteForm();
 
   attemptTarget = signal<any>(null);
   attemptSaving = signal(false);
@@ -829,6 +1029,61 @@ export class RiderDeliveriesComponent implements OnInit {
     this.riderService.getDeliveryDetail(id).subscribe({
       next: d => this.detail.set(d),
     });
+  }
+
+  printReceipt(orderId: number) {
+    const win = window.open('', '_blank');
+    if (!win) { this.toast.warn('Allow popups to print receipts.'); return; }
+    this.printingReceiptId.set(orderId);
+    this.receiptSvc.adminGetReceipt(orderId).subscribe({
+      next: r => {
+        this.printingReceiptId.set(null);
+        const html = r.html.replace(
+          '</body>',
+          `<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</script></body>`
+        );
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      },
+      error: () => {
+        this.printingReceiptId.set(null);
+        win.close();
+        this.toast.error('Could not load receipt.');
+      }
+    });
+  }
+
+  openComplete(d: any) {
+    this.completeTarget.set(d);
+    this.completeForm = { collectedAmount: d.remainingBalance, proofPhotoUrl: '', collectionRemarks: '' };
+    this.completeError.set('');
+  }
+
+  submitComplete() {
+    const f = this.completeForm;
+    if (f.collectedAmount < 0) {
+      this.completeError.set('Collected amount cannot be negative.');
+      return;
+    }
+    this.completeSaving.set(true);
+    this.riderService
+      .completeDelivery(this.completeTarget()!.id, {
+        collectedAmount: f.collectedAmount,
+        proofPhotoUrl: f.proofPhotoUrl || undefined,
+        collectionRemarks: f.collectionRemarks || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.completeSaving.set(false);
+          this.completeTarget.set(null);
+          this.load();
+        },
+        error: (e: any) => {
+          this.completeSaving.set(false);
+          this.completeError.set(e.error?.message ?? 'Failed to complete delivery.');
+        },
+      });
   }
 
   openAttempt(d: any) {
@@ -872,6 +1127,39 @@ export class RiderDeliveriesComponent implements OnInit {
 
   bowlTotalGrams(bowl: BowlDetails): number {
     return bowl.totalGrams ?? bowl.fruits.reduce((s, f) => s + f.grams, 0);
+  }
+
+  isPdfProof(url: string): boolean {
+    return url.toLowerCase().endsWith('.pdf');
+  }
+
+  removeProof() {
+    this.completeForm.proofPhotoUrl = '';
+  }
+
+  onProofSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+
+    const form = new FormData();
+    form.append('file', file);
+    this.uploadingProof.set(true);
+    this.api.upload<{ url: string }>('/api/upload', form).subscribe({
+      next: r => {
+        this.uploadingProof.set(false);
+        this.completeForm.proofPhotoUrl = environment.apiUrl + r.url;
+      },
+      error: () => {
+        this.uploadingProof.set(false);
+        this.toast.error('Upload failed. Please try again.');
+      },
+    });
+  }
+
+  private emptyCompleteForm() {
+    return { collectedAmount: 0, proofPhotoUrl: '', collectionRemarks: '' };
   }
 
   private emptyAttemptForm() {

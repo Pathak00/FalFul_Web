@@ -14,7 +14,11 @@ public class UtcDateTimeConverter : JsonConverter<DateTime>
         => reader.GetDateTime();
 
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
-        => writer.WriteStringValue(new DateTimeOffset(value, NepalOffset));
+    {
+        // DateTime.MinValue with a positive offset underflows DateTimeOffset; write ISO 8601 fallback.
+        try { writer.WriteStringValue(new DateTimeOffset(value, NepalOffset)); }
+        catch (ArgumentOutOfRangeException) { writer.WriteStringValue(value.ToString("o")); }
+    }
 }
 
 public class NullableUtcDateTimeConverter : JsonConverter<DateTime?>
@@ -26,7 +30,8 @@ public class NullableUtcDateTimeConverter : JsonConverter<DateTime?>
 
     public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
     {
-        if (value is null) writer.WriteNullValue();
-        else writer.WriteStringValue(new DateTimeOffset(value.Value, NepalOffset));
+        if (value is null) { writer.WriteNullValue(); return; }
+        try { writer.WriteStringValue(new DateTimeOffset(value.Value, NepalOffset)); }
+        catch (ArgumentOutOfRangeException) { writer.WriteStringValue(value.Value.ToString("o")); }
     }
 }

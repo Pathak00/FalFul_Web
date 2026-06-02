@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
+import { PaymentService } from '../../../core/services/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { OrderDetail, ORDER_STATUSES, DELIVERY_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
+import { PaymentDto } from '../../../core/models/payment.models';
+import { ReceiptService } from '../../../core/services/receipt.service';
 
 interface BowlDetails {
   container: string;
@@ -55,6 +58,21 @@ const DELIVERY_STEPS = [
             {{ orderStatusLabel(order()!.status) }}
           </span>
         </div>
+
+        <!-- Awaiting Payment banner -->
+        @if (order()!.status === 7) {
+          <div class="awaiting-payment-banner">
+            <i class="bi bi-clock-history"></i>
+            <div class="apb-body">
+              <strong>Payment Required</strong>
+              <p>Your order is on hold until the advance payment is completed.</p>
+            </div>
+            <button class="btn-pay-now" (click)="payNow()" [disabled]="payingNow()">
+              @if (payingNow()) { <i class="bi bi-arrow-repeat spin"></i> } @else { <i class="bi bi-credit-card"></i> }
+              {{ payingNow() ? 'Loading…' : 'Pay Now' }}
+            </button>
+          </div>
+        }
 
         <!-- Order Progress Timeline (active orders only) -->
         @if (order()!.status >= 1 && order()!.status <= 4) {
@@ -264,6 +282,15 @@ const DELIVERY_STEPS = [
               </div>
             }
 
+            <!-- Print receipt button (once delivered) -->
+            @if (order()!.delivery?.status === 5) {
+              <div class="od-card" style="padding:.75rem 1rem">
+                <button class="btn-print-receipt" (click)="openPrintReceipt()">
+                  <i class="bi bi-printer"></i> Print Receipt
+                </button>
+              </div>
+            }
+
             <!-- Rating section (delivered, not yet rated) -->
             @if (order()!.delivery?.status === 5 && !order()!.rating && !ratingSubmitted()) {
               <div class="od-card rating-card">
@@ -303,6 +330,10 @@ const DELIVERY_STEPS = [
                 </div>
                 <textarea [(ngModel)]="ratingForm.comment" placeholder="Leave a comment (optional)" rows="2"
                           style="width:100%;margin-top:.5rem;padding:.5rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem"></textarea>
+                <label class="ack-label">
+                  <input type="checkbox" [(ngModel)]="ratingForm.receiptAcknowledged" />
+                  <span>I have received the delivery receipt</span>
+                </label>
                 <button class="btn-submit-rating" (click)="submitRating()"
                         [disabled]="ratingForm.overallRating === 0 || submittingRating()">
                   @if (submittingRating()) { Submitting... } @else { Submit Rating }
@@ -335,21 +366,54 @@ const DELIVERY_STEPS = [
             <div class="ps-row"><span>Delivery Fee</span><span>Rs. {{ order()!.deliveryFee | number:'1.0-0' }}</span></div>
             <div class="ps-row"><span>Service Fee</span><span>Rs. {{ order()!.serviceFee | number:'1.0-0' }}</span></div>
             <div class="ps-row total"><span>Total</span><span>Rs. {{ order()!.totalAmount | number:'1.0-0' }}</span></div>
+            @if ((order()!.advanceAmount ?? 0) > 0) {
+              <div class="ps-row advance-row"><span><i class="bi bi-check-circle-fill" style="color:#22c55e;font-size:.75rem"></i> Advance Paid</span><span>Rs. {{ order()!.advanceAmount | number:'1.0-0' }}</span></div>
+              <div class="ps-row remaining-row"><span><i class="bi bi-hourglass-split" style="color:#f59e0b;font-size:.75rem"></i> On Delivery</span><span>Rs. {{ (order()!.totalAmount - order()!.advanceAmount) | number:'1.0-0' }}</span></div>
+            }
 
-            <div class="ps-payment-section">
-              <div class="ps-row">
-                <span>Method</span>
-                <span>{{ paymentMethodLabel(order()!.paymentMethod) }}</span>
+            <!-- Payment details (live from Payments table) -->
+            @if (payments().length > 0) {
+              <div class="ps-payment-section">
+                <p class="ps-section-title">Payment</p>
+                @for (p of payments(); track p.id) {
+                  <div class="payment-row">
+                    <div class="payment-row-left">
+                      <span class="payment-method-name">{{ p.paymentMethodName }}</span>
+                      @if (payments().length > 1) {
+                        <span class="payment-type-tag">{{ p.paymentTypeLabel }}</span>
+                      }
+                    </div>
+                    <div class="payment-row-right">
+                      <span class="payment-amount">Rs. {{ p.amount | number:'1.0-0' }}</span>
+                      <span class="pstatus-badge" [ngClass]="paymentStatusClass(p.status)">
+                        {{ p.statusLabel }}
+                      </span>
+                    </div>
+                  </div>
+                  @if (p.paidAt) {
+                    <div class="payment-paid-at">
+                      Paid {{ p.paidAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}
+                    </div>
+                  }
+                }
               </div>
-              <div class="ps-row">
-                <span>Payment</span>
-                <span class="pstatus-badge"
-                      [style.background]="paymentStatusColor(order()!) + '20'"
-                      [style.color]="paymentStatusColor(order()!)">
-                  {{ paymentStatusLabel(order()!) }}
-                </span>
+            } @else {
+              <!-- Fallback for legacy orders without payment records -->
+              <div class="ps-payment-section">
+                <div class="ps-row">
+                  <span>Method</span>
+                  <span>{{ paymentMethodLabel(order()!.paymentMethod) }}</span>
+                </div>
+                <div class="ps-row">
+                  <span>Payment</span>
+                  <span class="pstatus-badge"
+                        [style.background]="paymentStatusColor(order()!) + '20'"
+                        [style.color]="paymentStatusColor(order()!)">
+                    {{ paymentStatusLabel(order()!) }}
+                  </span>
+                </div>
               </div>
-            </div>
+            }
 
             @if (canCancel()) {
               <button class="btn-cancel" (click)="cancelModalOpen.set(true)" [disabled]="cancelling()">
@@ -393,6 +457,14 @@ const DELIVERY_STEPS = [
     .progress-section { margin-bottom: 1.5rem; }
     .ps-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 0 0 .75rem; }
 
+    .awaiting-payment-banner { display: flex; align-items: center; gap: .75rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: .875rem 1rem; margin-bottom: 1.5rem; }
+    .awaiting-payment-banner > i { font-size: 1.4rem; color: #f97316; flex-shrink: 0; }
+    .apb-body { flex: 1; strong { display: block; font-size: .875rem; color: #9a3412; } p { margin: .15rem 0 0; font-size: .8rem; color: #c2410c; } }
+    .btn-pay-now { background: #f97316; color: #fff; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: .85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: .35rem; white-space: nowrap; &:hover:not(:disabled) { background: #ea580c; } &:disabled { opacity: .6; cursor: not-allowed; } }
+
+    .advance-row { color: #16a34a; font-size: .8rem; gap: .35rem; }
+    .remaining-row { color: #b45309; font-size: .8rem; gap: .35rem; border-top: 1px dashed #e2e8f0; padding-top: .3rem; margin-top: .15rem; }
+
     .terminal-note { display: flex; align-items: center; gap: .5rem; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.5rem; font-size: .875rem; color: #dc2626; }
     .terminal-note.rejected { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
 
@@ -419,7 +491,20 @@ const DELIVERY_STEPS = [
     .bc-fee-row .bc-name { color: #6b7280; font-style: italic; }
 
     .ps-payment-section { border-top: 1px solid #f1f5f9; margin-top: .5rem; padding-top: .5rem; }
-    .pstatus-badge { display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+    .ps-section-title { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 0 0 .5rem; }
+    .pstatus-badge { display: inline-block; font-size: .68rem; font-weight: 700; padding: 1px 7px; border-radius: 10px; white-space: nowrap; }
+    .pstatus-pending   { background: #fff7ed; color: #ea580c; }
+    .pstatus-completed { background: #dcfce7; color: #16a34a; }
+    .pstatus-failed    { background: #fef2f2; color: #dc2626; }
+    .pstatus-refunded  { background: #f5f3ff; color: #7c3aed; }
+
+    .payment-row { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; padding: .3rem 0; }
+    .payment-row-left { display: flex; flex-direction: column; gap: .15rem; }
+    .payment-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; }
+    .payment-method-name { font-size: .8rem; font-weight: 600; color: #0f172a; }
+    .payment-type-tag { font-size: .65rem; background: #f1f5f9; color: #64748b; padding: 1px 6px; border-radius: 4px; width: fit-content; }
+    .payment-amount { font-size: .82rem; font-weight: 700; color: #0f172a; }
+    .payment-paid-at { font-size: .68rem; color: #9ca3af; padding-bottom: .35rem; text-align: right; }
 
     .attempts-list { }
     .attempts-title { font-size: .72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .5rem; }
@@ -445,6 +530,8 @@ const DELIVERY_STEPS = [
     .rating-display { display: flex; justify-content: space-between; align-items: center; }
     .stars-display { color: #f59e0b; font-size: 1rem; letter-spacing: .1em; }
     .cancel-policy-text { font-size: .72rem; color: #9ca3af; margin: .5rem 0 0; line-height: 1.4; }
+    .btn-print-receipt { display:flex; align-items:center; gap:.5rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:.5rem 1rem; font-size:.85rem; font-weight:600; color:#16a34a; cursor:pointer; width:100%; justify-content:center; &:hover { background:#dcfce7; } }
+    .ack-label { display:flex; align-items:center; gap:.5rem; margin:.5rem 0; font-size:.82rem; color:#475569; cursor:pointer; input[type=checkbox] { width:15px; height:15px; cursor:pointer; } }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
     .cancel-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
@@ -461,13 +548,17 @@ const DELIVERY_STEPS = [
   styleUrl: './order-detail.scss'
 })
 export class OrderDetailComponent implements OnInit {
-  private svc   = inject(OrderService);
-  private route = inject(ActivatedRoute);
-  private toast = inject(ToastService);
+  private svc        = inject(OrderService);
+  private paySvc     = inject(PaymentService);
+  private route      = inject(ActivatedRoute);
+  private toast      = inject(ToastService);
+  private receiptSvc = inject(ReceiptService);
 
   order            = signal<OrderDetail | null>(null);
+  payments         = signal<PaymentDto[]>([]);
   loading          = signal(true);
   cancelling       = signal(false);
+  payingNow        = signal(false);
   submittingRating = signal(false);
   ratingSubmitted  = signal(false);
   cancelPolicy     = signal<string>('');
@@ -481,7 +572,8 @@ export class OrderDetailComponent implements OnInit {
     overallRating:        0,
     deliveryRating:       undefined as number | undefined,
     productQualityRating: undefined as number | undefined,
-    comment:              ''
+    comment:              '',
+    receiptAcknowledged:  false
   };
 
   ngOnInit() {
@@ -489,6 +581,10 @@ export class OrderDetailComponent implements OnInit {
     this.svc.getOrderById(id).subscribe({
       next: o  => { this.order.set(o); this.loading.set(false); },
       error: () => this.loading.set(false)
+    });
+    this.paySvc.getPaymentsByOrder(id).subscribe({
+      next: list => this.payments.set(list),
+      error: ()  => {}
     });
     this.svc.getSetting('cancellation_policy_text').subscribe({
       next: s => this.cancelPolicy.set(s.value),
@@ -498,6 +594,48 @@ export class OrderDetailComponent implements OnInit {
 
   canCancel(): boolean {
     return this.order()?.status === 1;
+  }
+
+  payNow(): void {
+    const o = this.order();
+    if (!o) return;
+    const pending = this.payments().find(p => p.status === 1 && p.paymentMethodCode !== 'cod');
+    if (!pending) { this.toast.error('No pending payment found.'); return; }
+
+    const gateway = pending.paymentMethodCode ?? 'esewa';
+    const base    = window.location.origin;
+    this.payingNow.set(true);
+    this.paySvc.initiatePayment(o.id, {
+      paymentMethodId: pending.paymentMethodId,
+      returnUrl:  `${base}/payment/callback?gateway=${gateway}`,
+      failureUrl: `${base}/payment/callback?gateway=${gateway}&status=failed`,
+    }).subscribe({
+      next: r => {
+        this.payingNow.set(false);
+        if (r.formFields && r.redirectUrl) {
+          this.submitGatewayForm(r.redirectUrl, r.formFields);
+        } else if (r.redirectUrl) {
+          window.location.href = r.redirectUrl;
+        }
+      },
+      error: (e: any) => {
+        this.payingNow.set(false);
+        this.toast.error(e?.error?.message ?? 'Payment initiation failed.');
+      }
+    });
+  }
+
+  private submitGatewayForm(action: string, fields: Record<string, string>): void {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = action;
+    Object.entries(fields).forEach(([k, v]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = k; input.value = v;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
   }
 
   executeCancelOrder(): void {
@@ -519,6 +657,13 @@ export class OrderDetailComponent implements OnInit {
     });
   }
 
+  openPrintReceipt(): void {
+    const id = this.order()?.id;
+    if (!id) return;
+    window.open(`/orders/${id}/receipt`, '_blank');
+    this.receiptSvc.logPrint(id, { role: 'Customer' }).subscribe({ error: () => {} });
+  }
+
   submitRating(): void {
     const id = this.order()?.id;
     if (!id || this.ratingForm.overallRating === 0) return;
@@ -527,7 +672,8 @@ export class OrderDetailComponent implements OnInit {
       overallRating:        this.ratingForm.overallRating,
       deliveryRating:       this.ratingForm.deliveryRating,
       productQualityRating: this.ratingForm.productQualityRating,
-      comment:              this.ratingForm.comment || undefined
+      comment:              this.ratingForm.comment || undefined,
+      receiptAcknowledged:  this.ratingForm.receiptAcknowledged
     }).subscribe({
       next: () => { this.ratingSubmitted.set(true); this.submittingRating.set(false); },
       error: () => this.submittingRating.set(false)
@@ -570,6 +716,10 @@ export class OrderDetailComponent implements OnInit {
       case 5:  return '#9ca3af';
       default: return '#f59e0b';
     }
+  }
+
+  paymentStatusClass(status: number): string {
+    return { 1: 'pstatus-pending', 2: 'pstatus-completed', 3: 'pstatus-failed', 4: 'pstatus-refunded' }[status] ?? 'pstatus-pending';
   }
 
   orderStatusLabel(s: number): string  { return ORDER_STATUSES[s]?.label    ?? 'Unknown'; }

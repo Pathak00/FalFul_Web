@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, map, skip, tap } from 'rxjs/operators';
 import { AdminNavItem } from '../models/admin.models';
 import { AdminService } from '../services/admin.service';
@@ -9,9 +9,19 @@ import { PermissionService } from '../services/permission.service';
 
 /**
  * Singleton cache for the current user's admin nav items.
- * Both admin/rider layout sidebars and the dynamicNavGuard read from here,
- * so sidebar visibility and route access are always derived from the same
- * DB source (AdminNavItems.RequiredPermission via sp_AdminNavItem_GetForUser).
+ *
+ * Maintains TWO separate item lists:
+ *
+ *   _visibleItems  — items the user can SEE in the sidebar (IsVisible=1 + has permission).
+ *                    Used by admin-layout and rider-layout to render the sidebar.
+ *
+ *   _permittedItems — items the user has PERMISSION to access, regardless of IsVisible.
+ *                    Used exclusively by dynamicNavGuard.
+ *
+ * This separation fixes the security bug where hidden nav items were accessible
+ * by direct URL: previously canAccess() returned true for any URL not in the
+ * visible-items list, so staff could bypass permission checks by typing a URL
+ * whose nav item had been hidden.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminNavStore {
@@ -19,14 +29,15 @@ export class AdminNavStore {
   private permService  = inject(PermissionService);
   private authService  = inject(AuthService);
 
-  private readonly _items  = signal<AdminNavItem[]>([]);
-  private readonly _loaded = signal(false);
+  private readonly _visibleItems   = signal<AdminNavItem[]>([]);
+  private readonly _permittedItems = signal<AdminNavItem[]>([]);
+  private readonly _loaded         = signal(false);
 
-  readonly items  = this._items.asReadonly();
+  /** Sidebar navigation (visible items the user has permission for). */
+  readonly items  = this._visibleItems.asReadonly();
   readonly loaded = this._loaded.asReadonly();
 
   constructor() {
-    // Wipe cached items when the user logs out so the next login gets fresh data.
     toObservable(this.authService.isAuthenticated).pipe(
       distinctUntilChanged(),
       skip(1),
@@ -34,29 +45,38 @@ export class AdminNavStore {
     ).subscribe(() => this.clear());
   }
 
-  /** Fetch nav items for the current user and populate the cache. */
+  /** Fetch both nav lists for the current user and populate the cache. */
   load(): Observable<AdminNavItem[]> {
-    return this.adminService.getAdminNav().pipe(
-      tap(items => { this._items.set(items); this._loaded.set(true); })
+    return forkJoin({
+      visible:   this.adminService.getAdminNav().pipe(catchError(() => of([] as AdminNavItem[]))),
+      permitted: this.adminService.getPermittedAdminNav().pipe(catchError(() => of([] as AdminNavItem[])))
+    }).pipe(
+      tap(({ visible, permitted }) => {
+        this._visibleItems.set(visible);
+        this._permittedItems.set(permitted);
+        this._loaded.set(true);
+      }),
+      map(({ visible }) => visible)
     );
   }
 
   clear(): void {
-    this._items.set([]);
+    this._visibleItems.set([]);
+    this._permittedItems.set([]);
     this._loaded.set(false);
   }
 
   /**
    * Guard helper: returns true if the user may access this URL.
    *
-   * The check works by matching the URL to an AdminNavItem and reading its
-   * RequiredPermission from the DB.  Rider URLs (/rider/*) are normalised to
-   * their admin equivalents (/admin/*) before matching, because a rider's nav
-   * items are the same rows — just remapped at runtime.
+   * Uses _permittedItems (not _visibleItems) so that hidden nav items still
+   * enforce their RequiredPermission.  If the URL is not registered in
+   * AdminNavItems at all (e.g. a newly added route without a nav entry),
+   * access is allowed — the parent anyPermGuard / riderGuard already
+   * enforced portal-type access.
    *
-   * If no matching nav item exists (e.g. admin dashboard root "/admin") the
-   * route is allowed; the parent anyPermGuard / riderGuard already enforced
-   * portal-type access.
+   * Rider URLs (/rider/*) are normalised to /admin/* before matching,
+   * because rider nav items share the same AdminNavItems rows.
    */
   canAccess(url: string): Observable<boolean> {
     const doCheck = () => {
@@ -65,8 +85,13 @@ export class AdminNavStore {
         .split('?')[0]
         .split('#')[0];
 
-      const item = this._items().find(i => i.route === normalized);
+      const item = this._permittedItems().find(i => i.route === normalized);
+
+      // Route not registered in AdminNavItems — allow (unregistered routes are
+      // protected only by the portal-type guard above this one).
       if (!item) return true;
+
+      // Route is registered: check permission.
       if (!item.requiredPermission) return true;
       return this.permService.can(item.requiredPermission);
     };

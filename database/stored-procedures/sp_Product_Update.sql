@@ -17,7 +17,9 @@ CREATE OR ALTER PROCEDURE sp_Product_Update
     @DisplayOrder     INT            = 0,
     @MinOrderGrams    INT            = NULL,
     @GramStep         INT            = NULL,
-    @CutFruitPrice    DECIMAL(10,2)  = NULL
+    @CutFruitPrice    DECIMAL(10,2)  = NULL,
+    @Mrp              DECIMAL(10,2)  = NULL,
+    @ShowInCatalog    BIT            = 1
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -36,6 +38,7 @@ BEGIN
            Description      = @Description,
            ShortDescription = @ShortDescription,
            Price            = @Price,
+           Mrp              = @Mrp,
            Unit             = @Unit,
            Stock            = @Stock,
            IsAvailable      = @IsAvailable,
@@ -46,6 +49,7 @@ BEGIN
            MinOrderGrams    = @MinOrderGrams,
            GramStep         = @GramStep,
            CutFruitPrice    = @CutFruitPrice,
+           ShowInCatalog    = @ShowInCatalog,
            UpdatedAt        = dbo.fn_NepalNow()
     WHERE  Id = @Id AND IsDeleted = 0;
 END

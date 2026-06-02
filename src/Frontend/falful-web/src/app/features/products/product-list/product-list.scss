@@ -347,19 +347,63 @@
 
 .card-price {
   display: flex;
-  align-items: baseline;
-  gap: .2rem;
+  flex-direction: column;
+  gap: .15rem;
+  min-width: 0;
 }
 
-.price-amount {
-  font-size: 1rem;
+/* Discount badge */
+.price-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  margin-bottom: .05rem;
+}
+
+/* Selling price row */
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: .18rem;
+}
+
+.price-selling {
+  font-size: 1.05rem;
   font-weight: 800;
   color: #2d9348;
+  line-height: 1;
 }
 
 .price-unit {
-  font-size: .72rem;
+  font-size: .7rem;
   color: #94a3b8;
+}
+
+/* MRP + Save row */
+.price-meta {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.price-mrp {
+  font-size: .75rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  text-decoration-color: #cbd5e1;
+}
+
+.price-save {
+  font-size: .72rem;
+  font-weight: 700;
+  color: #16a34a;
 }
 
 .add-btn {

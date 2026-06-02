@@ -12,4 +12,6 @@ public class AdminNavItem
     public bool    IsVisible          { get; set; }
     public string? RequiredPermission { get; set; }
     public bool    IsSystem           { get; set; }
+    /// <summary>null=all portals, 'admin'=admin only, 'rider'=rider only.</summary>
+    public string? PortalScope        { get; set; }
 }

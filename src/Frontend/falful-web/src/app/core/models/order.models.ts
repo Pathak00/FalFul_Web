@@ -126,6 +126,7 @@ export interface OrderSummary {
   deliveryFee: number;
   serviceFee: number;
   totalAmount: number;
+  advanceAmount: number;
   paymentMethod: number;
   paymentStatus: number;
   deliveryDate: string;
@@ -176,6 +177,11 @@ export interface DeliverySummary {
   fullAddress: string;
   deliveryPhone: string;
   totalAmount: number;
+  advanceAmount: number;
+  remainingBalance: number;
+  collectedAmount?: number;
+  proofPhotoUrl?: string;
+  collectionRemarks?: string;
   createdAt: string;
   assignedAt?: string;
   deliveredAt?: string;
@@ -226,6 +232,7 @@ export interface PlaceOrderRequest {
   deliveryDate: string;
   deliveryTimeSlot: string;
   paymentMethod: number;
+  discountCode?: string;
   notes?: string;
   deliveryLatitude?: number;
   deliveryLongitude?: number;
@@ -257,6 +264,7 @@ export interface PlaceOrderItemRequest {
 }
 
 export const ORDER_STATUSES: Record<number, { label: string; color: string }> = {
+  7: { label: 'Awaiting Payment',     color: '#f97316' },
   1: { label: 'Pending',              color: '#f59e0b' },
   2: { label: 'Confirmed',            color: '#3b82f6' },
   3: { label: 'Preparing',            color: '#8b5cf6' },

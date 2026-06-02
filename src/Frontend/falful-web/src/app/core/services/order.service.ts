@@ -34,8 +34,8 @@ export class OrderService {
   }
 
   // ── Orders ────────────────────────────────────────────────────────────────────
-  placeOrder(dto: PlaceOrderRequest): Observable<{ orderNumber: string }> {
-    return this.api.post<{ orderNumber: string }>('/api/orders', dto);
+  placeOrder(dto: PlaceOrderRequest): Observable<{ orderId: number; orderNumber: string }> {
+    return this.api.post<{ orderId: number; orderNumber: string }>('/api/orders', dto);
   }
 
   getMyOrders(): Observable<OrderSummary[]> {
@@ -55,7 +55,7 @@ export class OrderService {
     return this.api.get<OrderRating | null>(`/api/orders/${orderId}/rating`);
   }
 
-  submitRating(orderId: number, dto: { deliveryRating?: number; productQualityRating?: number; overallRating: number; comment?: string }): Observable<void> {
+  submitRating(orderId: number, dto: { deliveryRating?: number; productQualityRating?: number; overallRating: number; comment?: string; receiptAcknowledged?: boolean }): Observable<void> {
     return this.api.post<void>(`/api/orders/${orderId}/rating`, dto);
   }
 

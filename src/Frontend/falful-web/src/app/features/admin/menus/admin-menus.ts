@@ -24,7 +24,7 @@ const BASE_OPTIONS = [
       <div class="page-header">
         <div>
           <h1>Navigation Menus</h1>
-          <p class="page-sub">Build the website navigation. Create top-level links and nest items under them to make dropdowns. Control who sees each link using the "Visible To" setting.</p>
+          <p class="page-sub">Build the public website navigation. Create top-level links and nest items under them to make dropdowns. Control who sees each link using the "Visible To" setting.</p>
         </div>
         <button class="btn-primary" (click)="openCreate()">+ Add Menu Item</button>
       </div>
@@ -32,8 +32,9 @@ const BASE_OPTIONS = [
       @if (loading()) {
         <div class="empty-state"><div class="spinner"></div><p>Loading…</p></div>
       } @else {
+        <!-- Public navigation items -->
         <div class="menu-tree">
-          @for (item of topLevel(); track item.id) {
+          @for (item of publicTopLevel(); track item.id) {
             <div class="menu-row menu-row-top" [class.row-hidden]="!item.isVisible">
               <div class="menu-row-left">
                 @if (item.icon) {
@@ -79,14 +80,65 @@ const BASE_OPTIONS = [
             }
           }
 
-          @if (allItems().length === 0) {
+          @if (publicTopLevel().length === 0) {
             <div class="empty-state">
               <i class="bi bi-list-nested empty-icon"></i>
-              <h3>No menu items yet</h3>
+              <h3>No public menu items yet</h3>
               <p>Create your first navigation link above.</p>
             </div>
           }
         </div>
+
+        <!-- Portal Shortcuts section -->
+        @if (portalShortcuts().length > 0) {
+          <div class="section-header">
+            <div>
+              <h2 class="section-title"><i class="bi bi-door-open"></i> Portal Shortcuts</h2>
+              <p class="section-desc">These links appear in the public navbar for role-specific users (e.g. "Dashboard" for customers, "Admin" for admin users). They link into a portal — not the public website. Visibility is controlled by role assignment, not general navigation.</p>
+            </div>
+          </div>
+          <div class="menu-tree menu-tree-portal">
+            @for (item of portalShortcuts(); track item.id) {
+              <div class="menu-row menu-row-top menu-row-portal" [class.row-hidden]="!item.isVisible">
+                <div class="menu-row-left">
+                  <i class="bi bi-door-open-fill portal-icon"></i>
+                  <div class="menu-label-block">
+                    <strong>{{ item.label }}</strong>
+                    @if (item.url) { <span class="menu-url">{{ item.url }}</span> }
+                  </div>
+                  <span class="badge badge-purple">Portal Shortcut</span>
+                  @if (item.requiredPortalType) {
+                    <span class="badge badge-portal-type">{{ item.requiredPortalType }} portal</span>
+                  } @else {
+                    <span class="badge badge-blue">{{ visibilityLabel(item) }}</span>
+                  }
+                  @if (!item.isVisible) { <span class="badge badge-gray">Hidden</span> }
+                </div>
+                <div class="menu-row-actions">
+                  <button class="btn-sm btn-edit" (click)="openEdit(item)">Edit</button>
+                  <button class="btn-sm btn-danger" (click)="deleteTarget.set(item)">Delete</button>
+                </div>
+              </div>
+
+              @for (child of childrenOf(item.id); track child.id) {
+                <div class="menu-row menu-row-child menu-row-portal" [class.row-hidden]="!child.isVisible">
+                  <div class="menu-row-left">
+                    <span class="child-indent">↳</span>
+                    <div class="menu-label-block">
+                      <strong>{{ child.label }}</strong>
+                      @if (child.url) { <span class="menu-url">{{ child.url }}</span> }
+                    </div>
+                    <span class="badge badge-blue">{{ visibilityLabel(child) }}</span>
+                  </div>
+                  <div class="menu-row-actions">
+                    <button class="btn-sm btn-edit" (click)="openEdit(child)">Edit</button>
+                    <button class="btn-sm btn-danger" (click)="deleteTarget.set(child)">Delete</button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
       }
     </div>
 
@@ -251,6 +303,24 @@ const BASE_OPTIONS = [
     .child-indent { font-size: .9rem; color: #cbd5e1; flex-shrink: 0; }
     .btn-success-soft { background: #f0fdf4; color: #16a34a; &:hover { background: #dcfce7; } }
 
+    .section-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin: 2rem 0 .75rem;
+    }
+    .section-title {
+      font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0 0 .25rem;
+      display: flex; align-items: center; gap: .4rem;
+      i { color: #7c3aed; }
+    }
+    .section-desc {
+      font-size: .8rem; color: #64748b; margin: 0; max-width: 680px; line-height: 1.5;
+    }
+    .menu-tree-portal { border-color: #e9d5ff; }
+    .menu-row-portal { background: #faf5ff !important; &:hover { background: #f3e8ff !important; } }
+    .portal-icon { color: #7c3aed; font-size: 1rem; flex-shrink: 0; width: 18px; text-align: center; }
+    .badge-purple      { background: #ede9fe; color: #7c3aed; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+    .badge-portal-type { background: #fef3c7; color: #b45309; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+
     .role-picker {
       background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
       padding: .875rem 1rem; margin-top: .5rem;
@@ -288,9 +358,11 @@ export class AdminMenusComponent implements OnInit {
     displayOrder: number; isVisible: boolean; visibleTo: number; requiredRoleIds: number[]; openInNewTab: boolean;
   } = this.emptyForm();
 
-  topLevel    = () => this.allItems().filter(i => !i.parentId);
-  childrenOf  = (pid: number) => this.allItems().filter(i => i.parentId === pid);
-  parentLabel = () => this.allItems().find(i => i.id === this.form.parentId)?.label ?? '';
+  publicTopLevel  = () => this.allItems().filter(i => !i.parentId && !i.isPortalShortcut);
+  portalShortcuts = () => this.allItems().filter(i => !i.parentId && i.isPortalShortcut);
+  topLevel        = () => this.allItems().filter(i => !i.parentId);
+  childrenOf      = (pid: number) => this.allItems().filter(i => i.parentId === pid);
+  parentLabel     = () => this.allItems().find(i => i.id === this.form.parentId)?.label ?? '';
 
   visibilityLabel(item: MenuItem): string {
     if (item.visibleTo === 3) {

@@ -13,4 +13,8 @@ public class MenuItem
     public int VisibleTo { get; set; }
     public string? RequiredRoleIds { get; set; }  // comma-separated from STRING_AGG
     public bool OpenInNewTab { get; set; }
+    /// <summary>When set, this portal shortcut is visible only to users whose role's PortalType matches.
+    /// Replaces the MenuItemRoles role-ID approach for portal shortcuts, so new roles with the matching
+    /// PortalType automatically see the shortcut without any manual MenuItemRoles maintenance.</summary>
+    public string? RequiredPortalType { get; set; }
 }

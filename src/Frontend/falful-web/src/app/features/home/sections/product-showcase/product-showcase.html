@@ -13,34 +13,67 @@
       <a routerLink="/products" class="btn-primary">View All Products</a>
     </div>
 
-    <div class="products-grid">
-      @for (p of products; track p.name; let i = $index) {
-        <div class="product-card" [appScrollAnimate]="'reveal'" [animDelay]="i * 70">
-          <div class="product-visual">
-            <span class="product-emoji">{{ p.emoji }}</span>
-            <span class="product-tag tag-{{ p.tagColor }}">{{ p.tag }}</span>
-            <button class="wishlist-btn" aria-label="Add to wishlist">♡</button>
-          </div>
-          <div class="product-body">
-            <h3>{{ p.name }}</h3>
-            <div class="product-rating">
-              <span class="stars">
-                @for (s of starsArray(p.rating); track $index) { ★ }
-              </span>
-              <span class="review-count">({{ p.reviews }})</span>
+    @if (loading) {
+      <div class="products-grid">
+        @for (i of [0,1,2,3,4,5]; track i) {
+          <div class="product-card skeleton-card">
+            <div class="skeleton-visual"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line w-70"></div>
+              <div class="skeleton-line w-45"></div>
+              <div class="skeleton-line w-55"></div>
             </div>
-            <div class="product-footer">
-              <div class="product-price">
-                <span class="price-value">NPR {{ p.price }}</span>
-                <span class="price-unit">{{ p.unit }}</span>
+          </div>
+        }
+      </div>
+    } @else if (products.length === 0) {
+      <div class="showcase-empty">
+        <span>🍃</span>
+        <p>Products coming soon. Check back shortly!</p>
+        <a routerLink="/products" class="btn-primary btn-sm">Browse All</a>
+      </div>
+    } @else {
+      <div class="products-grid">
+        @for (p of products; track p.id; let i = $index) {
+          <a class="product-card" [routerLink]="['/products', p.slug]"
+             [appScrollAnimate]="'reveal'" [animDelay]="i * 70">
+            <div class="product-visual" [class.has-image]="p.imageUrl">
+              @if (p.imageUrl) {
+                <img class="product-img" [src]="imageUrl(p.imageUrl)" [alt]="p.name" loading="lazy" />
+              } @else {
+                <span class="product-emoji">🌿</span>
+              }
+
+              @if (firstTag(p.tags) || p.isFeatured) {
+                <span class="product-tag tag-{{ tagColor(firstTag(p.tags) || 'featured') }}">
+                  {{ firstTag(p.tags) || 'Featured' }}
+                </span>
+              }
+            </div>
+
+            <div class="product-body">
+              <h3>{{ p.name }}</h3>
+              @if (p.shortDescription) {
+                <p class="product-desc">{{ p.shortDescription }}</p>
+              } @else {
+                <p class="product-desc muted">{{ p.categoryName }}</p>
+              }
+              <div class="product-footer">
+                <div class="product-price">
+                  @if (p.mrp && p.mrp > p.price) {
+                    <span class="price-mrp">NPR {{ p.mrp | number:'1.0-0' }}</span>
+                  }
+                  <span class="price-value">NPR {{ p.price | number:'1.0-0' }}</span>
+                  <span class="price-unit">/ {{ p.unit }}</span>
+                </div>
+                <span class="view-btn" aria-label="View product">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </span>
               </div>
-              <button class="add-btn" aria-label="Add to cart">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
             </div>
-          </div>
-        </div>
-      }
-    </div>
+          </a>
+        }
+      </div>
+    }
   </div>
 </section>

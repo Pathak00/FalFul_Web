@@ -143,8 +143,12 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Per KG Price (Rs.) <span class="required">*</span></label>
-                <input type="number" [(ngModel)]="form.price" min="0" step="0.01" placeholder="e.g. 250" />
+                <label>Selling Price (Rs.) <span class="required">*</span></label>
+                <input type="number" [(ngModel)]="form.price" min="0" step="0.01" placeholder="e.g. 200" />
+              </div>
+              <div class="form-group">
+                <label>MRP / Original Price (Rs.) <span class="hint-inline">optional</span></label>
+                <input type="number" [(ngModel)]="form.mrp" min="0" step="0.01" placeholder="e.g. 250 (crossed-out)" />
               </div>
               <div class="form-group">
                 <label>Unit <span class="required">*</span></label>
@@ -221,6 +225,10 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
               <label class="checkbox-label">
                 <input type="checkbox" [(ngModel)]="form.isFeatured" />
                 <span>Featured <i class="bi bi-star-fill" style="color:#f59e0b;font-size:.8rem"></i></span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="form.showInCatalog" />
+                <span>Show in catalog <small style="color:#94a3b8">(uncheck for BYB-only)</small></span>
               </label>
             </div>
           </div>
@@ -329,10 +337,11 @@ export class AdminProductsComponent implements OnInit {
     this.form = {
       categoryId: p.categoryId, name: p.name, slug: p.slug,
       description: p.description, shortDescription: p.shortDescription,
-      price: p.price, unit: p.unit, stock: p.stock,
+      price: p.price, mrp: p.mrp, unit: p.unit, stock: p.stock,
       isAvailable: p.isAvailable, isFeatured: p.isFeatured,
       imageUrl: p.imageUrl, tags: p.tags, displayOrder: p.displayOrder,
-      minOrderGrams: p.minOrderGrams, gramStep: p.gramStep, cutFruitPrice: p.cutFruitPrice
+      minOrderGrams: p.minOrderGrams, gramStep: p.gramStep, cutFruitPrice: p.cutFruitPrice,
+      showInCatalog: p.showInCatalog ?? true
     };
     this.formError.set('');
     this.showForm.set(true);
@@ -380,8 +389,9 @@ export class AdminProductsComponent implements OnInit {
   private emptyForm(): CreateProductRequest {
     return {
       categoryId: 0, name: '', slug: '', description: '', shortDescription: '',
-      price: 0, unit: 'KG', stock: 0, isAvailable: true, isFeatured: false,
-      imageUrl: '', tags: '', displayOrder: 0, minOrderGrams: undefined, gramStep: undefined, cutFruitPrice: undefined
+      price: 0, mrp: undefined, unit: 'KG', stock: 0, isAvailable: true, isFeatured: false,
+      imageUrl: '', tags: '', displayOrder: 0, minOrderGrams: undefined, gramStep: undefined,
+      cutFruitPrice: undefined, showInCatalog: true
     };
   }
 }

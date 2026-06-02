@@ -8,6 +8,8 @@ public class OrderRating
     public byte?    DeliveryRating       { get; set; }
     public byte?    ProductQualityRating { get; set; }
     public byte     OverallRating        { get; set; }
-    public string?  Comment              { get; set; }
-    public DateTime CreatedAt            { get; set; }
+    public string?   Comment                 { get; set; }
+    public bool      ReceiptAcknowledged     { get; set; }
+    public DateTime? ReceiptAcknowledgedAt   { get; set; }
+    public DateTime  CreatedAt               { get; set; }
 }

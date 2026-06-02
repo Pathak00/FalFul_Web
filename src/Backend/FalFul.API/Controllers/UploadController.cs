@@ -8,8 +8,8 @@ namespace FalFul.API.Controllers;
 [Authorize]
 public class UploadController(IWebHostEnvironment env) : ControllerBase
 {
-    private static readonly HashSet<string> AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
-    private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+    private static readonly HashSet<string> AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf"];
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
 
     [HttpPost]
     [Consumes("multipart/form-data")]
@@ -23,7 +23,7 @@ public class UploadController(IWebHostEnvironment env) : ControllerBase
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(ext))
-            return BadRequest(new { message = "Only image files are allowed (jpg, png, webp, gif)." });
+            return BadRequest(new { message = "Only image or PDF files are allowed (jpg, png, webp, gif, pdf)." });
 
         var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
         var uploadsDir = Path.Combine(webRoot, "uploads");

@@ -119,8 +119,19 @@ import { Category, ProductSummary } from '../../../core/models/product.models';
                     }
                     <div class="card-footer">
                       <div class="card-price">
-                        <span class="price-amount">Rs. {{ p.price | number:'1.0-0' }}</span>
-                        <span class="price-unit">/ {{ p.unit }}</span>
+                        @if (hasDiscount(p)) {
+                          <span class="price-badge">{{ discountPct(p) }}% OFF</span>
+                        }
+                        <div class="price-row">
+                          <span class="price-selling">Rs.&nbsp;{{ p.price | number:'1.0-0' }}</span>
+                          <span class="price-unit">/ {{ p.unit }}</span>
+                        </div>
+                        @if (hasDiscount(p)) {
+                          <div class="price-meta">
+                            <span class="price-mrp">Rs. {{ p.mrp | number:'1.0-0' }}</span>
+                            <span class="price-save">Save Rs.&nbsp;{{ savedAmount(p) | number:'1.0-0' }}</span>
+                          </div>
+                        }
                       </div>
                       <button class="add-btn" [disabled]="!p.isAvailable" (click)="$event.preventDefault()">
                         <i class="bi bi-cart-plus"></i>
@@ -172,11 +183,9 @@ export class ProductListComponent implements OnInit {
     this.loading.set(true);
     this.svc.getPublicProducts(this.selectedCategory, this.searchTerm || undefined, this.featuredOnly).subscribe({
       next: list => {
-        // Products with minOrderGrams belong exclusively to Build Your Bowl
-        const perKg = list.filter(p => !p.minOrderGrams);
-        this.hasCutFruits.set(perKg.length < list.length);
-        this.products.set(perKg);
-        if (!this.selectedCategory && !this.searchTerm) this.totalCount.set(perKg.length);
+        this.hasCutFruits.set(list.some(p => !!p.minOrderGrams));
+        this.products.set(list);
+        if (!this.selectedCategory && !this.searchTerm) this.totalCount.set(list.length);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
@@ -185,5 +194,19 @@ export class ProductListComponent implements OnInit {
 
   activeCategoryName(): string {
     return this.categories().find(c => c.id === this.selectedCategory)?.name ?? '';
+  }
+
+  hasDiscount(p: ProductSummary): boolean {
+    return !!p.mrp && p.mrp > p.price;
+  }
+
+  discountPct(p: ProductSummary): number {
+    if (!this.hasDiscount(p)) return 0;
+    return Math.round(((p.mrp! - p.price) / p.mrp!) * 100);
+  }
+
+  savedAmount(p: ProductSummary): number {
+    if (!this.hasDiscount(p)) return 0;
+    return Math.max(0, p.mrp! - p.price);
   }
 }

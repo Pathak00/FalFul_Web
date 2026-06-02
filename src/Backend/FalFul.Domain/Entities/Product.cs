@@ -10,6 +10,7 @@ public class Product
     public string?  Description      { get; set; }
     public string?  ShortDescription { get; set; }
     public decimal  Price            { get; set; }
+    public decimal? Mrp              { get; set; }
     public string   Unit             { get; set; } = "KG";
     public decimal  Stock            { get; set; }
     public bool     IsAvailable      { get; set; }
@@ -20,6 +21,7 @@ public class Product
     public int?     MinOrderGrams    { get; set; }
     public int?     GramStep         { get; set; }
     public decimal? CutFruitPrice    { get; set; }
+    public bool     ShowInCatalog    { get; set; } = true;
     public DateTime CreatedAt        { get; set; }
     public DateTime? UpdatedAt       { get; set; }
 }

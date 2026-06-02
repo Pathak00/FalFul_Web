@@ -1,0 +1,9 @@
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE OR ALTER PROCEDURE sp_Discount_IncrementUsage
+    @Code NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Discounts SET UsesCount = UsesCount + 1 WHERE Code = UPPER(@Code);
+END

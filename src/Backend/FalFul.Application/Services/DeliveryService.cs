@@ -7,11 +7,12 @@ using FalFul.Domain.Enums;
 namespace FalFul.Application.Services;
 
 public class DeliveryService(
-    IDeliveryRepository      deliveries,
+    IDeliveryRepository        deliveries,
     IDeliveryAttemptRepository attempts,
-    IDeliveryIssueRepository issues,
-    IOrderRatingRepository   ratings,
-    IOrderRepository         orders) : IDeliveryService
+    IDeliveryIssueRepository   issues,
+    IOrderRatingRepository     ratings,
+    IOrderRepository           orders,
+    IAppSettingService         settings) : IDeliveryService
 {
     public async Task<IEnumerable<DeliverySummaryDto>> GetAllAsync(byte? status = null, string? fromDate = null, string? toDate = null)
     {
@@ -110,6 +111,28 @@ public class DeliveryService(
 
     public async Task<IEnumerable<DeliverySummaryDto>> GetRiderDeliveriesAsync(int riderUserId)
         => await deliveries.GetRiderDeliveriesAsync(riderUserId);
+
+    public async Task<Result> CompleteDeliveryAsync(int id, CompleteDeliveryDto dto)
+    {
+        if (dto.CollectedAmount < 0)
+            return Result.Failure("Collected amount cannot be negative.");
+
+        var requireProofSetting = await settings.GetValueAsync("delivery:require_proof");
+        var requireProof = requireProofSetting == "1";
+
+        if (requireProof && string.IsNullOrWhiteSpace(dto.ProofPhotoUrl))
+            return Result.Failure("A proof photo URL is required to complete this delivery.");
+
+        var delivery = await deliveries.GetByIdAsync(id);
+        if (delivery is null) return Result.Failure("Delivery not found.");
+
+        try
+        {
+            await deliveries.CompleteAsync(id, dto.CollectedAmount, dto.ProofPhotoUrl?.Trim(), dto.CollectionRemarks?.Trim());
+            return Result.Success();
+        }
+        catch (Exception ex) { return Result.Failure(ex.Message); }
+    }
 
     public async Task<Result> SubmitRatingAsync(int orderId, int userId, SubmitRatingDto dto)
     {
@@ -266,6 +289,11 @@ public class DeliveryService(
         FullAddress       = d.FullAddress,
         DeliveryPhone     = d.DeliveryPhone,
         TotalAmount       = d.TotalAmount,
+        AdvanceAmount     = d.AdvanceAmount,
+        RemainingBalance  = d.RemainingBalance,
+        CollectedAmount   = d.CollectedAmount,
+        ProofPhotoUrl     = d.ProofPhotoUrl,
+        CollectionRemarks = d.CollectionRemarks,
         CreatedAt         = d.CreatedAt,
         AssignedAt        = d.AssignedAt,
         DeliveredAt       = d.DeliveredAt,
@@ -293,6 +321,11 @@ public class DeliveryService(
         DeliveryFee       = d.DeliveryFee,
         ServiceFee        = d.ServiceFee,
         TotalAmount       = d.TotalAmount,
+        AdvanceAmount     = d.AdvanceAmount,
+        RemainingBalance  = d.RemainingBalance,
+        CollectedAmount   = d.CollectedAmount,
+        ProofPhotoUrl     = d.ProofPhotoUrl,
+        CollectionRemarks = d.CollectionRemarks,
         CreatedAt         = d.CreatedAt,
         AssignedAt        = d.AssignedAt,
         DeliveredAt       = d.DeliveredAt,

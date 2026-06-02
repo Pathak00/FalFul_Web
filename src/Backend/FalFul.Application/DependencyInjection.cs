@@ -17,6 +17,10 @@ public static class DependencyInjection
         services.AddScoped<IAppSettingService, AppSettingService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IDiscountService, DiscountService>();
+        services.AddScoped<INoticeService, NoticeService>();
+        services.AddScoped<IReceiptService, ReceiptService>();
         return services;
     }
 }

@@ -1,20 +1,25 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminNavItem, UpdateAdminNavItemRequest } from '../../../core/models/admin.models';
+import { AdminNavItem, CreateAdminNavItemRequest, UpdateAdminNavItemRequest } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-admin-nav',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule, TitleCasePipe],
   styleUrl: '../admin-shared.scss',
   template: `
     <div class="admin-page">
       <div class="page-header">
         <div>
           <h1>Navigation</h1>
-          <p class="page-sub">Customise the admin sidebar — rename labels, change icons, reorder, or hide items. Required permissions cannot be changed here.</p>
+          <p class="page-sub">Customise the admin/rider sidebar — rename labels, change icons, reorder, or hide items. Add custom items pointing to any admin route. System items cannot be deleted.</p>
         </div>
+        <button class="btn-primary" (click)="openCreate()">
+          <i class="bi bi-plus-lg"></i> New Item
+        </button>
       </div>
 
       @if (loading()) {
@@ -47,8 +52,11 @@ import { AdminService } from '../../../core/services/admin.service';
                   @if (item.requiredPermission) {
                     <span class="meta-perm">{{ item.requiredPermission }}</span>
                   } @else {
-                    <span class="meta-perm meta-perm-open">always visible</span>
+                    <span class="meta-perm meta-perm-open">no permission</span>
                   }
+                  <span class="meta-scope" [class]="portalScopeClass(item.portalScope)">
+                    {{ portalScopeLabel(item.portalScope) }}
+                  </span>
                   @if (item.groupLabel) {
                     <span class="meta-group">{{ item.groupLabel }}</span>
                   }
@@ -87,6 +95,26 @@ import { AdminService } from '../../../core/services/admin.service';
                         Visible in sidebar
                       </label>
                     </div>
+                    @if (!item.isSystem) {
+                      <div class="edit-row">
+                        <label>Permission</label>
+                        <input [(ngModel)]="editForm.requiredPermission" placeholder="e.g. reports (blank = no check)" />
+                      </div>
+                    }
+                    <div class="edit-row portal-row">
+                      <label>Portals</label>
+                      <div class="portal-checks">
+                        @for (pt of portalTypes(); track pt) {
+                          <label class="portal-check-lbl">
+                            <input type="checkbox"
+                                   [checked]="editPortals.has(pt)"
+                                   (change)="toggleEditPortal(pt)" />
+                            {{ pt | titlecase }}
+                          </label>
+                        }
+                      </div>
+                      <span class="hint-xs">Uncheck all = visible in all portals</span>
+                    </div>
                     @if (saveError()) {
                       <p class="save-error">{{ saveError() }}</p>
                     }
@@ -106,6 +134,11 @@ import { AdminService } from '../../../core/services/admin.service';
                     <i class="bi" [class.bi-eye-slash]="item.isVisible" [class.bi-eye]="!item.isVisible"></i>
                     {{ item.isVisible ? 'Hide' : 'Show' }}
                   </button>
+                  @if (!item.isSystem) {
+                    <button class="ua-btn ua-btn-danger" (click)="confirmDelete(item)" title="Delete this item">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
                 }
               </div>
             </div>
@@ -113,6 +146,95 @@ import { AdminService } from '../../../core/services/admin.service';
         </div>
       }
     </div>
+
+    <!-- ── Create Nav Item modal ──────────────────────────────────────────── -->
+    @if (showCreate()) {
+      <div class="modal-overlay" (click)="showCreate.set(false)">
+        <div class="modal-box" style="max-width:500px" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>New Navigation Item</h3>
+            <button class="modal-close" (click)="showCreate.set(false)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group-row">
+              <div class="fg">
+                <label>Label *</label>
+                <input [(ngModel)]="createForm.label" placeholder="e.g. Analytics" />
+              </div>
+              <div class="fg">
+                <label>Icon</label>
+                <input [(ngModel)]="createForm.icon" placeholder="bi-graph-up" />
+              </div>
+            </div>
+            <div class="fg">
+              <label>Route * <span class="hint">(must start with /admin/)</span></label>
+              <input [(ngModel)]="createForm.route" placeholder="/admin/analytics" />
+            </div>
+            <div class="form-group-row">
+              <div class="fg">
+                <label>Section (Group)</label>
+                <input [(ngModel)]="createForm.groupLabel" placeholder="e.g. Operations" />
+              </div>
+              <div class="fg">
+                <label>Display Order</label>
+                <input type="number" [(ngModel)]="createForm.displayOrder" min="0" />
+              </div>
+            </div>
+            <div class="fg">
+              <label>Required Permission <span class="hint">(leave blank = no permission check)</span></label>
+              <input [(ngModel)]="createForm.requiredPermission" placeholder="e.g. reports" />
+            </div>
+            <div class="fg">
+              <label>Portals <span class="hint">(uncheck all = no portal restriction)</span></label>
+              <div class="portal-checks" style="flex-direction:row;flex-wrap:wrap;gap:.5rem .75rem;margin-top:.25rem">
+                @for (pt of portalTypes(); track pt) {
+                  <label class="portal-check-lbl">
+                    <input type="checkbox"
+                           [checked]="createPortals.has(pt)"
+                           (change)="toggleCreatePortal(pt)" />
+                    {{ pt | titlecase }}
+                  </label>
+                }
+              </div>
+            </div>
+            <label class="toggle-lbl">
+              <input type="checkbox" [(ngModel)]="createForm.isVisible" />
+              <span>Visible in sidebar</span>
+            </label>
+            @if (createError()) {
+              <p class="err-msg">{{ createError() }}</p>
+            }
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="showCreate.set(false)">Cancel</button>
+            <button class="btn-primary" (click)="saveCreate()" [disabled]="creatingItem()">
+              @if (creatingItem()) { Creating… } @else { <i class="bi bi-plus-lg"></i> Create Item }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Delete confirm modal ───────────────────────────────────────────── -->
+    @if (deleteTarget()) {
+      <div class="modal-overlay" (click)="deleteTarget.set(null)">
+        <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Delete Nav Item</h3>
+            <button class="modal-close" (click)="deleteTarget.set(null)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="modal-body">
+            <p>Delete <strong>"{{ deleteTarget()!.label }}"</strong>? This cannot be undone.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="deleteTarget.set(null)">Cancel</button>
+            <button class="btn-danger" (click)="doDelete()" [disabled]="saving()">
+              @if (saving()) { Deleting… } @else { Delete }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .page-sub { color: #64748b; margin: .25rem 0 0; font-size: .875rem; }
@@ -159,6 +281,17 @@ import { AdminService } from '../../../core/services/admin.service';
       font-size: .65rem; background: #eff6ff; color: #1d4ed8;
       padding: 1px 6px; border-radius: 3px; font-weight: 600;
     }
+    .meta-scope {
+      font-size: .65rem; padding: 1px 6px; border-radius: 3px; font-weight: 600;
+      &.scope-admin  { background: #fef3c7; color: #b45309; }
+      &.scope-rider  { background: #dbeafe; color: #1d4ed8; }
+      &.scope-both   { background: #d1fae5; color: #065f46; }
+      &.scope-all    { background: #f1f5f9; color: #64748b; }
+    }
+    .portal-row { align-items: flex-start !important; }
+    .portal-checks { display: flex; flex-direction: column; gap: .3rem; }
+    .portal-check-lbl { display: flex; align-items: center; gap: .35rem; cursor: pointer; font-size: .8rem; color: #374151; input { width: 14px; height: 14px; accent-color: #16a34a; cursor: pointer; } }
+    .hint-xs { font-size: .68rem; color: #94a3b8; margin-top: .2rem; }
 
     .nav-row-actions { display: flex; flex-direction: column; gap: .375rem; align-items: flex-end; flex-shrink: 0; }
 
@@ -202,16 +335,49 @@ import { AdminService } from '../../../core/services/admin.service';
     .btn-sm { padding: .3rem .75rem; font-size: .78rem; border-radius: 6px; cursor: pointer; font-weight: 600; border: none; }
     .btn-primary  { background: #16a34a; color: #fff; &:hover:not(:disabled) { background: #15803d; } &:disabled { opacity: .6; cursor: not-allowed; } }
     .btn-secondary { background: #f1f5f9; color: #374151; border: 1px solid #e2e8f0; &:hover { background: #e2e8f0; } }
+    .ua-btn-danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; &:hover { background: #fee2e2; } }
+    .btn-danger { background: #dc2626; color: #fff; border: none; border-radius: 6px; padding: .375rem .875rem; font-size: .82rem; font-weight: 600; cursor: pointer; &:hover:not(:disabled) { background: #b91c1c; } &:disabled { opacity: .5; cursor: not-allowed; } }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1rem; }
+    .modal-box { background:#fff; border-radius:12px; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .modal-sm { max-width:380px; }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid #f1f5f9; h3 { margin:0; font-size:1rem; font-weight:700; } }
+    .modal-close { background:none; border:none; cursor:pointer; color:#94a3b8; font-size:.9rem; padding:.25rem; border-radius:4px; &:hover { background:#f1f5f9; } }
+    .modal-body { padding:1.25rem; display:flex; flex-direction:column; gap:.75rem; p { margin:0; font-size:.875rem; color:#374151; } }
+    .modal-footer { display:flex; gap:.75rem; justify-content:flex-end; padding:.875rem 1.25rem; border-top:1px solid #f1f5f9; }
+    .form-group-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+    .fg { display:flex; flex-direction:column; gap:.3rem;
+      label { font-size:.75rem; font-weight:600; color:#64748b; }
+      input { border:1px solid #e2e8f0; border-radius:6px; padding:.375rem .625rem; font-size:.85rem; &:focus { outline:none; border-color:#22c55e; } }
+      .hint { font-size:.7rem; color:#94a3b8; font-weight:400; }
+    }
+    .toggle-lbl { display:flex; align-items:center; gap:.5rem; font-size:.85rem; cursor:pointer; input { width:14px; height:14px; cursor:pointer; } }
+    .err-msg { font-size:.78rem; color:#dc2626; margin:0; }
   `]
 })
 export class AdminNavComponent implements OnInit {
   private adminService = inject(AdminService);
+  private toast        = inject(ToastService);
 
   items   = signal<AdminNavItem[]>([]);
   loading = signal(true);
   editing = signal<AdminNavItem | null>(null);
   saving  = signal(false);
   saveError = signal('');
+
+  showCreate   = signal(false);
+  creatingItem = signal(false);
+  createError  = signal('');
+  deleteTarget = signal<AdminNavItem | null>(null);
+
+  /** Distinct portal types derived from all Roles.PortalType values.
+   *  Grows automatically as new roles with new portal types are created. */
+  private readonly allRoles = signal<{portalType: string; name: string}[]>([]);
+  readonly portalTypes = computed(() =>
+    [...new Set(this.allRoles().map(r => r.portalType))].sort()
+  );
+
+  createForm: CreateAdminNavItemRequest = this.blankCreateForm();
 
   editForm: UpdateAdminNavItemRequest & { id: number } = this.emptyForm();
 
@@ -220,18 +386,25 @@ export class AdminNavComponent implements OnInit {
       next: items => { this.items.set(items); this.loading.set(false); },
       error: () => this.loading.set(false)
     });
+    this.adminService.getRoles().subscribe({
+      next: roles => this.allRoles.set(roles),
+      error: () => {}
+    });
   }
 
   startEdit(item: AdminNavItem): void {
     this.editing.set(item);
     this.saveError.set('');
+    this.editPortals = this.parsePortals(item.portalScope);
     this.editForm = {
       id: item.id,
       label: item.label,
       icon: item.icon ?? '',
       groupLabel: item.groupLabel ?? '',
       displayOrder: item.displayOrder,
-      isVisible: item.isVisible
+      isVisible: item.isVisible,
+      requiredPermission: item.requiredPermission ?? '',
+      portalScope: item.portalScope ?? ''
     };
   }
 
@@ -242,11 +415,13 @@ export class AdminNavComponent implements OnInit {
     this.saving.set(true);
     this.saveError.set('');
     const dto: UpdateAdminNavItemRequest = {
-      label:        this.editForm.label.trim(),
-      icon:         this.editForm.icon || undefined,
-      groupLabel:   this.editForm.groupLabel || undefined,
-      displayOrder: this.editForm.displayOrder,
-      isVisible:    this.editForm.isVisible
+      label:              this.editForm.label.trim(),
+      icon:               this.editForm.icon || undefined,
+      groupLabel:         this.editForm.groupLabel || undefined,
+      displayOrder:       this.editForm.displayOrder,
+      isVisible:          this.editForm.isVisible,
+      requiredPermission: this.editForm.requiredPermission || undefined,
+      portalScope:        this.stringifyPortals(this.editPortals)
     };
     this.adminService.updateAdminNavItem(item.id, dto).subscribe({
       next: () => {
@@ -260,11 +435,13 @@ export class AdminNavComponent implements OnInit {
 
   toggleVisible(item: AdminNavItem): void {
     const dto: UpdateAdminNavItemRequest = {
-      label:        item.label,
-      icon:         item.icon,
-      groupLabel:   item.groupLabel,
-      displayOrder: item.displayOrder,
-      isVisible:    !item.isVisible
+      label:              item.label,
+      icon:               item.icon,
+      groupLabel:         item.groupLabel,
+      displayOrder:       item.displayOrder,
+      isVisible:          !item.isVisible,
+      requiredPermission: item.requiredPermission,
+      portalScope:        item.portalScope ?? undefined
     };
     this.adminService.updateAdminNavItem(item.id, dto).subscribe({
       next: () => this.items.update(list => list.map(i => i.id === item.id ? { ...i, isVisible: !i.isVisible } : i))
@@ -272,6 +449,114 @@ export class AdminNavComponent implements OnInit {
   }
 
   private emptyForm() {
-    return { id: 0, label: '', icon: '', groupLabel: '', displayOrder: 0, isVisible: true };
+    return { id: 0, label: '', icon: '', groupLabel: '', displayOrder: 0, isVisible: true, requiredPermission: '', portalScope: '' };
+  }
+
+  openCreate(): void {
+    this.createForm = this.blankCreateForm();
+    this.createPortals = new Set(['admin']); // default: admin only
+    this.createError.set('');
+    this.showCreate.set(true);
+  }
+
+  saveCreate(): void {
+    if (!this.createForm.label.trim()) { this.createError.set('Label is required.'); return; }
+    if (!this.createForm.route.trim()) { this.createError.set('Route is required.'); return; }
+    this.creatingItem.set(true);
+    this.adminService.createAdminNavItem({
+      ...this.createForm,
+      label:       this.createForm.label.trim(),
+      route:       this.createForm.route.trim(),
+      portalScope: this.stringifyPortals(this.createPortals) ?? 'admin'
+    }).subscribe({
+      next: () => {
+        this.toast.success('Nav item created.');
+        this.creatingItem.set(false);
+        this.showCreate.set(false);
+        this.reload();
+      },
+      error: (e: { error?: { message?: string } }) => {
+        this.createError.set(e?.error?.message ?? 'Failed to create item.');
+        this.creatingItem.set(false);
+      }
+    });
+  }
+
+  confirmDelete(item: AdminNavItem): void { this.deleteTarget.set(item); }
+
+  doDelete(): void {
+    const item = this.deleteTarget();
+    if (!item) return;
+    this.saving.set(true);
+    this.adminService.deleteAdminNavItem(item.id).subscribe({
+      next: () => {
+        this.toast.success('Nav item deleted.');
+        this.saving.set(false);
+        this.deleteTarget.set(null);
+        this.reload();
+      },
+      error: (e: { error?: { message?: string } }) => {
+        this.toast.error(e?.error?.message ?? 'Failed to delete item.');
+        this.saving.set(false);
+        this.deleteTarget.set(null);
+      }
+    });
+  }
+
+  private reload(): void {
+    this.adminService.getAllAdminNav().subscribe({
+      next: items => this.items.set(items),
+      error: () => {}
+    });
+  }
+
+  /** Parses a comma-separated PortalScope string into a Set of portal names. */
+  private parsePortals(scope?: string | null): Set<string> {
+    if (!scope) return new Set();
+    return new Set(scope.split(',').map(p => p.trim()).filter(Boolean));
+  }
+
+  /** Converts the Set back to a comma-separated string (or undefined for "all portals"). */
+  private stringifyPortals(portals: Set<string>): string | undefined {
+    if (portals.size === 0) return undefined;
+    return [...portals].sort().join(',');
+  }
+
+  // ── Per-item portal selection (edit form) ─────────────────────────────────
+  editPortals = new Set<string>();
+
+  toggleEditPortal(portal: string): void {
+    if (this.editPortals.has(portal)) this.editPortals.delete(portal);
+    else this.editPortals.add(portal);
+    this.editPortals = new Set(this.editPortals); // trigger Angular change detection
+  }
+
+  // ── Per-item portal selection (create form) ───────────────────────────────
+  createPortals = new Set<string>(['admin']);
+
+  toggleCreatePortal(portal: string): void {
+    if (this.createPortals.has(portal)) this.createPortals.delete(portal);
+    else this.createPortals.add(portal);
+    this.createPortals = new Set(this.createPortals);
+  }
+
+  portalScopeLabel(scope?: string | null): string {
+    if (!scope) return 'all portals';
+    const portals = scope.split(',').map(p => p.trim()).filter(Boolean);
+    if (portals.length === 0) return 'all portals';
+    return portals.join(' + ');
+  }
+
+  portalScopeClass(scope?: string | null): string {
+    if (!scope) return 'scope-all';
+    const portals = scope.split(',').map(p => p.trim()).filter(Boolean);
+    if (portals.includes('admin') && portals.includes('rider')) return 'scope-both';
+    if (portals.includes('admin')) return 'scope-admin';
+    if (portals.includes('rider')) return 'scope-rider';
+    return 'scope-all';
+  }
+
+  private blankCreateForm(): CreateAdminNavItemRequest {
+    return { label: '', route: '/admin/', icon: '', groupLabel: '', displayOrder: 0, isVisible: true, requiredPermission: '', portalScope: 'admin' };
   }
 }

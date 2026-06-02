@@ -13,4 +13,5 @@ public interface IDeliveryRepository
     Task<DeliveryReportDto> GetReportAsync(DateOnly? fromDate, DateOnly? toDate);
     Task<IEnumerable<DeliverySummaryDto>> GetRiderDeliveriesAsync(int riderUserId);
     Task<IEnumerable<RiderUserDto>> GetRidersAsync();
+    Task CompleteAsync(int id, decimal collectedAmount, string? proofPhotoUrl, string? collectionRemarks);
 }

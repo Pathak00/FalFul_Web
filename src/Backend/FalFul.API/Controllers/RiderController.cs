@@ -39,4 +39,11 @@ public class RiderController(IDeliveryService deliveryService) : ControllerBase
         var result = await deliveryService.LogAttemptAsync(id, dto);
         return result.IsSuccess ? CreatedAtAction(nameof(GetDelivery), new { id }, null) : BadRequest(result.Error);
     }
+
+    [HttpPost("deliveries/{id:int}/complete")]
+    public async Task<IActionResult> CompleteDelivery(int id, [FromBody] CompleteDeliveryDto dto)
+    {
+        var result = await deliveryService.CompleteDeliveryAsync(id, dto);
+        return result.IsSuccess ? NoContent() : BadRequest(new { message = result.Error });
+    }
 }

@@ -23,6 +23,7 @@ public interface IDeliveryService
 
     // Rider portal
     Task<IEnumerable<DeliverySummaryDto>> GetRiderDeliveriesAsync(int riderUserId);
+    Task<Result> CompleteDeliveryAsync(int id, CompleteDeliveryDto dto);
 
     // Customer rating
     Task<Result>               SubmitRatingAsync(int orderId, int userId, SubmitRatingDto dto);
