@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, output, signal } from '@angular/core';
+import { Component, HostListener, OnInit, effect, inject, output, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
@@ -63,7 +63,7 @@ import { MenuStore } from '../../../core/stores/menu.store';
 
       <!-- Desktop actions -->
       <div class="nav-actions">
-        <button class="cart-btn" (click)="cartOpen.emit()">
+        <button class="cart-btn" [class.cart-bounce]="cartBouncing()" (click)="cartOpen.emit()">
           <i class="bi bi-cart3"></i>
           @if (cart.itemCount() > 0) {
             <span class="cart-badge">{{ cart.itemCount() }}</span>
@@ -91,7 +91,7 @@ import { MenuStore } from '../../../core/stores/menu.store';
 
       <!-- Mobile controls: cart + hamburger -->
       <div class="mobile-controls">
-        <button class="cart-btn" (click)="cartOpen.emit()">
+        <button class="cart-btn" [class.cart-bounce]="cartBouncing()" (click)="cartOpen.emit()">
           <i class="bi bi-cart3"></i>
           @if (cart.itemCount() > 0) {
             <span class="cart-badge">{{ cart.itemCount() }}</span>
@@ -185,14 +185,22 @@ export class NavbarComponent implements OnInit {
   readonly user = this.authService.currentUser;
 
   scrolled       = signal(false);
+  cartBouncing   = signal(false);
   activeDropdown = signal<number | null>(null);
   mobileMenuOpen = signal(false);
 
-  ngOnInit(): void {
-    // On non-home pages start in scrolled (opaque) state immediately
-    this.updateScrolled();
+  constructor() {
+    // Bounce the cart icon whenever a new item is added
+    effect(() => {
+      if (this.cart.lastAdded() > 0) {
+        this.cartBouncing.set(true);
+        setTimeout(() => this.cartBouncing.set(false), 600);
+      }
+    }, { allowSignalWrites: true });
+  }
 
-    // Re-evaluate on every route change (e.g. navigating home → products)
+  ngOnInit(): void {
+    this.updateScrolled();
     this.router.events.subscribe(e => {
       if (e instanceof NavigationEnd) this.updateScrolled();
     });

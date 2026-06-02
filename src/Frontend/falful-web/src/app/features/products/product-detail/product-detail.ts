@@ -108,7 +108,10 @@ import { Product } from '../../../core/models/product.models';
                 <button (click)="incQty()"><i class="bi bi-plus"></i></button>
               </div>
 
-              <button class="btn-add-cart" [disabled]="!product()!.isAvailable" (click)="addToCart()">
+              <button class="btn-add-cart"
+                      [class.pressing]="btnPressing()"
+                      [disabled]="!product()!.isAvailable"
+                      (click)="addToCart()">
                 <i class="bi bi-cart-plus"></i> Add to Cart
               </button>
             </div>
@@ -146,10 +149,11 @@ export class ProductDetailComponent implements OnInit {
   private cart  = inject(CartService);
   private route = inject(ActivatedRoute);
 
-  product  = signal<Product | null>(null);
-  loading  = signal(true);
-  addedMsg = signal(false);
-  qty      = 1;
+  product     = signal<Product | null>(null);
+  loading     = signal(true);
+  addedMsg    = signal(false);
+  btnPressing = signal(false);
+  qty         = 1;
   private msgTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit() {
@@ -183,6 +187,8 @@ export class ProductDetailComponent implements OnInit {
       totalPrice:  p.price * this.qty,
       isCustomBuild: false,
     });
+    this.btnPressing.set(true);
+    setTimeout(() => this.btnPressing.set(false), 280);
     this.addedMsg.set(true);
     if (this.msgTimer) clearTimeout(this.msgTimer);
     this.msgTimer = setTimeout(() => this.addedMsg.set(false), 2000);
