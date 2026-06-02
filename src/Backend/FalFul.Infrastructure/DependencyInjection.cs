@@ -15,9 +15,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
-        // Notification services (swap ConsoleSmsService for TwilioSmsService in production)
         services.AddScoped<IEmailService, SmtpEmailService>();
-        services.AddScoped<ISmsService,   ConsoleSmsService>();
+        services.AddScoped<ISmsService,   TwilioSmsService>();
 
         // Payment gateways — resolved by IEnumerable<IPaymentGateway>, picked by .Code
         services.AddScoped<IPaymentGateway, CodGateway>();
