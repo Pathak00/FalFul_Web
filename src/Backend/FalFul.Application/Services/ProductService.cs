@@ -2,12 +2,47 @@ using FalFul.Application.DTOs.Product;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Common;
 using FalFul.Domain.Entities;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 
 namespace FalFul.Application.Services;
 
-public class ProductService(ICategoryRepository categories, IProductRepository products) : IProductService
+public class ProductService(
+    ICategoryRepository categories,
+    IProductRepository  products,
+    IMemoryCache        cache) : IProductService
 {
-    // ── Categories ──────────────────────────────────────────────────────────
+    // ── Cache TTLs ────────────────────────────────────────────────────────────
+    private static readonly TimeSpan ProductTtl  = TimeSpan.FromSeconds(45);
+    private static readonly TimeSpan CategoryTtl = TimeSpan.FromMinutes(5);
+
+    // ── Shared eviction token — cancelled to flush all product/category entries
+    private static CancellationTokenSource _productEvict  = new();
+    private static CancellationTokenSource _categoryEvict = new();
+
+    private static MemoryCacheEntryOptions ProductOpts() =>
+        new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ProductTtl }
+            .AddExpirationToken(new CancellationChangeToken(_productEvict.Token));
+
+    private static MemoryCacheEntryOptions CategoryOpts() =>
+        new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = CategoryTtl }
+            .AddExpirationToken(new CancellationChangeToken(_categoryEvict.Token));
+
+    private static void EvictProducts()
+    {
+        var old = Interlocked.Exchange(ref _productEvict, new CancellationTokenSource());
+        old.Cancel();
+        old.Dispose();
+    }
+
+    private static void EvictCategories()
+    {
+        var old = Interlocked.Exchange(ref _categoryEvict, new CancellationTokenSource());
+        old.Cancel();
+        old.Dispose();
+    }
+
+    // ── Categories ────────────────────────────────────────────────────────────
 
     public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync()
     {
@@ -17,8 +52,14 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
 
     public async Task<IEnumerable<CategoryDto>> GetActiveCategoriesAsync()
     {
+        const string key = "categories:active";
+        if (cache.TryGetValue(key, out IEnumerable<CategoryDto>? cached) && cached is not null)
+            return cached;
+
         var list = await categories.GetActiveAsync();
-        return list.Select(MapCategory);
+        var dto  = list.Select(MapCategory).ToList();
+        cache.Set(key, (IEnumerable<CategoryDto>)dto, CategoryOpts());
+        return dto;
     }
 
     public async Task<Result<int>> CreateCategoryAsync(CreateCategoryDto dto)
@@ -40,6 +81,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         try
         {
             var id = await categories.CreateAsync(entity);
+            EvictCategories();
             return Result<int>.Success(id);
         }
         catch (Exception ex)
@@ -67,6 +109,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         try
         {
             await categories.UpdateAsync(existing);
+            EvictCategories();
             return Result.Success();
         }
         catch (Exception ex)
@@ -83,6 +126,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         try
         {
             await categories.DeleteAsync(id);
+            EvictCategories();
             return Result.Success();
         }
         catch (Exception ex)
@@ -91,36 +135,64 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         }
     }
 
-    // ── Products ─────────────────────────────────────────────────────────────
+    // ── Products ──────────────────────────────────────────────────────────────
 
-    public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(int? categoryId = null, string? searchTerm = null)
+    public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(
+        int? categoryId = null, string? searchTerm = null)
     {
+        // Admin endpoint — no caching (always fresh data)
         var list = await products.GetAllAsync(categoryId, searchTerm);
         return list.Select(MapProduct);
     }
 
-    public async Task<IEnumerable<ProductSummaryDto>> GetPublicProductsAsync(int? categoryId = null, string? searchTerm = null, bool featuredOnly = false)
+    public async Task<IEnumerable<ProductSummaryDto>> GetPublicProductsAsync(
+        int? categoryId = null, string? searchTerm = null, bool featuredOnly = false)
     {
+        // Cache key encodes all query parameters
+        var key = $"products:public:{categoryId}:{searchTerm?.ToLowerInvariant() ?? ""}:{featuredOnly}";
+
+        if (cache.TryGetValue(key, out IEnumerable<ProductSummaryDto>? cached) && cached is not null)
+            return cached;
+
         var list = await products.GetPublicAsync(categoryId, searchTerm, featuredOnly);
-        return list.Select(MapSummary);
+        var dto  = list.Select(MapSummary).ToList();
+        cache.Set(key, (IEnumerable<ProductSummaryDto>)dto, ProductOpts());
+        return dto;
     }
 
     public async Task<IEnumerable<ProductSummaryDto>> GetFeaturedProductsAsync()
     {
+        const string key = "products:featured";
+
+        if (cache.TryGetValue(key, out IEnumerable<ProductSummaryDto>? cached) && cached is not null)
+            return cached;
+
         var list = await products.GetFeaturedAsync();
-        return list.Select(MapSummary);
+        var dto  = list.Select(MapSummary).ToList();
+        cache.Set(key, (IEnumerable<ProductSummaryDto>)dto, ProductOpts());
+        return dto;
     }
 
     public async Task<ProductDto?> GetProductByIdAsync(int id)
     {
+        // Admin endpoint — no caching
         var p = await products.GetByIdAsync(id);
         return p is null ? null : MapProduct(p);
     }
 
     public async Task<ProductDto?> GetProductBySlugAsync(string slug)
     {
+        var key = $"product:slug:{slug.ToLowerInvariant()}";
+
+        if (cache.TryGetValue(key, out ProductDto? cached) && cached is not null)
+            return cached;
+
         var p = await products.GetBySlugAsync(slug);
-        return p is null ? null : MapProduct(p);
+        if (p is null) return null;
+
+        var dto = MapProduct(p);
+        cache.Set(key, dto, ProductOpts());
+        return dto;
     }
 
     public async Task<Result<int>> CreateProductAsync(CreateProductDto dto)
@@ -150,6 +222,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         try
         {
             var id = await products.CreateAsync(entity);
+            EvictProducts();
             return Result<int>.Success(id);
         }
         catch (Exception ex)
@@ -185,6 +258,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         try
         {
             await products.UpdateAsync(existing);
+            EvictProducts();
             return Result.Success();
         }
         catch (Exception ex)
@@ -199,6 +273,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         if (existing is null) return Result.Failure("Product not found.");
 
         await products.DeleteAsync(id);
+        EvictProducts();
         return Result.Success();
     }
 
@@ -208,6 +283,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         if (existing is null) return Result.Failure("Product not found.");
 
         await products.SetAvailabilityAsync(id, isAvailable);
+        EvictProducts();
         return Result.Success();
     }
 

@@ -15,6 +15,11 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IGoogleAuthService _googleAuth;
 
+    // BCrypt work-factor 12 takes ~300-500 ms per call.
+    // Limit concurrent verifications to CPU-count to prevent thread-pool saturation under load.
+    private static readonly SemaphoreSlim _bcryptGate =
+        new(Math.Max(1, Environment.ProcessorCount), Math.Max(1, Environment.ProcessorCount));
+
     public AuthService(
         IUserRepository userRepo,
         IOrganizationRepository orgRepo,
@@ -88,17 +93,37 @@ public class AuthService : IAuthService
 
     public async Task<Result<AuthResponseDto>> LoginAsync(LoginDto dto)
     {
-        var user = await _userRepo.GetByEmailAsync(dto.Identifier)
+        // Route by identifier type to avoid an unnecessary second DB query.
+        // An '@' sign means email; pure digits/plus means phone; ambiguous → try both.
+        User? user;
+        if (dto.Identifier.Contains('@'))
+        {
+            user = await _userRepo.GetByEmailAsync(dto.Identifier);
+        }
+        else if (dto.Identifier.All(c => char.IsDigit(c) || c == '+' || c == '-' || c == ' '))
+        {
+            user = await _userRepo.GetByPhoneAsync(dto.Identifier);
+        }
+        else
+        {
+            user = await _userRepo.GetByEmailAsync(dto.Identifier)
                    ?? await _userRepo.GetByPhoneAsync(dto.Identifier);
+        }
 
         if (user == null || user.PasswordHash == null)
             return Result<AuthResponseDto>.Failure("Invalid credentials.");
 
-        if (!_passwordHasher.Verify(dto.Password, user.PasswordHash))
-            return Result<AuthResponseDto>.Failure("Invalid credentials.");
-
         if (!user.IsActive)
             return Result<AuthResponseDto>.Failure("Account is deactivated.");
+
+        // Throttle concurrent BCrypt operations — prevents CPU saturation under load
+        await _bcryptGate.WaitAsync();
+        bool valid;
+        try   { valid = _passwordHasher.Verify(dto.Password, user.PasswordHash); }
+        finally { _bcryptGate.Release(); }
+
+        if (!valid)
+            return Result<AuthResponseDto>.Failure("Invalid credentials.");
 
         return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
     }

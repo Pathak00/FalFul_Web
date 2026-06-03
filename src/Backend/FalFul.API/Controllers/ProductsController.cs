@@ -13,6 +13,7 @@ public class ProductsController(IProductService productService) : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
+    [ResponseCache(Duration = 45, VaryByQueryKeys = ["categoryId", "search", "featured"])]
     public async Task<IActionResult> GetPublic(
         [FromQuery] int? categoryId,
         [FromQuery] string? search,
@@ -24,11 +25,13 @@ public class ProductsController(IProductService productService) : ControllerBase
 
     [HttpGet("featured")]
     [AllowAnonymous]
+    [ResponseCache(Duration = 60)]
     public async Task<IActionResult> GetFeatured() =>
         Ok(await productService.GetFeaturedProductsAsync());
 
     [HttpGet("{slug}")]
     [AllowAnonymous]
+    [ResponseCache(Duration = 60, VaryByQueryKeys = ["slug"])]
     public async Task<IActionResult> GetBySlug(string slug)
     {
         var product = await productService.GetProductBySlugAsync(slug);

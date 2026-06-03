@@ -1,6 +1,7 @@
 using FalFul.Application.DTOs.Auth;
 using FalFul.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FalFul.API.Controllers;
 
@@ -13,6 +14,7 @@ public class AuthController : ControllerBase
     public AuthController(IAuthService authService) => _authService = authService;
 
     [HttpPost("register")]
+    [EnableRateLimiting("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
     {
         var result = await _authService.RegisterUserAsync(dto);
@@ -31,6 +33,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
         var result = await _authService.LoginAsync(dto);
