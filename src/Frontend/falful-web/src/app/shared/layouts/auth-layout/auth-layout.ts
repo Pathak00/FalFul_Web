@@ -8,13 +8,23 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   template: `
     <div class="auth-layout">
       <div class="auth-brand">
+        <div class="auth-brand-grain" aria-hidden="true"></div>
         <a routerLink="/" class="logo">
-          <span>🍎</span>
+          <span class="logo-leaf">🌿</span>
           <span class="logo-text">FalFul</span>
         </a>
         <div class="brand-tagline">
-          <h1>Fresh Fruits,<br>Fast Delivery</h1>
-          <p>Order premium fruits online and get them delivered fresh to your door.</p>
+          <p class="brand-overline">Farm to Table · Since 2024</p>
+          <h1>Sun-Kissed.<br><em>Grove-Fresh.</em></h1>
+          <p class="brand-desc">Hand-picked seasonal fruits from Himalayan farms, delivered within 48 hours of harvest.</p>
+        </div>
+        <div class="brand-fruits" aria-hidden="true">🍊 🥭 🍎 🍇 🍋 🍓</div>
+        <div class="brand-stat-row">
+          <div class="brand-stat"><strong>2,400+</strong><span>Happy customers</span></div>
+          <div class="brand-stat-div"></div>
+          <div class="brand-stat"><strong>48 hr</strong><span>Farm to door</span></div>
+          <div class="brand-stat-div"></div>
+          <div class="brand-stat"><strong>100%</strong><span>Natural</span></div>
         </div>
       </div>
       <div class="auth-content">

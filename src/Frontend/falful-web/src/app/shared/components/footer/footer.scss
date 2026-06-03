@@ -1,54 +1,158 @@
 .footer {
-  background: #1a1a2e;
-  color: #aaa;
-  padding: 3rem 2rem 1.5rem;
+  background: var(--color-soil);
+  color: rgba(249,244,236,0.6);
+  position: relative;
+  overflow: hidden;
 
-  @media (max-width: 480px) { padding: 2rem 1rem 1rem; }
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 56px 56px;
+    pointer-events: none;
+  }
 }
 
-.footer-content {
+/* ── Top section ─────────────────────────────────────────────────────────── */
+.footer-top {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 4rem 2rem 3rem;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: 1.75fr 1fr 1fr 1fr;
+  gap: 3rem;
+  position: relative;
 
-  @media (max-width: 768px) { grid-template-columns: 1fr 1fr; }
-  @media (max-width: 480px) { grid-template-columns: 1fr; gap: 1.5rem; }
+  @media (max-width: 900px) { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 640px) { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.25rem 2rem; }
 }
 
+/* Brand column */
 .footer-brand {
-  .logo-icon { font-size: 1.5rem; }
-  .logo-text {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: #48c774;
-    margin-left: 0.3rem;
-  }
-  p { margin-top: 0.75rem; font-size: 0.9rem; line-height: 1.6; }
-}
-
-.footer-links {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.25rem;
+}
 
-  h4 { color: white; font-size: 0.95rem; margin-bottom: 0.5rem; }
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-icon { font-size: 1.5rem; }
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--color-cream);
+  letter-spacing: -0.01em;
+}
+
+.brand-tagline {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.0625rem;
+  font-style: italic;
+  color: rgba(249,244,236,0.55);
+  line-height: 1.6;
+}
+
+.brand-badges {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-leaf);
+  background: rgba(123,173,78,0.1);
+  border: 1px solid rgba(123,173,78,0.2);
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.75rem;
+}
+
+/* Nav cols */
+.footer-nav-cols {
+  display: contents;
+
+  @media (max-width: 640px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+
+  h4 {
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    margin-bottom: 0.5rem;
+  }
 
   a {
-    color: #aaa;
+    color: rgba(249,244,236,0.5);
     text-decoration: none;
     font-size: 0.9rem;
     transition: color 0.2s;
 
-    &:hover { color: #48c774; }
+    &:hover { color: var(--color-cream); }
   }
 }
 
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+.footer-divider {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
+/* ── Bottom bar ──────────────────────────────────────────────────────────── */
 .footer-bottom {
-  border-top: 1px solid rgba(255,255,255,0.08);
-  padding-top: 1.5rem;
-  text-align: center;
-  font-size: 0.85rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  position: relative;
+
+  p {
+    font-size: 0.8125rem;
+    color: rgba(249,244,236,0.3);
+  }
+
+  .footer-bottom-tagline {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: rgba(249,244,236,0.2);
+  }
+
+  @media (max-width: 640px) {
+    padding: 1.5rem 1.25rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

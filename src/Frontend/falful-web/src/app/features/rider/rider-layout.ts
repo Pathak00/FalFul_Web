@@ -69,7 +69,7 @@ import { AdminNavStore } from '../../core/stores/admin-nav.store';
     .rider-shell { display: flex; min-height: 100vh; background: #f8fafc; }
 
     .rider-sidebar {
-      width: 200px; min-height: 100vh; background: #1e293b;
+      width: 200px; min-height: 100vh; background: #0B3D20;
       display: flex; flex-direction: column; flex-shrink: 0;
       position: sticky; top: 0; height: 100vh; z-index: 200;
     }
@@ -80,10 +80,10 @@ import { AdminNavStore } from '../../core/stores/admin-nav.store';
       .brand-logo {
         color: #fff; text-decoration: none; font-weight: 800; font-size: 1rem;
         display: flex; align-items: center; gap: .4rem;
-        i { color: #60a5fa; font-size: 1.1rem; }
+        i { color: #22C55E; font-size: 1.1rem; }
       }
       .rider-badge {
-        font-size: .6rem; background: #3b82f6; color: #fff;
+        font-size: .6rem; background: #16A34A; color: #fff;
         padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .06em;
       }
     }
@@ -96,7 +96,7 @@ import { AdminNavStore } from '../../core/stores/admin-nav.store';
       display: flex; justify-content: center; padding: 1.5rem;
       .nav-spinner {
         width: 20px; height: 20px; border-radius: 50%;
-        border: 2px solid rgba(255,255,255,.15); border-top-color: #60a5fa;
+        border: 2px solid rgba(255,255,255,.15); border-top-color: #22C55E;
         animation: spin .7s linear infinite;
       }
     }
@@ -113,8 +113,8 @@ import { AdminNavStore } from '../../core/stores/admin-nav.store';
       border: none; background: none; width: 100%; cursor: pointer; text-align: left;
       position: relative;
       &:hover { background: rgba(255,255,255,.06); color: #fff; }
-      &.active { background: rgba(59,130,246,.15); color: #93c5fd;
-        &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #60a5fa; border-radius: 0 2px 2px 0; }
+      &.active { background: rgba(22,163,74,.15); color: #93c5fd;
+        &::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 20px; width: 3px; background: #22C55E; border-radius: 0 2px 2px 0; }
       }
       .nav-icon { font-size: 1rem; flex-shrink: 0; width: 16px; text-align: center; }
     }
@@ -136,7 +136,7 @@ import { AdminNavStore } from '../../core/stores/admin-nav.store';
     .topbar-left { display: flex; align-items: center; gap: .75rem; }
 
     .topbar-avatar {
-      width: 30px; height: 30px; border-radius: 50%; background: #dbeafe; color: #2563eb;
+      width: 30px; height: 30px; border-radius: 50%; background: #dbeafe; color: #16A34A;
       font-size: .8rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
     }
 

@@ -11,6 +11,9 @@ export class CartService {
   readonly itemCount  = computed(() => this._items().length);
   readonly subTotal   = computed(() => this._items().reduce((s, i) => s + i.totalPrice, 0));
 
+  // Incremented on every addItem call — consumers watch it to trigger bounce animations
+  readonly lastAdded  = signal(0);
+
   readonly productItems  = computed(() => this._items().filter(i => i.itemType === 'PRODUCT'));
   readonly bowlItems     = computed(() => this._items().filter(i => i.itemType === 'BUILD_BOWL'));
 
@@ -24,7 +27,7 @@ export class CartService {
         this._items.update(list => {
           const updated = [...list];
           const cur     = updated[idx];
-          const newQty  = cur.quantity + 1;
+          const newQty  = cur.quantity + item.quantity;
           updated[idx]  = { ...cur, quantity: newQty, totalPrice: cur.unitPrice * newQty };
           return updated;
         });
@@ -51,6 +54,7 @@ export class CartService {
       }
     }
     this.persist();
+    this.lastAdded.update(n => n + 1);
   }
 
   removeItem(index: number): void {

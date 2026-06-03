@@ -148,7 +148,7 @@ import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../core/mode
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2d9348, #48c774);
+      background: linear-gradient(135deg, #16A34A, #22C55E);
       color: #fff;
       font-size: 1.25rem;
       font-weight: 800;
@@ -175,7 +175,7 @@ import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../core/mode
       display: inline-flex;
       align-items: center;
       gap: .4rem;
-      background: linear-gradient(135deg, #2d9348, #48c774);
+      background: linear-gradient(135deg, #16A34A, #22C55E);
       color: #fff;
       text-decoration: none;
       padding: .55rem 1.25rem;
@@ -211,7 +211,7 @@ import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../core/mode
     .see-all {
       font-size: .8rem;
       font-weight: 600;
-      color: #2d9348;
+      color: #16A34A;
       text-decoration: none;
       display: flex;
       align-items: center;
@@ -307,7 +307,7 @@ import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../core/mode
     .btn-browse {
       display: inline-block;
       text-decoration: none;
-      background: linear-gradient(135deg, #2d9348, #48c774);
+      background: linear-gradient(135deg, #16A34A, #22C55E);
       color: #fff;
       padding: .5rem 1.25rem;
       border-radius: 8px;
@@ -411,7 +411,7 @@ import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../core/mode
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2d9348, #48c774);
+      background: linear-gradient(135deg, #16A34A, #22C55E);
       color: #fff;
       font-size: 1.1rem;
       font-weight: 800;

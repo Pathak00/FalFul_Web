@@ -12,10 +12,13 @@ import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-ani
 })
 export class HowItWorksComponent {
   @Input() sectionData: HomepageSection | undefined;
-  steps = [
-    { num: '01', icon: '🔍', title: 'Browse & Select', desc: 'Explore our fresh catalogue. Filter by type, season, or price. Every item is in stock and ready.' },
-    { num: '02', icon: '🛒', title: 'Customise Your Order', desc: 'Choose weight, cut style, or build a custom box. Add delivery instructions or schedule for later.' },
-    { num: '03', icon: '💳', title: 'Pay Securely', desc: 'Pay via eSewa, Khalti, card, or cash on delivery. All transactions are fully encrypted.' },
-    { num: '04', icon: '🚀', title: 'Get It Fresh', desc: 'Your order is packed and dispatched the same day. Track it live right to your door.' },
+
+  journey = [
+    { num: '01', icon: '🌱', label: 'Orchard',    title: 'Farm Selection',      desc: 'Hand-selected partner farms across Nepal & India, verified for quality.' },
+    { num: '02', icon: '🧺', label: 'Harvest',    title: 'Picked at Peak',       desc: 'Harvested at peak ripeness within 24 hours of your order placement.' },
+    { num: '03', icon: '🏭', label: 'Sorting',    title: 'Quality Graded',       desc: 'Inspected, graded, and chilled to lock in flavour and freshness.' },
+    { num: '04', icon: '📦', label: 'Packing',    title: 'Eco Packaging',        desc: 'Zero plastic — 100% compostable materials protect every piece.' },
+    { num: '05', icon: '🚚', label: 'Dispatch',   title: 'Cold-Chain Express',   desc: 'Temperature-controlled logistics ensure nothing wilts in transit.' },
+    { num: '06', icon: '🍽️', label: 'Your Table', title: 'Grove to Door',        desc: 'Delivered within 48 hours of harvest. Taste the difference.' },
   ];
 }

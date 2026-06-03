@@ -25,41 +25,85 @@
 
 .fruit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
 
+// ── Fruit Card ───────────────────────────────────────────────────────────────
+
 .fruit-card {
   background: #fff; border: 2px solid #e5e7eb; border-radius: 12px;
-  cursor: pointer; transition: all .2s; overflow: hidden;
-  position: relative;
+  cursor: pointer; transition: border-color .2s, box-shadow .2s, background .15s;
+  overflow: hidden; position: relative; will-change: transform;
 
   &:hover { border-color: #16a34a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(22,163,74,.15); }
-  &.added { border-color: #16a34a; background: #f0fdf4; }
-  &.skeleton { height: 160px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+
+  &.added {
+    border-color: #16a34a; background: #f0fdf4;
+
+    .fruit-check { animation: check-bounce .4s cubic-bezier(.16,1,.3,1) both; }
+  }
+
+  &.popping { animation: card-pop .38s cubic-bezier(.16,1,.3,1) forwards; }
+
+  &.skeleton {
+    height: 160px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%; animation: shimmer 1.5s infinite; pointer-events: none;
   }
 
   .fruit-img { height: 100px; overflow: hidden;
-    img { width: 100%; height: 100%; object-fit: cover; }
+    img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
     .no-img { width: 100%; height: 100%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 2rem; }
   }
+  &:hover .fruit-img img { transform: scale(1.05); }
+
   .fruit-info { padding: .625rem;
     .fruit-name  { display: block; font-size: .8rem; font-weight: 600; color: #111; }
     .fruit-price { display: block; font-size: .75rem; color: #16a34a; font-weight: 700; margin-top: 2px; }
     .fruit-min   { display: block; font-size: .68rem; color: #9ca3af; margin-top: 2px; }
   }
-  .fruit-check { position: absolute; top: 6px; right: 6px; color: #16a34a; font-size: 1.1rem;
-    display: none;
-    .added & { display: block; }
+
+  .fruit-check {
+    position: absolute; top: 6px; right: 6px; color: #16a34a; font-size: 1.1rem;
+    opacity: 0; transform: scale(0) rotate(-20deg);
+    .added & { opacity: 1; transform: scale(1) rotate(0); }
   }
 }
 
+// ── Fruit Card Keyframes ─────────────────────────────────────────────────────
+
 @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+@keyframes card-pop {
+  0%   { transform: scale(1)    translateY(0); }
+  35%  { transform: scale(1.07) translateY(-4px); }
+  65%  { transform: scale(.97)  translateY(0); }
+  100% { transform: scale(1)    translateY(0); }
+}
+
+@keyframes check-bounce {
+  0%   { opacity: 0; transform: scale(0)    rotate(-20deg); }
+  55%  { opacity: 1; transform: scale(1.25) rotate(8deg); }
+  100% { opacity: 1; transform: scale(1)    rotate(0); }
+}
+
+// ── Bowl Summary ─────────────────────────────────────────────────────────────
 
 .bowl-summary {
   background: #fff; border-radius: 16px; border: 1px solid #e5e7eb;
   padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;
   height: fit-content; position: sticky; top: 80px;
+  transition: box-shadow .4s ease;
 
   h3 { font-size: 1.1rem; font-weight: 700; margin: 0; color: #111; }
+
+  &.bowl-pulse { animation: bowl-pulse .55s ease forwards; }
 }
+
+@keyframes bowl-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(22,163,74,.3); }
+  45%  { box-shadow: 0 0 0 10px rgba(22,163,74,.12); }
+  100% { box-shadow: 0 0 0 0   rgba(22,163,74,0); }
+}
+
+// ── Container Select ─────────────────────────────────────────────────────────
 
 .container-select {
   label { display: block; font-size: .8rem; font-weight: 600; color: #374151; margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .04em; }
@@ -76,6 +120,8 @@
   }
 }
 
+// ── Empty Bowl ───────────────────────────────────────────────────────────────
+
 .empty-bowl {
   display: flex; flex-direction: column; align-items: center; gap: .5rem;
   color: #9ca3af; padding: 1.5rem;
@@ -83,31 +129,56 @@
   p { margin: 0; font-size: .85rem; }
 }
 
+// ── Entry List ───────────────────────────────────────────────────────────────
+
 .entries-list { display: flex; flex-direction: column; gap: .625rem; }
 
 .entry-row {
   display: flex; align-items: center; gap: .625rem;
   background: #f9fafb; border-radius: 8px; padding: .5rem .75rem;
+  animation: entry-slide-in .32s cubic-bezier(.16,1,.3,1) both;
+
   .entry-name { flex: 1; font-size: .8rem; font-weight: 600; color: #111; }
   .weight-control {
     display: flex; align-items: center; gap: .4rem;
     button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #d1d5db;
       background: #fff; cursor: pointer; font-size: .7rem; color: #374151;
       display: flex; align-items: center; justify-content: center;
-      &:hover:not(:disabled) { border-color: #16a34a; color: #16a34a; }
+      transition: border-color .15s, color .15s, transform .1s;
+      &:hover:not(:disabled) { border-color: #16a34a; color: #16a34a; transform: scale(1.12); }
+      &:active:not(:disabled) { transform: scale(.9); }
       &:disabled { opacity: .4; cursor: not-allowed; }
     }
   }
   .weight-display {
     display: flex; flex-direction: column; align-items: center; min-width: 64px;
-    .weight-val { font-size: .82rem; font-weight: 700; color: #111; line-height: 1.2; }
+    .weight-val {
+      font-size: .82rem; font-weight: 700; color: #111; line-height: 1.2;
+      transition: color .15s, transform .15s;
+      &.flashing { animation: weight-flash .28s ease forwards; }
+    }
     .weight-min { font-size: .66rem; color: #9ca3af; line-height: 1.2; }
   }
   .entry-price { font-size: .8rem; font-weight: 700; color: #16a34a; min-width: 55px; text-align: right; }
-  .remove-entry { background: none; border: none; color: #d1d5db; cursor: pointer; font-size: .9rem; padding: 0;
-    &:hover { color: #ef4444; }
+  .remove-entry {
+    background: none; border: none; color: #d1d5db; cursor: pointer; font-size: .9rem; padding: 0;
+    transition: color .15s, transform .15s;
+    &:hover { color: #ef4444; transform: scale(1.2) rotate(10deg); }
   }
 }
+
+@keyframes entry-slide-in {
+  0%   { transform: translateX(18px); opacity: 0; }
+  100% { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes weight-flash {
+  0%   { color: #111;     transform: scale(1); }
+  35%  { color: #16a34a;  transform: scale(1.18); }
+  100% { color: #111;     transform: scale(1); }
+}
+
+// ── Price Breakdown ──────────────────────────────────────────────────────────
 
 .price-breakdown {
   border-top: 1px solid #f0f0f0; padding-top: 1rem; display: flex; flex-direction: column; gap: .4rem;
@@ -119,14 +190,84 @@
   }
 }
 
+// ── Bowl Quantity Row ────────────────────────────────────────────────────────
+
+.bowl-qty-row {
+  display: flex; align-items: center; gap: .75rem;
+  background: #f9fafb; border-radius: 10px; padding: .625rem .875rem;
+
+  .bowl-qty-label {
+    font-size: .8rem; font-weight: 600; color: #374151;
+    text-transform: uppercase; letter-spacing: .04em; flex: 1;
+  }
+
+  .bowl-qty-control {
+    display: flex; align-items: center; gap: 0;
+    border: 1.5px solid #d1d5db; border-radius: 8px; overflow: hidden;
+
+    button {
+      width: 30px; height: 30px; border: none; background: #fff;
+      cursor: pointer; font-size: .75rem; color: #374151;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s, transform .1s;
+      &:hover:not(:disabled) { background: #f0fdf4; color: #16a34a; }
+      &:active:not(:disabled) { transform: scale(.88); }
+      &:disabled { opacity: .35; cursor: not-allowed; }
+    }
+
+    .bowl-qty-val {
+      min-width: 36px; text-align: center;
+      font-size: .88rem; font-weight: 700; color: #111;
+      border-left: 1.5px solid #d1d5db; border-right: 1.5px solid #d1d5db;
+      line-height: 30px;
+    }
+  }
+
+  .bowl-qty-total {
+    font-size: .85rem; font-weight: 700; color: #16a34a;
+    white-space: nowrap;
+    animation: success-slide .25s cubic-bezier(.16,1,.3,1) both;
+  }
+}
+
+// ── Add Bowl Button ──────────────────────────────────────────────────────────
+
 .btn-add-bowl {
   background: #16a34a; color: #fff; border: none; border-radius: 10px;
   padding: .75rem; font-size: .9rem; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: .5rem;
-  transition: background .2s;
-  &:hover { background: #15803d; }
+  transition: background .2s, transform .15s;
+  will-change: transform;
+
+  &:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: scale(.97); }
   &:disabled { background: #d1d5db; cursor: not-allowed; }
+  &.cart-popping { animation: btn-cart-pop .38s cubic-bezier(.16,1,.3,1) forwards; }
 }
+
+@keyframes btn-cart-pop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(.92); }
+  65%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+// ── Success Message ──────────────────────────────────────────────────────────
+
+.added-success {
+  display: flex; align-items: center; gap: .5rem;
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+  padding: .625rem .875rem; font-size: .85rem; font-weight: 600; color: #16a34a;
+  animation: success-slide .32s cubic-bezier(.16,1,.3,1) both;
+  i { font-size: 1rem; }
+}
+
+@keyframes success-slide {
+  0%   { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0);   opacity: 1; }
+}
+
+// ── Misc ─────────────────────────────────────────────────────────────────────
 
 .btn-browse {
   display: flex; align-items: center; justify-content: center; gap: .4rem;
@@ -139,13 +280,6 @@
   padding: 3rem 2rem; color: #9ca3af; text-align: center;
   i { font-size: 2.5rem; }
   p { margin: 0; font-size: .9rem; }
-}
-
-.added-success {
-  display: flex; align-items: center; gap: .5rem;
-  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
-  padding: .625rem .875rem; font-size: .85rem; font-weight: 600; color: #16a34a;
-  i { font-size: 1rem; }
 }
 
 .bowls-in-cart {
@@ -175,7 +309,8 @@
   .bic-price { font-size: .82rem; font-weight: 700; color: #16a34a; white-space: nowrap; }
   .bic-remove {
     background: none; border: none; color: #d1d5db; cursor: pointer; font-size: .85rem; padding: 0;
-    &:hover { color: #ef4444; }
+    transition: color .15s, transform .15s;
+    &:hover { color: #ef4444; transform: scale(1.15); }
   }
 }
 
@@ -184,6 +319,27 @@
   border: none; border-radius: 10px; padding: .7rem;
   font-size: .88rem; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: .5rem;
-  text-decoration: none; transition: opacity .15s;
-  &:hover { opacity: .9; }
+  text-decoration: none; transition: opacity .15s, transform .15s;
+  &:hover { opacity: .9; transform: translateY(-1px); }
+}
+
+// ── Flying Particle ──────────────────────────────────────────────────────────
+
+.fp {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  animation: fruit-fly .75s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+@keyframes fruit-fly {
+  0%   { transform: translate(0, 0)                                                             scale(1.1);  opacity: 1; }
+  38%  { transform: translate(calc(var(--tx) * .42), calc(var(--ty) * .3 - 64px))              scale(.95);  opacity: .95; }
+  100% { transform: translate(var(--tx), var(--ty))                                             scale(.2);   opacity: 0; }
 }

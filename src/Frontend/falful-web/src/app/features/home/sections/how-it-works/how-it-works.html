@@ -1,31 +1,53 @@
-<section class="hiw-section section-pad">
+<section class="journey-section">
   <div class="container">
-    <div class="text-center" appScrollAnimate="reveal">
-      <span class="section-label">How It Works</span>
+
+    <!-- Section header -->
+    <div class="journey-header" appScrollAnimate="reveal">
+      <span class="journey-label">Farm to Table</span>
       @if (sectionData?.title) {
-        <h2 class="section-title">{{ sectionData!.title }}</h2>
+        <h2 class="journey-title">{{ sectionData!.title }}</h2>
       } @else {
-        <h2 class="section-title">From orchard to doorstep<br>in <span class="gradient-text">four simple steps</span></h2>
+        <h2 class="journey-title">From the <em>grove</em><br>to your table</h2>
       }
+      <p class="journey-sub">{{ sectionData?.subtitle || 'Six steps. 48 hours. Every fruit at its peak.' }}</p>
     </div>
 
-    <div class="steps-grid">
-      @for (s of steps; track s.num; let i = $index) {
-        <div class="step-card" [appScrollAnimate]="'reveal'" [animDelay]="i * 100">
-          <div class="step-num">{{ s.num }}</div>
-          <div class="step-icon">{{ s.icon }}</div>
-          <h3>{{ s.title }}</h3>
-          <p>{{ s.desc }}</p>
-          @if (i < steps.length - 1) {
-            <div class="step-arrow" aria-hidden="true">→</div>
-          }
+    <!-- Timeline -->
+    <div class="journey-grid">
+      @for (step of journey; track step.num; let i = $index) {
+        <div class="journey-step" [appScrollAnimate]="'reveal'" [animDelay]="i * 100">
+          <!-- Step number + connector line -->
+          <div class="step-track">
+            <div class="step-num">{{ step.num }}</div>
+            @if (i < journey.length - 1) {
+              <div class="step-line"></div>
+            }
+          </div>
+          <!-- Step content -->
+          <div class="step-content">
+            <div class="step-icon-wrap">
+              <span class="step-icon">{{ step.icon }}</span>
+            </div>
+            <div class="step-meta">
+              <span class="step-badge">{{ step.label }}</span>
+              <h3 class="step-title">{{ step.title }}</h3>
+              <p class="step-desc">{{ step.desc }}</p>
+            </div>
+          </div>
         </div>
       }
     </div>
 
-    <div class="hiw-cta text-center" [appScrollAnimate]="'reveal'" [animDelay]="400">
-      <a routerLink="/auth/register" class="btn-primary btn-lg">Start Ordering Now</a>
+    <!-- CTA -->
+    <div class="journey-cta" appScrollAnimate="reveal" [animDelay]="700">
+      <a routerLink="/products" class="journey-btn">
+        <span>Start Your Harvest</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <p class="journey-promise">Free delivery on your first order · No commitment</p>
     </div>
+
   </div>
 </section>
-

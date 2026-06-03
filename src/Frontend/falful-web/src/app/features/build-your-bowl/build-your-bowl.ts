@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, effect } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, effect, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -12,6 +12,14 @@ import { PriceRule } from '../../core/models/order.models';
 interface BowlEntry {
   product: ProductSummary;
   grams: number;
+}
+
+interface Particle {
+  id: number;
+  sx: number;
+  sy: number;
+  tx: string;
+  ty: string;
 }
 
 @Component({
@@ -44,7 +52,10 @@ interface BowlEntry {
           } @else {
             <div class="fruit-grid">
               @for (p of available(); track p.id) {
-                <div class="fruit-card" [class.added]="isAdded(p.id)" (click)="toggleFruit(p)">
+                <div class="fruit-card"
+                     [class.added]="isAdded(p.id)"
+                     [class.popping]="isPopping(p.id)"
+                     (click)="toggleFruit(p, $event)">
                   <div class="fruit-img">
                     @if (p.imageUrl) { <img [src]="p.imageUrl" [alt]="p.name" /> }
                     @else { <div class="no-img"><i class="bi bi-image"></i></div> }
@@ -68,7 +79,7 @@ interface BowlEntry {
         </div>
 
         <!-- Right: Build Summary -->
-        <div class="bowl-summary">
+        <div class="bowl-summary" #bowlPanel [class.bowl-pulse]="bowlPulsing()">
           <h3>Your Bowl</h3>
 
           <!-- Container type -->
@@ -103,7 +114,7 @@ interface BowlEntry {
                       <i class="bi bi-dash"></i>
                     </button>
                     <div class="weight-display">
-                      <span class="weight-val">{{ entry.grams }}g</span>
+                      <span class="weight-val" [class.flashing]="isFlashingGram(entry.product.id)">{{ entry.grams }}g</span>
                       <span class="weight-min">min {{ entryMin(entry) }}g</span>
                     </div>
                     <button (click)="increaseGrams(entry)"><i class="bi bi-plus"></i></button>
@@ -140,8 +151,29 @@ interface BowlEntry {
           </div>
 
           @if (entries().length > 0) {
-            <button class="btn-add-bowl" (click)="addToCart()" [disabled]="bowlTotal() <= 0">
-              <i class="bi bi-cart-plus"></i> Add Bowl to Cart
+            <div class="bowl-qty-row">
+              <span class="bowl-qty-label">Quantity</span>
+              <div class="bowl-qty-control">
+                <button (click)="decreaseBowlQty()" [disabled]="bowlQty() <= 1">
+                  <i class="bi bi-dash"></i>
+                </button>
+                <span class="bowl-qty-val">{{ bowlQty() }}</span>
+                <button (click)="increaseBowlQty()">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+              @if (bowlQty() > 1) {
+                <span class="bowl-qty-total">Rs. {{ bowlTotal() * bowlQty() | number:'1.0-0' }}</span>
+              }
+            </div>
+
+            <button class="btn-add-bowl"
+                    [class.cart-popping]="cartPopping()"
+                    (click)="addToCart()"
+                    [disabled]="bowlTotal() <= 0">
+              <i class="bi bi-cart-plus"></i>
+              @if (bowlQty() > 1) { Add {{ bowlQty() }} Bowls to Cart }
+              @else { Add Bowl to Cart }
             </button>
           }
 
@@ -184,18 +216,31 @@ interface BowlEntry {
         </div>
       </div>
     </div>
+
+    <!-- Flying fruit particles — fixed overlay, clips outside scroll context -->
+    @for (p of particles(); track p.id) {
+      <div class="fp"
+           [style.left.px]="p.sx"
+           [style.top.px]="p.sy"
+           [style.--tx]="p.tx"
+           [style.--ty]="p.ty">
+        🍃
+      </div>
+    }
   `,
   styleUrl: './build-your-bowl.scss'
 })
 export class BuildYourBowlComponent implements OnInit {
+  @ViewChild('bowlPanel') bowlPanelRef?: ElementRef<HTMLElement>;
+
   private productSvc = inject(ProductService);
   private orderSvc   = inject(OrderService);
   readonly cartSvc   = inject(CartService);
 
-  loading   = signal(true);
-  available = signal<ProductSummary[]>([]);
-  entries   = signal<BowlEntry[]>([]);
-  container = signal<'bowl' | 'box'>('bowl');
+  loading      = signal(true);
+  available    = signal<ProductSummary[]>([]);
+  entries      = signal<BowlEntry[]>([]);
+  container    = signal<'bowl' | 'box'>('bowl');
   addedSuccess = signal(false);
 
   bowlFee          = signal(0);
@@ -204,9 +249,16 @@ export class BuildYourBowlComponent implements OnInit {
   cutFruitMinGrams = signal(100);
   cutFruitGramStep = signal(50);
 
+  bowlQty      = signal(1);
+
+  particles    = signal<Particle[]>([]);
+  poppingIds   = signal<number[]>([]);
+  gramFlashIds = signal<number[]>([]);
+  bowlPulsing  = signal(false);
+  cartPopping  = signal(false);
+
   private addedTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // When the global minimum changes, clamp any existing entries below the new floor.
   private readonly clampEffect = effect(() => {
     const globalMin = this.cutFruitMinGrams();
     this.entries.update(list =>
@@ -258,6 +310,14 @@ export class BuildYourBowlComponent implements OnInit {
     return Math.max(p.minOrderGrams ?? 0, this.cutFruitMinGrams());
   }
 
+  isPopping(id: number): boolean {
+    return this.poppingIds().includes(id);
+  }
+
+  isFlashingGram(id: number): boolean {
+    return this.gramFlashIds().includes(id);
+  }
+
   private bowlSig(entries: BowlEntry[], cont: 'bowl' | 'box'): string {
     const parts = [...entries]
       .sort((a, b) => a.product.id - b.product.id)
@@ -281,7 +341,6 @@ export class BuildYourBowlComponent implements OnInit {
         this.serviceFeePct.set(map['service_fee_percent']?.value  ?? 0);
         this.cutFruitMinGrams.set(map['cut_fruit_min_grams']?.value ?? 100);
         this.cutFruitGramStep.set(map['cut_fruit_gram_step']?.value ?? 50);
-        // Only show products configured for cut-fruit (minOrderGrams > 0)
         this.available.set(products.filter(p => p.isAvailable && !!p.minOrderGrams));
         this.loading.set(false);
       },
@@ -295,13 +354,30 @@ export class BuildYourBowlComponent implements OnInit {
     return this.entries().some(e => e.product.id === id);
   }
 
-  toggleFruit(p: ProductSummary): void {
+  toggleFruit(p: ProductSummary, event: MouseEvent): void {
     if (this.isAdded(p.id)) {
       this.removeEntry(p.id);
     } else {
+      this.spawnParticle(event, p.id);
       const initialGrams = this.effectiveMin(p);
       this.entries.update(list => [...list, { product: p, grams: initialGrams }]);
     }
+  }
+
+  private spawnParticle(event: MouseEvent, productId: number): void {
+    const pr = this.bowlPanelRef?.nativeElement.getBoundingClientRect();
+    const dx = pr ? (pr.left + pr.width / 2) - event.clientX : -180;
+    const dy = pr ? (pr.top  + 72)           - event.clientY : 120;
+
+    const id = (Date.now() + Math.random() * 1000) | 0;
+    this.particles.update(ps => [
+      ...ps,
+      { id, sx: event.clientX - 14, sy: event.clientY - 14, tx: `${dx}px`, ty: `${dy}px` }
+    ]);
+    setTimeout(() => this.particles.update(ps => ps.filter(p => p.id !== id)), 850);
+
+    this.poppingIds.update(ids => [...ids, productId]);
+    setTimeout(() => this.poppingIds.update(ids => ids.filter(i => i !== productId)), 420);
   }
 
   increaseGrams(entry: BowlEntry): void {
@@ -309,6 +385,7 @@ export class BuildYourBowlComponent implements OnInit {
     this.entries.update(list => list.map(e =>
       e.product.id === entry.product.id ? { ...e, grams: e.grams + step } : e
     ));
+    this.flashGram(entry.product.id);
   }
 
   decreaseGrams(entry: BowlEntry): void {
@@ -319,16 +396,25 @@ export class BuildYourBowlComponent implements OnInit {
         ? { ...e, grams: Math.max(min, e.grams - step) }
         : e
     ));
+    this.flashGram(entry.product.id);
   }
+
+  private flashGram(id: number): void {
+    this.gramFlashIds.update(ids => [...ids, id]);
+    setTimeout(() => this.gramFlashIds.update(ids => ids.filter(i => i !== id)), 320);
+  }
+
+  increaseBowlQty(): void { this.bowlQty.update(q => Math.min(q + 1, 20)); }
+  decreaseBowlQty(): void { this.bowlQty.update(q => Math.max(1, q - 1)); }
 
   removeEntry(id: number): void {
     this.entries.update(list => list.filter(e => e.product.id !== id));
   }
 
   addToCart(): void {
-    const cont = this.container();
+    const cont           = this.container();
     const currentEntries = this.entries();
-    const sig  = this.bowlSig(currentEntries, cont);
+    const sig            = this.bowlSig(currentEntries, cont);
 
     const details = {
       container:    cont,
@@ -343,17 +429,24 @@ export class BuildYourBowlComponent implements OnInit {
       }))
     };
 
+    const qty = this.bowlQty();
     this.cartSvc.addItem({
       itemType:           'BUILD_BOWL',
       productName:        `Custom Fruit ${cont === 'bowl' ? 'Bowl' : 'Box'}`,
       unitPrice:          this.bowlTotal(),
-      quantity:           1,
+      quantity:           qty,
       unit:               cont === 'bowl' ? 'Bowl' : 'Box',
-      totalPrice:         this.bowlTotal(),
+      totalPrice:         this.bowlTotal() * qty,
       isCustomBuild:      true,
       customBuildDetails: JSON.stringify(details),
       bowlSignature:      sig,
     });
+    this.bowlQty.set(1);
+
+    this.cartPopping.set(true);
+    this.bowlPulsing.set(true);
+    setTimeout(() => this.cartPopping.set(false), 400);
+    setTimeout(() => this.bowlPulsing.set(false), 650);
 
     this.entries.set([]);
     this.addedSuccess.set(true);

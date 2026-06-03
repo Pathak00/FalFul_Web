@@ -67,6 +67,14 @@ const SETTING_META: Record<string, { label: string; description: string; multili
     category:    'Delivery Radius',
   },
 
+  // ── Contact ─────────────────────────────────────────────────────────────────
+  contact_email: {
+    label:       'Contact Form Recipient',
+    description: 'Email address where contact-form submissions are delivered. Defaults to the app sender address if left blank.',
+    multiline:   false,
+    category:    'Contact',
+  },
+
   // ── Homepage Stats ──────────────────────────────────────────────────────────
   homepage_stat_1_value: {
     label:       'Stat 1 – Value',
@@ -147,6 +155,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Scheduling':      'bi-clock',
   'Delivery Radius': 'bi-geo-alt',
   'Homepage Stats':  'bi-bar-chart-line',
+  'Contact':         'bi-envelope',
 };
 
 @Component({
@@ -184,7 +193,11 @@ const CATEGORY_ICONS: Record<string, string> = {
                     <div class="setting-meta">
                       <span class="setting-label">{{ meta(s.key).label }}</span>
                       <span class="setting-desc">{{ meta(s.key).description }}</span>
-                      <span class="setting-updated">Updated {{ s.updatedAt | nepalDate }} NPT</span>
+                      @if (s.updatedAt) {
+                        <span class="setting-updated">Updated {{ s.updatedAt | nepalDate }} NPT</span>
+                      } @else {
+                        <span class="setting-updated">Not configured yet</span>
+                      }
                     </div>
 
                     @if (editingKey() === s.key) {
@@ -273,8 +286,18 @@ export class AdminSettingsComponent implements OnInit {
   editValue  = '';
 
   readonly groupedSettings = computed(() => {
+    const existingKeys = new Set(this.settings().map(s => s.key));
+
+    // Include placeholder rows for known settings not yet in the database
+    const allSettings: Setting[] = [...this.settings()];
+    for (const key of Object.keys(SETTING_META)) {
+      if (!existingKeys.has(key)) {
+        allSettings.push({ key, value: '', updatedAt: '' });
+      }
+    }
+
     const map = new Map<string, { category: string; settings: Setting[] }>();
-    for (const s of this.settings()) {
+    for (const s of allSettings) {
       const cat = SETTING_META[s.key]?.category ?? 'Other';
       if (!map.has(cat)) map.set(cat, { category: cat, settings: [] });
       map.get(cat)!.settings.push(s);
