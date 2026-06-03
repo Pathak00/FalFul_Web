@@ -41,9 +41,9 @@ import { CartService } from '../../../core/services/cart.service';
                 <div class="item-info">
                   <span class="item-name">{{ entry.item.productName }}</span>
                   <div class="qty-control">
-                    <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)"
-                            title="{{ entry.item.quantity === 1 ? 'Remove item' : 'Decrease' }}">
-                      <i class="bi {{ entry.item.quantity === 1 ? 'bi-trash3' : 'bi-dash' }}"></i>
+                    <button class="qty-btn" [disabled]="entry.item.quantity <= 1"
+                            (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)">
+                      <i class="bi bi-dash"></i>
                     </button>
                     <span class="qty-val">{{ entry.item.quantity }}</span>
                     <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity + 1)">
@@ -55,6 +55,9 @@ import { CartService } from '../../../core/services/cart.service';
                 </div>
                 <div class="item-right">
                   <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)" title="Remove item">
+                    <i class="bi bi-trash3"></i>
+                  </button>
                 </div>
               </div>
             }
@@ -74,9 +77,9 @@ import { CartService } from '../../../core/services/cart.service';
                   <span class="item-name">{{ entry.item.productName }}</span>
                   <span class="bowl-badge"><i class="bi bi-scissors"></i> Custom Build</span>
                   <div class="qty-control">
-                    <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)"
-                            title="{{ entry.item.quantity === 1 ? 'Remove item' : 'Decrease' }}">
-                      <i class="bi {{ entry.item.quantity === 1 ? 'bi-trash3' : 'bi-dash' }}"></i>
+                    <button class="qty-btn" [disabled]="entry.item.quantity <= 1"
+                            (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)">
+                      <i class="bi bi-dash"></i>
                     </button>
                     <span class="qty-val">{{ entry.item.quantity }}</span>
                     <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity + 1)">
@@ -87,6 +90,9 @@ import { CartService } from '../../../core/services/cart.service';
                 </div>
                 <div class="item-right">
                   <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)" title="Remove item">
+                    <i class="bi bi-trash3"></i>
+                  </button>
                 </div>
               </div>
             }
@@ -182,8 +188,11 @@ import { CartService } from '../../../core/services/cart.service';
         }
         .item-unit-price { font-size: .72rem; color: #9ca3af; }
       }
-      .item-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+      .item-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: .4rem;
         .item-price { font-size: .875rem; font-weight: 700; color: #16a34a; }
+        .remove-btn { background: none; border: none; color: #d1d5db; cursor: pointer; font-size: .8rem; padding: 0;
+          &:hover { color: #ef4444; }
+        }
       }
       .qty-control {
         display: flex; align-items: center; gap: .25rem;
@@ -192,7 +201,8 @@ import { CartService } from '../../../core/services/cart.service';
           background: #fff; cursor: pointer; font-size: .65rem; color: #374151;
           display: flex; align-items: center; justify-content: center;
           transition: border-color .15s, color .15s, background .15s;
-          &:hover { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+          &:hover:not(:disabled) { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+          &:disabled { opacity: .35; cursor: not-allowed; }
         }
         .qty-val { font-size: .82rem; font-weight: 700; color: #111; min-width: 20px; text-align: center; }
         .qty-unit { font-size: .72rem; color: #9ca3af; }
