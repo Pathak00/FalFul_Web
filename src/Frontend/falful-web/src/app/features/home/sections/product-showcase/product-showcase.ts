@@ -46,6 +46,10 @@ export class ProductShowcaseComponent implements OnInit {
     return Math.round(((p.mrp - p.price) / p.mrp) * 100);
   }
 
+  savedAmount(p: ProductSummary): number {
+    return (!p.mrp || p.mrp <= p.price) ? 0 : Math.max(0, p.mrp - p.price);
+  }
+
   tagColor(tag: string): string {
     const t = tag.toLowerCase();
     if (t.includes('new'))      return 'red';

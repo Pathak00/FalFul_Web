@@ -69,9 +69,6 @@
               <span class="product-emoji">🌿</span>
             }
             <span class="hero-badge"><i class="bi bi-star-fill"></i> Top Pick</span>
-            @if (discountPct(products[0]) > 0) {
-              <span class="discount-badge">{{ discountPct(products[0]) }}% OFF</span>
-            }
           </div>
 
           <div class="product-body hero-body">
@@ -82,11 +79,19 @@
             </p>
             <div class="product-footer">
               <div class="product-price">
-                @if (products[0].mrp && products[0].mrp > products[0].price) {
-                  <span class="price-mrp">NPR {{ products[0].mrp | number:'1.0-0' }}</span>
+                @if (discountPct(products[0]) > 0) {
+                  <span class="price-badge">{{ discountPct(products[0]) }}% OFF</span>
                 }
-                <span class="price-value">NPR {{ products[0].price | number:'1.0-0' }}</span>
-                <span class="price-unit">/ {{ products[0].unit }}</span>
+                <div class="price-row">
+                  <span class="price-value">NPR {{ products[0].price | number:'1.0-0' }}</span>
+                  <span class="price-unit">/ {{ products[0].unit }}</span>
+                </div>
+                @if (discountPct(products[0]) > 0) {
+                  <div class="price-meta">
+                    <span class="price-mrp">NPR {{ products[0].mrp | number:'1.0-0' }}</span>
+                    <span class="price-save">Save NPR {{ savedAmount(products[0]) | number:'1.0-0' }}</span>
+                  </div>
+                }
               </div>
               <span class="view-btn view-btn-hero">
                 Shop Now <i class="bi bi-arrow-right"></i>
@@ -113,9 +118,6 @@
                   {{ firstTag(p.tags) || 'Featured' }}
                 </span>
               }
-              @if (discountPct(p) > 0) {
-                <span class="discount-badge">{{ discountPct(p) }}% OFF</span>
-              }
             </div>
 
             <div class="product-body">
@@ -127,11 +129,19 @@
               }
               <div class="product-footer">
                 <div class="product-price">
-                  @if (p.mrp && p.mrp > p.price) {
-                    <span class="price-mrp">NPR {{ p.mrp | number:'1.0-0' }}</span>
+                  @if (discountPct(p) > 0) {
+                    <span class="price-badge">{{ discountPct(p) }}% OFF</span>
                   }
-                  <span class="price-value">NPR {{ p.price | number:'1.0-0' }}</span>
-                  <span class="price-unit">/ {{ p.unit }}</span>
+                  <div class="price-row">
+                    <span class="price-value">NPR {{ p.price | number:'1.0-0' }}</span>
+                    <span class="price-unit">/ {{ p.unit }}</span>
+                  </div>
+                  @if (discountPct(p) > 0) {
+                    <div class="price-meta">
+                      <span class="price-mrp">NPR {{ p.mrp | number:'1.0-0' }}</span>
+                      <span class="price-save">Save NPR {{ savedAmount(p) | number:'1.0-0' }}</span>
+                    </div>
+                  }
                 </div>
                 <span class="view-btn" aria-label="View product">
                   <i class="bi bi-arrow-right"></i>
