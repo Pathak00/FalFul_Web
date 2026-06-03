@@ -9,6 +9,7 @@ import {
   UserInfo,
 } from '../models/auth.models';
 import { ApiService } from './api.service';
+import { CartService } from './cart.service';
 
 const ACCESS_TOKEN_KEY = 'falful_access_token';
 const REFRESH_TOKEN_KEY = 'falful_refresh_token';
@@ -20,7 +21,7 @@ export class AuthService {
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => !!this._currentUser());
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(private api: ApiService, private router: Router, private cart: CartService) {}
 
   register(dto: RegisterUserRequest): Observable<AuthResponse> {
     return this.api.post<AuthResponse>('/api/auth/register', dto).pipe(
@@ -78,6 +79,7 @@ export class AuthService {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._currentUser.set(null);
+    this.cart.clearCart();
   }
 
   private loadUser(): UserInfo | null {
