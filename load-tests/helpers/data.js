@@ -22,12 +22,17 @@ export function futureDate(daysAhead = 2) {
  * Build a minimal but valid PlaceOrderDto from a products array returned
  * by GET /api/products.  Picks a random available product.
  */
+// Minimum order value enforced by the API (Rs. 200)
+const MIN_ORDER_VALUE = 200;
+
 export function buildOrderPayload(products) {
   const available = products.filter(p => p.isAvailable && !p.minOrderGrams);
   if (!available.length) return null;
 
   const product = available[Math.floor(Math.random() * available.length)];
-  const qty     = Math.random() < 0.5 ? 1 : 2;
+  // Ensure total >= MIN_ORDER_VALUE regardless of unit price
+  const minQty  = Math.ceil(MIN_ORDER_VALUE / product.price);
+  const qty     = Math.max(minQty, Math.floor(Math.random() * 3) + 1);
   const total   = product.price * qty;
 
   return {
