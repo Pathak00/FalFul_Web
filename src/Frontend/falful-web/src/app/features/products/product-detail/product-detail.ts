@@ -91,8 +91,7 @@ import { Product } from '../../../core/models/product.models';
 
             <div class="detail-avail" [class.unavailable]="!product()!.isAvailable">
               @if (product()!.isAvailable) {
-                <i class="bi bi-check-circle-fill"></i>
-                In Stock ({{ product()!.stock | number:'1.0-1' }} {{ product()!.unit }} available)
+                <i class="bi bi-check-circle-fill"></i> In Stock
               } @else {
                 <i class="bi bi-x-circle-fill"></i> Out of Stock
               }

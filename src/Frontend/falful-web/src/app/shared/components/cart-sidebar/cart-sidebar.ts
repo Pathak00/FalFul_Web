@@ -40,11 +40,22 @@ import { CartService } from '../../../core/services/cart.service';
                 </div>
                 <div class="item-info">
                   <span class="item-name">{{ entry.item.productName }}</span>
-                  <span class="item-qty">{{ entry.item.quantity }} {{ entry.item.unit }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
+                  <div class="qty-control">
+                    <button class="qty-btn" [disabled]="entry.item.quantity <= 1"
+                            (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <span class="qty-val">{{ entry.item.quantity }}</span>
+                    <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity + 1)">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                    <span class="qty-unit">{{ entry.item.unit }}</span>
+                  </div>
+                  <span class="item-unit-price">Rs. {{ entry.item.unitPrice | number:'1.0-0' }} each</span>
                 </div>
                 <div class="item-right">
                   <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
-                  <button class="remove-btn" (click)="cart.removeItem(entry.index)">
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)" title="Remove item">
                     <i class="bi bi-trash3"></i>
                   </button>
                 </div>
@@ -65,11 +76,21 @@ import { CartService } from '../../../core/services/cart.service';
                 <div class="item-info">
                   <span class="item-name">{{ entry.item.productName }}</span>
                   <span class="bowl-badge"><i class="bi bi-scissors"></i> Custom Build</span>
-                  <span class="item-qty">{{ entry.item.quantity }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
+                  <div class="qty-control">
+                    <button class="qty-btn" [disabled]="entry.item.quantity <= 1"
+                            (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <span class="qty-val">{{ entry.item.quantity }}</span>
+                    <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity + 1)">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                  <span class="item-unit-price">Rs. {{ entry.item.unitPrice | number:'1.0-0' }} each</span>
                 </div>
                 <div class="item-right">
                   <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
-                  <button class="remove-btn" (click)="cart.removeItem(entry.index)">
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)" title="Remove item">
                     <i class="bi bi-trash3"></i>
                   </button>
                 </div>
@@ -160,18 +181,31 @@ import { CartService } from '../../../core/services/cart.service';
         background: #ede9fe; display: flex; align-items: center; justify-content: center;
         color: #7c3aed; font-size: 1.4rem; border-radius: 6px;
       }
-      .item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .2rem;
+      .item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .25rem;
         .item-name { font-size: .85rem; font-weight: 600; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .bowl-badge { font-size: .7rem; color: #7c3aed; background: #f5f3ff; padding: 1px 6px; border-radius: 4px; width: fit-content;
           display: flex; align-items: center; gap: .25rem;
         }
-        .item-qty { font-size: .75rem; color: #6b7280; }
+        .item-unit-price { font-size: .72rem; color: #9ca3af; }
       }
-      .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: .4rem;
+      .item-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: .4rem;
         .item-price { font-size: .875rem; font-weight: 700; color: #16a34a; }
         .remove-btn { background: none; border: none; color: #d1d5db; cursor: pointer; font-size: .8rem; padding: 0;
           &:hover { color: #ef4444; }
         }
+      }
+      .qty-control {
+        display: flex; align-items: center; gap: .25rem;
+        .qty-btn {
+          width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e5e7eb;
+          background: #fff; cursor: pointer; font-size: .65rem; color: #374151;
+          display: flex; align-items: center; justify-content: center;
+          transition: border-color .15s, color .15s, background .15s;
+          &:hover:not(:disabled) { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+          &:disabled { opacity: .35; cursor: not-allowed; }
+        }
+        .qty-val { font-size: .82rem; font-weight: 700; color: #111; min-width: 20px; text-align: center; }
+        .qty-unit { font-size: .72rem; color: #9ca3af; }
       }
     }
 
