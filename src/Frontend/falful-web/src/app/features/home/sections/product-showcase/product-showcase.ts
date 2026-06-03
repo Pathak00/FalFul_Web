@@ -25,7 +25,7 @@ export class ProductShowcaseComponent implements OnInit {
   ngOnInit(): void {
     this.productService.getPublicProducts().subscribe({
       next: list => {
-        this.products = list.slice(0, 6);
+        this.products = list.slice(0, 7);
         this.loading = false;
       },
       error: () => { this.loading = false; },
@@ -39,6 +39,11 @@ export class ProductShowcaseComponent implements OnInit {
 
   firstTag(tags: string | undefined): string {
     return tags?.split(',')[0]?.trim() ?? '';
+  }
+
+  discountPct(p: ProductSummary): number {
+    if (!p.mrp || p.mrp <= p.price) return 0;
+    return Math.round(((p.mrp - p.price) / p.mrp) * 100);
   }
 
   tagColor(tag: string): string {
