@@ -44,6 +44,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/build-your-bowl/build-your-bowl').then(m => m.BuildYourBowlComponent)
       },
       {
+        path: 'contact',
+        loadComponent: () => import('./features/contact/contact').then(m => m.ContactComponent)
+      },
+      {
+        path: 'about',
+        loadComponent: () => import('./features/about/about').then(m => m.AboutComponent)
+      },
+      {
         path: 'notices',
         loadComponent: () => import('./features/notices/notices-page').then(m => m.NoticesPageComponent)
       },
