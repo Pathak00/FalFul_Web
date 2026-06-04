@@ -2,6 +2,8 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
+import { ReceiptService } from '../../../core/services/receipt.service';
+import { ToastService } from '../../../core/services/toast.service';
 import {
   DeliverySummary, DeliveryDetail, RiderUser,
   DELIVERY_STATUSES, DELIVERY_FAILURE_REASONS, DELIVERY_ISSUE_TYPES,
@@ -439,6 +441,21 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
             <p style="margin-top:1rem;font-size:.82rem;color:#9ca3af;font-style:italic">No attempts recorded yet.</p>
           }
 
+          <!-- Print Receipt (delivered orders only) -->
+          @if (detail()!.status === 5) {
+            <div style="margin-top:1.25rem;display:flex;justify-content:flex-end">
+              <button class="btn-sm btn-receipt"
+                      (click)="printReceipt(detail()!.orderId)"
+                      [disabled]="printingReceiptId() === detail()!.orderId">
+                @if (printingReceiptId() === detail()!.orderId) {
+                  <span class="spinner-xs"></span> Loading…
+                } @else {
+                  <i class="bi bi-printer"></i> Print Receipt
+                }
+              </button>
+            </div>
+          }
+
           <!-- Issues -->
           @if (detail()!.issues?.length) {
             <div style="margin-top:1.25rem">
@@ -502,7 +519,9 @@ const ISSUE_TYPES_LIST      = Object.entries(DELIVERY_ISSUE_TYPES).map(([k, v]) 
   `
 })
 export class AdminDeliveriesComponent implements OnInit {
-  private svc = inject(OrderService);
+  private svc        = inject(OrderService);
+  private receiptSvc = inject(ReceiptService);
+  private toast      = inject(ToastService);
 
   deliveries    = signal<DeliverySummary[]>([]);
   loading       = signal(true);
@@ -510,7 +529,8 @@ export class AdminDeliveriesComponent implements OnInit {
   fromDate      = '';
   toDate        = '';
 
-  detail           = signal<DeliveryDetail | null>(null);
+  detail              = signal<DeliveryDetail | null>(null);
+  printingReceiptId   = signal<number | null>(null);
   assignModal      = signal<number | null>(null);
   isReassign       = signal(false);
   attemptModal     = signal<number | null>(null);
@@ -692,6 +712,30 @@ export class AdminDeliveriesComponent implements OnInit {
     this.svc.updateDeliveryStatus(m.id, this.transitionForm.status, this.transitionForm.trackingNotes || undefined, scheduledDate, scheduledTimeSlot).subscribe({
       next: () => { this.transitionModal.set(null); this.saving.set(false); this.load(); },
       error: () => this.saving.set(false),
+    });
+  }
+
+  // ── Print Receipt ─────────────────────────────────────────────────────────────
+  printReceipt(orderId: number) {
+    const win = window.open('', '_blank');
+    if (!win) { this.toast.warn('Allow popups to print receipts.'); return; }
+    this.printingReceiptId.set(orderId);
+    this.receiptSvc.adminGetReceipt(orderId).subscribe({
+      next: r => {
+        this.printingReceiptId.set(null);
+        const html = r.html.replace(
+          '</body>',
+          `<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</script></body>`
+        );
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      },
+      error: () => {
+        this.printingReceiptId.set(null);
+        win.close();
+        this.toast.error('Could not load receipt.');
+      }
     });
   }
 

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Subscription, switchMap } from 'rxjs';
+import { Subscription, catchError, of, switchMap } from 'rxjs';
 import { AdminNavItem } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -254,7 +254,13 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.navSub.unsubscribe(); }
 
   private loadNav(): void {
-    this.navStore.load().subscribe({
+    // Refresh the JWT first so permission claims are always in sync with DB,
+    // then load nav. Without this, stale tokens cause the guard to deny access
+    // to pages whose permissions were granted after the user last logged in.
+    this.authService.refreshToken().pipe(
+      catchError(() => of(null)),
+      switchMap(() => this.navStore.load())
+    ).subscribe({
       next: () => this.navLoading.set(false),
       error: () => this.navLoading.set(false)
     });
