@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Subscription, switchMap } from 'rxjs';
+import { Subscription, catchError, of, switchMap } from 'rxjs';
 import { AdminService } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AdminNavStore } from '../../core/stores/admin-nav.store';
@@ -209,7 +209,10 @@ export class RiderLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.navSub.unsubscribe(); }
 
   private loadNav(): void {
-    this.navStore.load().subscribe({
+    this.authService.refreshToken().pipe(
+      catchError(() => of(null)),
+      switchMap(() => this.navStore.load())
+    ).subscribe({
       next: () => this.navLoading.set(false),
       error: () => this.navLoading.set(false)
     });
