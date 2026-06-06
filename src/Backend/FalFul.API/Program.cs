@@ -8,6 +8,7 @@ using FalFul.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,15 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
         opt.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeConverter());
     });
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, _) =>
+    {
+        document.Info.Title = "FalFul API";
+        document.Info.Description = "FalFul Fruit eCommerce REST API";
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -62,10 +71,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-}
+    options
+        .WithTitle("FalFul API")
+        .AddPreferredSecuritySchemes("Bearer")
+        .AddHttpAuthentication("Bearer", _ => { });
+});
+
+app.MapGet("/env", (IWebHostEnvironment env) => env.EnvironmentName);
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("FalFulPolicy");
