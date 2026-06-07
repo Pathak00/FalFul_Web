@@ -35,6 +35,6 @@ public class UploadController(IWebHostEnvironment env) : ControllerBase
         await using var stream = System.IO.File.Create(fullPath);
         await file.CopyToAsync(stream);
 
-        return Ok(new { url = $"/uploads/{fileName}" });
+        return Ok(new { url = $"uploads/{fileName}" });
     }
 }
