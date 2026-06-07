@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://falfruits.azurewebsites.net',
-  googleClientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
+  apiUrl: 'https://falful.azurewebsites.net',
+  googleClientId: '895952840579-44d7r40llsq82h7pmihdhib9d1qdrsvp.apps.googleusercontent.com'
 };
