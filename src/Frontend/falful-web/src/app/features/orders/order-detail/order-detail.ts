@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
 import { PaymentService } from '../../../core/services/payment.service';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { OrderDetail, ORDER_STATUSES, DELIVERY_STATUSES, PAYMENT_METHODS } from '../../../core/models/order.models';
 import { PaymentDto } from '../../../core/models/payment.models';
@@ -154,7 +155,7 @@ const DELIVERY_STEPS = [
                 <div class="od-item-group">
                   <div class="od-item">
                     <div class="oi-img">
-                      @if (item.imageUrl) { <img [src]="item.imageUrl" [alt]="item.productName" /> }
+                      @if (item.imageUrl) { <img [src]="imgSvc.resolve(item.imageUrl)" [alt]="item.productName" /> }
                       @else { <div class="oi-no-img"><i class="bi bi-image"></i></div> }
                     </div>
                     <div class="oi-info">
@@ -553,6 +554,7 @@ export class OrderDetailComponent implements OnInit {
   private route      = inject(ActivatedRoute);
   private toast      = inject(ToastService);
   private receiptSvc = inject(ReceiptService);
+  protected imgSvc   = inject(ImageUrlService);
 
   order            = signal<OrderDetail | null>(null);
   payments         = signal<PaymentDto[]>([]);
