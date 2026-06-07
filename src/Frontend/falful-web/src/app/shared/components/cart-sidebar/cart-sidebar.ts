@@ -2,6 +2,7 @@ import { Component, inject, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 
 @Component({
   selector: 'app-cart-sidebar',
@@ -33,7 +34,7 @@ import { CartService } from '../../../core/services/cart.service';
               <div class="cart-item">
                 <div class="item-img">
                   @if (entry.item.imageUrl) {
-                    <img [src]="entry.item.imageUrl" [alt]="entry.item.productName" />
+                    <img [src]="imgSvc.resolve(entry.item.imageUrl)" [alt]="entry.item.productName" />
                   } @else {
                     <div class="img-placeholder"><i class="bi bi-image"></i></div>
                   }
@@ -235,6 +236,7 @@ import { CartService } from '../../../core/services/cart.service';
 export class CartSidebarComponent {
   readonly close = output<void>();
   readonly cart  = inject(CartService);
+  protected imgSvc = inject(ImageUrlService);
 
   readonly productEntries = computed(() =>
     this.cart.items()

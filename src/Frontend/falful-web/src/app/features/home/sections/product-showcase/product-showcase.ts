@@ -5,7 +5,7 @@ import { HomepageSection } from '../../../../core/models/cms.models';
 import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-animate.directive';
 import { ProductService } from '../../../../core/services/product.service';
 import { ProductSummary } from '../../../../core/models/product.models';
-import { environment } from '../../../../../environments/environment';
+import { ImageUrlService } from '../../../../core/services/image-url.service';
 
 @Component({
   selector: 'app-product-showcase',
@@ -18,6 +18,7 @@ export class ProductShowcaseComponent implements OnInit {
   @Input() sectionData: HomepageSection | undefined;
 
   private productService = inject(ProductService);
+  protected imgSvc       = inject(ImageUrlService);
 
   products: ProductSummary[] = [];
   loading = true;
@@ -33,8 +34,7 @@ export class ProductShowcaseComponent implements OnInit {
   }
 
   imageUrl(url: string | undefined): string {
-    if (!url) return '';
-    return url.startsWith('http') ? url : environment.apiUrl + url;
+    return this.imgSvc.resolve(url);
   }
 
   firstTag(tags: string | undefined): string {

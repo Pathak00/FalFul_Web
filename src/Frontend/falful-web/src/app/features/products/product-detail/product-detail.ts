@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 import { Product } from '../../../core/models/product.models';
 
 @Component({
@@ -44,7 +45,7 @@ import { Product } from '../../../core/models/product.models';
           <div class="detail-image-panel">
             <div class="main-image">
               @if (product()!.imageUrl) {
-                <img [src]="product()!.imageUrl" [alt]="product()!.name" />
+                <img [src]="imgSvc.resolve(product()!.imageUrl)" [alt]="product()!.name" />
               } @else {
                 <div class="image-placeholder"><i class="bi bi-image"></i></div>
               }
@@ -144,9 +145,10 @@ import { Product } from '../../../core/models/product.models';
   `
 })
 export class ProductDetailComponent implements OnInit {
-  private svc   = inject(ProductService);
-  private cart  = inject(CartService);
-  private route = inject(ActivatedRoute);
+  private svc    = inject(ProductService);
+  private cart   = inject(CartService);
+  private route  = inject(ActivatedRoute);
+  protected imgSvc = inject(ImageUrlService);
 
   product     = signal<Product | null>(null);
   loading     = signal(true);

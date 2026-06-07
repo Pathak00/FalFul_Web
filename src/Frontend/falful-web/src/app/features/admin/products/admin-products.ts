@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
 import { UploadService } from '../../../core/services/upload.service';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../../core/models/product.models';
 
@@ -63,7 +64,7 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
                   <td class="id-cell">{{ p.id }}</td>
                   <td>
                     @if (p.imageUrl) {
-                      <img [src]="p.imageUrl" [alt]="p.name" class="product-img-preview" />
+                      <img [src]="imgSvc.resolve(p.imageUrl)" [alt]="p.name" class="product-img-preview" />
                     } @else {
                       <div class="no-img"><i class="bi bi-image"></i></div>
                     }
@@ -171,7 +172,7 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
                 @if (uploading()) {
                   <div class="img-uploading"><i class="bi bi-arrow-repeat spin"></i> Uploading…</div>
                 } @else if (form.imageUrl) {
-                  <img [src]="form.imageUrl" class="img-preview" [alt]="form.name" />
+                  <img [src]="imgSvc.resolve(form.imageUrl)" class="img-preview" [alt]="form.name" />
                   <button type="button" class="img-remove" (click)="$event.stopPropagation(); form.imageUrl = ''">
                     <i class="bi bi-x-lg"></i>
                   </button>
@@ -272,6 +273,7 @@ export class AdminProductsComponent implements OnInit {
   private svc    = inject(ProductService);
   private upload = inject(UploadService);
   private toast  = inject(ToastService);
+  protected imgSvc = inject(ImageUrlService);
 
   products     = signal<Product[]>([]);
   categories   = signal<Category[]>([]);

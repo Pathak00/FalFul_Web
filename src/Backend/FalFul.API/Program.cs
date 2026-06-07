@@ -2,6 +2,7 @@ using System.Text;
 using FalFul.API;
 using FalFul.API.Authorization;
 using FalFul.API.Middleware;
+using FalFul.API.Startup;
 using FalFul.Application;
 using FalFul.Infrastructure;
 using FalFul.Persistence;
@@ -31,6 +32,7 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence();
+builder.Services.AddHostedService<ImageUrlNormalizationService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is not configured.");

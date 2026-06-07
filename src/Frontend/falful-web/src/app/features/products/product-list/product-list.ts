@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 import { Category, ProductSummary } from '../../../core/models/product.models';
 
 @Component({
@@ -98,7 +99,7 @@ import { Category, ProductSummary } from '../../../core/models/product.models';
                 <a class="product-card" [routerLink]="['/products', p.slug]">
                   <div class="card-image">
                     @if (p.imageUrl) {
-                      <img [src]="p.imageUrl" [alt]="p.name" />
+                      <img [src]="imgSvc.resolve(p.imageUrl)" [alt]="p.name" />
                     } @else {
                       <div class="card-image-placeholder">
                         <i class="bi bi-image"></i>
@@ -159,6 +160,7 @@ export class ProductListComponent implements OnInit {
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
+  protected imgSvc = inject(ImageUrlService);
   constructor(private svc: ProductService, private route: ActivatedRoute) {}
 
   ngOnInit() {

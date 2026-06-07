@@ -6,6 +6,7 @@ import { forkJoin } from 'rxjs';
 import { ProductService } from '../../core/services/product.service';
 import { OrderService } from '../../core/services/order.service';
 import { CartService } from '../../core/services/cart.service';
+import { ImageUrlService } from '../../core/services/image-url.service';
 import { ProductSummary } from '../../core/models/product.models';
 import { PriceRule } from '../../core/models/order.models';
 
@@ -57,7 +58,7 @@ interface Particle {
                      [class.popping]="isPopping(p.id)"
                      (click)="toggleFruit(p, $event)">
                   <div class="fruit-img">
-                    @if (p.imageUrl) { <img [src]="p.imageUrl" [alt]="p.name" /> }
+                    @if (p.imageUrl) { <img [src]="imgSvc.resolve(p.imageUrl)" [alt]="p.name" /> }
                     @else { <div class="no-img"><i class="bi bi-image"></i></div> }
                   </div>
                   <div class="fruit-info">
@@ -236,6 +237,7 @@ export class BuildYourBowlComponent implements OnInit {
   private productSvc = inject(ProductService);
   private orderSvc   = inject(OrderService);
   readonly cartSvc   = inject(CartService);
+  protected imgSvc   = inject(ImageUrlService);
 
   loading      = signal(true);
   available    = signal<ProductSummary[]>([]);

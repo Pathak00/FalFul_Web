@@ -5,7 +5,7 @@ import { RiderService } from '../../core/services/rider.service';
 import { ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ApiService } from '../../core/services/api.service';
-import { environment } from '../../../environments/environment';
+import { ImageUrlService } from '../../core/services/image-url.service';
 
 const STATUS_LABELS: Record<number, string> = {
   1: 'Awaiting Rider',
@@ -982,6 +982,7 @@ export class RiderDeliveriesComponent implements OnInit {
   private receiptSvc   = inject(ReceiptService);
   private toast        = inject(ToastService);
   private api          = inject(ApiService);
+  private imgSvc       = inject(ImageUrlService);
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_BADGE = STATUS_BADGE;
@@ -1149,7 +1150,7 @@ export class RiderDeliveriesComponent implements OnInit {
     this.api.upload<{ url: string }>('/api/upload', form).subscribe({
       next: r => {
         this.uploadingProof.set(false);
-        this.completeForm.proofPhotoUrl = environment.apiUrl + r.url;
+        this.completeForm.proofPhotoUrl = this.imgSvc.resolve(r.url);
       },
       error: () => {
         this.uploadingProof.set(false);
