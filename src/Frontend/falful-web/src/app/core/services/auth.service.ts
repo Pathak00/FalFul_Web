@@ -52,7 +52,14 @@ export class AuthService {
     if (refreshToken) {
       this.api.post('/api/auth/logout', { refreshToken }).subscribe();
     }
-    this.clearSession();
+    this.clearSession({ clearCart: true });
+    this.router.navigate(['/auth/login']);
+  }
+
+  /** Called by the auth interceptor when a token refresh fails silently.
+   *  Does NOT clear the cart so a guest's pre-login cart survives. */
+  silentLogout(): void {
+    this.clearSession({ clearCart: false });
     this.router.navigate(['/auth/login']);
   }
 
@@ -68,18 +75,25 @@ export class AuthService {
   }
 
   private persistSession(res: AuthResponse): void {
+    const previous = this._currentUser();
     localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(res.user));
     this._currentUser.set(res.user);
+    // Clear the cart only when a DIFFERENT user logs in to prevent
+    // one user's cart from leaking into another user's session.
+    // Guest → user and same-user re-login both preserve the cart.
+    if (previous && previous.id !== res.user.id) {
+      this.cart.clearCart();
+    }
   }
 
-  private clearSession(): void {
+  private clearSession(opts: { clearCart: boolean } = { clearCart: true }): void {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._currentUser.set(null);
-    this.cart.clearCart();
+    if (opts.clearCart) this.cart.clearCart();
   }
 
   private loadUser(): UserInfo | null {

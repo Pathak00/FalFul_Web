@@ -2,7 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { CartService } from '../../../core/services/cart.service';
 import { HomeRouteService } from '../../../core/services/home-route.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { GoogleSignInButtonComponent } from '../../../shared/components/google-signin-button/google-signin-button';
 
 @Component({
@@ -15,7 +17,9 @@ import { GoogleSignInButtonComponent } from '../../../shared/components/google-s
 export class LoginComponent {
   private fb          = inject(FormBuilder);
   private authService = inject(AuthService);
+  private cart        = inject(CartService);
   private homeRoute   = inject(HomeRouteService);
+  private perms       = inject(PermissionService);
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
 
@@ -31,6 +35,8 @@ export class LoginComponent {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     if (returnUrl) {
       this.router.navigateByUrl(returnUrl);
+    } else if (this.perms.canShop() && this.cart.itemCount() > 0) {
+      this.router.navigate(['/checkout']);
     } else {
       this.router.navigate([this.homeRoute.route()]);
     }
