@@ -3,7 +3,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { HomeRouteService } from '../../../core/services/home-route.service';
-import { PermissionService } from '../../../core/services/permission.service';
 import { GoogleSignInButtonComponent } from '../../../shared/components/google-signin-button/google-signin-button';
 
 @Component({
@@ -17,7 +16,6 @@ export class LoginComponent {
   private fb          = inject(FormBuilder);
   private authService = inject(AuthService);
   private homeRoute   = inject(HomeRouteService);
-  private perms       = inject(PermissionService);
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
 
@@ -31,7 +29,7 @@ export class LoginComponent {
 
   private redirectAfterLogin(): void {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    if (returnUrl && this.perms.canShop()) {
+    if (returnUrl) {
       this.router.navigateByUrl(returnUrl);
     } else {
       this.router.navigate([this.homeRoute.route()]);
