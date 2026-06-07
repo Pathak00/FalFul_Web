@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DiscountService } from '../../../core/services/discount.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NoticeDto, CreateNoticeDto } from '../../../core/models/discount.models';
-import { environment } from '../../../../environments/environment';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 
 const TYPE_LABELS: Record<number, string> = { 1: 'Info', 2: 'Warning', 3: 'Success', 4: 'Error' };
 const TARGET_LABELS: Record<number, string> = { 1: 'All Users', 2: 'Customers', 3: 'Organizations' };
@@ -40,7 +40,7 @@ const TARGET_LABELS: Record<number, string> = { 1: 'All Users', 2: 'Customers', 
             <div class="notice-card" [class]="'notice-card--' + typeClass(n.noticeType)">
               @if (n.imageUrl) {
                 <div class="notice-thumb">
-                  <img [src]="resolveUrl(n.imageUrl)" alt="notice image" />
+                  <img [src]="imgSvc.resolve(n.imageUrl)" alt="notice image" />
                   <span class="img-badge"><i class="bi bi-image"></i> Image Banner</span>
                 </div>
               }
@@ -106,7 +106,7 @@ const TARGET_LABELS: Record<number, string> = { 1: 'All Users', 2: 'Customers', 
                         <span>{{ pdfName(form.imageUrl) }}</span>
                       </div>
                     } @else {
-                      <img [src]="resolveUrl(form.imageUrl)" class="img-preview" alt="preview" />
+                      <img [src]="imgSvc.resolve(form.imageUrl)" class="img-preview" alt="preview" />
                     }
                     <button type="button" class="btn-remove-img" (click)="removeImage()" title="Remove file">
                       <i class="bi bi-x-circle-fill"></i>
@@ -267,6 +267,7 @@ const TARGET_LABELS: Record<number, string> = { 1: 'All Users', 2: 'Customers', 
 export class AdminNoticesComponent implements OnInit {
   private discountSvc = inject(DiscountService);
   private toast       = inject(ToastService);
+  protected imgSvc    = inject(ImageUrlService);
 
   notices      = signal<NoticeDto[]>([]);
   loading      = signal(true);
@@ -278,8 +279,6 @@ export class AdminNoticesComponent implements OnInit {
   deleteTarget = signal<NoticeDto | null>(null);
 
   form: CreateNoticeDto = this.blankForm();
-
-  readonly apiBase = environment.apiUrl;
 
   ngOnInit() { this.load(); }
 
@@ -334,10 +333,6 @@ export class AdminNoticesComponent implements OnInit {
 
   isPdf(url: string) { return url?.toLowerCase().endsWith('.pdf'); }
   pdfName(url: string) { return url.split('/').pop() ?? 'document.pdf'; }
-
-  resolveUrl(url: string): string {
-    return url.startsWith('http') ? url : `${this.apiBase}${url}`;
-  }
 
   save() {
     if (!this.form.title?.trim())   { this.formError.set('Title is required.'); return; }

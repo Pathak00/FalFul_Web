@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Banner } from '../../../core/models/cms.models';
 import { CmsService } from '../../../core/services/cms.service';
 import { UploadService } from '../../../core/services/upload.service';
+import { ImageUrlService } from '../../../core/services/image-url.service';
 
 @Component({
   selector: 'app-admin-banners',
@@ -121,7 +122,7 @@ import { UploadService } from '../../../core/services/upload.service';
                 @if (uploading()) {
                   <div class="img-uploading"><i class="bi bi-arrow-repeat spin"></i> Uploading…</div>
                 } @else if (form.imageUrl) {
-                  <img [src]="form.imageUrl" class="img-preview" [alt]="form.title" />
+                  <img [src]="imgSvc.resolve(form.imageUrl)" class="img-preview" [alt]="form.title" />
                   <button type="button" class="img-remove" (click)="$event.stopPropagation(); form.imageUrl = ''">
                     <i class="bi bi-x-lg"></i>
                   </button>
@@ -217,8 +218,9 @@ import { UploadService } from '../../../core/services/upload.service';
   `
 })
 export class AdminBannersComponent implements OnInit {
-  private cms = inject(CmsService);
+  private cms       = inject(CmsService);
   private uploadSvc = inject(UploadService);
+  protected imgSvc  = inject(ImageUrlService);
 
   banners      = signal<Banner[]>([]);
   loading      = signal(true);

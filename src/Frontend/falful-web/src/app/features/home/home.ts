@@ -9,7 +9,7 @@ import { HowItWorksComponent } from './sections/how-it-works/how-it-works';
 import { ProductShowcaseComponent } from './sections/product-showcase/product-showcase';
 import { PromoSectionComponent } from './sections/promo-section/promo-section';
 import { StatsSectionComponent } from './sections/stats-section/stats-section';
-import { environment } from '../../../environments/environment';
+import { ImageUrlService } from '../../core/services/image-url.service';
 
 @Component({
   selector: 'app-home',
@@ -90,7 +90,7 @@ import { environment } from '../../../environments/environment';
 export class HomeComponent implements OnInit {
   private cms         = inject(CmsService);
   private discountSvc = inject(DiscountService);
-  private readonly apiBase = environment.apiUrl;
+  protected imgSvc    = inject(ImageUrlService);
 
   private sectionsMap = signal<Map<string, HomepageSection>>(new Map());
   private loaded = signal(false);
@@ -133,6 +133,6 @@ export class HomeComponent implements OnInit {
   }
 
   imgUrl(url: string): string {
-    return url.startsWith('http') ? url : `${this.apiBase}${url}`;
+    return this.imgSvc.resolve(url);
   }
 }
