@@ -1,60 +1,109 @@
 <div class="auth-card">
-  <a routerLink="/" class="back-home"><i class="bi bi-arrow-left"></i> Back to Home</a>
-  <h2>Create account</h2>
-  <p class="subtitle">Join FalFul and start ordering fresh fruits</p>
 
-  @if (errorMessage()) {
-    <div class="alert alert-error">{{ errorMessage() }}</div>
-  }
+  <!-- Top accent stripe -->
+  <div class="card-stripe"></div>
 
-  <app-google-signin-button (credential)="onGoogleSignUp($event)" />
+  <div class="card-body">
 
-  <div class="divider"><span>or sign up with email</span></div>
+    <!-- Back link -->
+    <a routerLink="/" class="back-link">
+      <i class="bi bi-arrow-left-short"></i> Back to Home
+    </a>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <div class="form-group">
-      <label>Full Name *</label>
-      <input type="text" formControlName="fullName" placeholder="Your full name"
-        [class.invalid]="form.controls.fullName.invalid && form.controls.fullName.touched" />
-      @if (form.controls.fullName.invalid && form.controls.fullName.touched) {
-        <span class="error-text">Full name is required (max 100 chars).</span>
-      }
+    <!-- Identity -->
+    <div class="card-head">
+      <div class="head-mark">🌿</div>
+      <div>
+        <h2>Create your account</h2>
+        <p class="subtitle">Join 2,400+ customers getting grove-fresh fruits delivered</p>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" formControlName="email" placeholder="your@email.com"
-        [class.invalid]="form.controls.email.invalid && form.controls.email.touched" />
-      @if (form.controls.email.invalid && form.controls.email.touched) {
-        <span class="error-text">Enter a valid email.</span>
-      }
+    <!-- Server error -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Google SSO -->
+    <app-google-signin-button (credential)="onGoogleSignUp($event)" />
+
+    <!-- Divider -->
+    <div class="divider"><span>or continue with email</span></div>
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+      <div class="field" [class.has-error]="form.controls.fullName.invalid && form.controls.fullName.touched">
+        <label for="fullName">Full Name <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input id="fullName" type="text" formControlName="fullName"
+                 placeholder="Your full name" autocomplete="name" />
+        </div>
+        @if (form.controls.fullName.invalid && form.controls.fullName.touched) {
+          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Full name is required (max 100 chars).</p>
+        }
+      </div>
+
+      <div class="field" [class.has-error]="form.controls.email.invalid && form.controls.email.touched">
+        <label for="email">Email</label>
+        <div class="input-wrap">
+          <i class="bi bi-envelope input-icon"></i>
+          <input id="email" type="email" formControlName="email"
+                 placeholder="your@email.com" autocomplete="email" />
+        </div>
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Enter a valid email address.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone Number</label>
+        <div class="input-wrap">
+          <i class="bi bi-telephone input-icon"></i>
+          <input id="phone" type="tel" formControlName="phoneNumber"
+                 placeholder="+977XXXXXXXXXX" autocomplete="tel" />
+        </div>
+        <p class="field-hint"><i class="bi bi-info-circle"></i> Email or phone — at least one is required.</p>
+      </div>
+
+      <div class="field" [class.has-error]="form.controls.password.invalid && form.controls.password.touched">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock input-icon"></i>
+          <input id="password" type="password" formControlName="password"
+                 placeholder="Minimum 8 characters" autocomplete="new-password" />
+        </div>
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Password must be at least 8 characters.</p>
+        }
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="form.invalid || isLoading()">
+        @if (isLoading()) {
+          <span class="spinner"></span> Creating account…
+        } @else {
+          <i class="bi bi-person-plus-fill"></i> Create Account
+        }
+      </button>
+
+    </form>
+
+    <!-- Footer links -->
+    <div class="auth-footer">
+      <p>Already have an account? <a routerLink="/auth/login">Sign in</a></p>
+      <p>Registering as a business? <a routerLink="/auth/register-organization">Register organization</a></p>
     </div>
 
-    <div class="form-group">
-      <label>Phone Number</label>
-      <input type="tel" formControlName="phoneNumber" placeholder="+977XXXXXXXXXX" />
-      <span class="hint-text">Either email or phone is required.</span>
+    <!-- Trust bar -->
+    <div class="trust-bar">
+      <span><i class="bi bi-shield-fill-check"></i> Secure &amp; private</span>
+      <span><i class="bi bi-truck"></i> 48 hr delivery</span>
+      <span><i class="bi bi-leaf-fill"></i> 100% natural</span>
     </div>
 
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" formControlName="password" placeholder="Minimum 8 characters"
-        [class.invalid]="form.controls.password.invalid && form.controls.password.touched" />
-      @if (form.controls.password.invalid && form.controls.password.touched) {
-        <span class="error-text">Password must be at least 8 characters.</span>
-      }
-    </div>
-
-    <button type="submit" class="btn-submit" [disabled]="form.invalid || isLoading()">
-      @if (isLoading()) { <span class="spinner"></span> Creating account... }
-      @else { Create Account }
-    </button>
-  </form>
-
-  <p class="auth-link">
-    Already have an account? <a routerLink="/auth/login">Sign in</a>
-  </p>
-  <p class="auth-link">
-    Registering as organization? <a routerLink="/auth/register-organization">Register here</a>
-  </p>
+  </div>
 </div>

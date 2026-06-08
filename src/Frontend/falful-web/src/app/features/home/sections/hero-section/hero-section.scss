@@ -1,6 +1,5 @@
 .hero {
   position: relative;
-  min-height: 100vh;
   background: var(--gradient-hero);
   overflow: hidden;
   display: flex;
@@ -67,8 +66,8 @@
   gap: var(--space-12);
   align-items: center;
   flex: 1;
-  padding-top: clamp(var(--space-12), 8vh, var(--space-20));
-  padding-bottom: clamp(var(--space-12), 8vh, var(--space-20));
+  padding-top: clamp(1.75rem, 4vh, 2.75rem);
+  padding-bottom: clamp(1.75rem, 4vh, 2.75rem);
 }
 
 /* ── Eyebrow ─────────────────────────────────────────────────────────────── */
@@ -107,9 +106,9 @@
 
 .hero-heading {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 6.5vw, 5.25rem);
+  font-size: clamp(2.1rem, 4.5vw, 3.25rem);
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1.08;
   color: white;
   letter-spacing: -0.02em;
 
@@ -266,7 +265,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 520px;
+  height: 300px;
   animation: fade-in-up 1s 0.3s var(--ease-grove) both;
 }
 
@@ -403,43 +402,6 @@
   &.orb-3 { bottom: 60px;  right: -60px; animation-delay: 2s; font-size: 1.75rem; }
 }
 
-/* ── Scroll hint ─────────────────────────────────────────────────────────── */
-.scroll-hint {
-  position: absolute;
-  bottom: 110px; left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  z-index: 3;
-  animation: fade-in-up 1s 1s var(--ease-grove) both;
-  opacity: 0.45;
-}
-
-.scroll-line {
-  width: 1px; height: 40px;
-  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.6));
-  animation: float-y 2s ease-in-out infinite;
-}
-
-.scroll-hint span {
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
-}
-
-/* ── Bottom wave ─────────────────────────────────────────────────────────── */
-.hero-bottom {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 100px;
-  z-index: 3;
-  svg { width: 100%; height: 100%; }
-}
-
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .pill-harvest  { left: -30px; }
@@ -456,7 +418,7 @@
   .hero-sub { margin: 0 auto; }
   .hero-actions { justify-content: center; }
   .hero-trust { justify-content: center; }
-  .hero-visual { height: 380px; margin-top: var(--space-6); }
+  .hero-visual { height: 240px; margin-top: var(--space-4); }
   .pill-harvest  { left: 10px; top: 20px; }
   .pill-delivery { right: 10px; top: 20px; }
   .pill-organic  { bottom: 30px; right: 20px; }
@@ -466,10 +428,8 @@
 }
 
 @media (max-width: 600px) {
-  .hero-heading { font-size: clamp(2.5rem, 10vw, 3.5rem); }
-  .hero-visual { height: 320px; }
-  .hero-card { width: 180px; }
-  .pill-harvest { display: none; }
+  .hero-visual { height: 0; overflow: hidden; }
+  .pill-harvest, .pill-delivery, .pill-organic { display: none; }
   .orb-1, .orb-2, .orb-3 { display: none; }
 }
 
