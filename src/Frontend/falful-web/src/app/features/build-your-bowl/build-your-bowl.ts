@@ -216,6 +216,24 @@ interface Particle {
           </a>
         </div>
       </div>
+
+      <!-- Mobile sticky bottom bar — visible only on ≤900px when bowl has entries -->
+      @if (entries().length > 0) {
+        <div class="mobile-add-bar">
+          <div class="mob-bar-total">
+            <span class="mob-bar-label">Total</span>
+            <strong class="mob-bar-price">Rs. {{ bowlTotal() | number:'1.0-0' }}</strong>
+          </div>
+          <button class="mob-bar-btn"
+                  [class.cart-popping]="cartPopping()"
+                  (click)="addToCart()"
+                  [disabled]="bowlTotal() <= 0">
+            <i class="bi bi-cart-plus"></i>
+            @if (bowlQty() > 1) { Add {{ bowlQty() }} Bowls }
+            @else { Add to Cart }
+          </button>
+        </div>
+      }
     </div>
 
     <!-- Flying fruit particles — fixed overlay, clips outside scroll context -->

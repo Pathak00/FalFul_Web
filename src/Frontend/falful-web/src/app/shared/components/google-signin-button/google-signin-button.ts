@@ -45,18 +45,21 @@ export class GoogleSignInButtonComponent implements AfterViewInit {
 
     google.accounts.id.initialize({
       client_id: environment.googleClientId,
-      // Force popup mode — prevents fallback redirect to /signin-google
       ux_mode: 'popup',
       callback: (response: { credential: string }) => {
-        // Google callback runs outside Angular's zone; bring it back in
         this.ngZone.run(() => this.credential.emit(response.credential));
       }
     });
 
+    // Use the actual wrapper width so the button never overflows its container.
+    // Google clamps its width to [200, 400]; we stay within that range.
+    const containerWidth = this.btnRef.nativeElement.parentElement?.offsetWidth ?? this.width;
+    const renderWidth = Math.max(200, Math.min(400, containerWidth));
+
     google.accounts.id.renderButton(this.btnRef.nativeElement, {
       theme: 'outline',
       size: 'large',
-      width: this.width,
+      width: renderWidth,
       text: 'continue_with',
       shape: 'rectangular',
       logo_alignment: 'left'

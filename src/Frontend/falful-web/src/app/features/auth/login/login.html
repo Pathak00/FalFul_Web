@@ -1,59 +1,96 @@
 <div class="auth-card">
-  <a routerLink="/" class="back-home"><i class="bi bi-arrow-left"></i> Back to Home</a>
-  <h2>Welcome back</h2>
-  <p class="subtitle">Sign in to your FalFul account</p>
 
-  @if (errorMessage()) {
-    <div class="alert alert-error">{{ errorMessage() }}</div>
-  }
+  <!-- Gradient accent stripe -->
+  <div class="card-stripe"></div>
 
-  <app-google-signin-button (credential)="onGoogleLogin($event)" />
+  <div class="card-body">
 
-  <div class="divider"><span>or sign in with email</span></div>
+    <a routerLink="/" class="back-link">
+      <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <div class="form-group">
-      <label for="identifier">Email or Phone</label>
-      <input
-        id="identifier"
-        type="text"
-        formControlName="identifier"
-        placeholder="Enter email or phone number"
-        [class.invalid]="form.controls.identifier.invalid && form.controls.identifier.touched"
-      />
-      @if (form.controls.identifier.invalid && form.controls.identifier.touched) {
-        <span class="error-text">Email or phone is required.</span>
-      }
+    <div class="card-head">
+      <span class="head-mark">🌿</span>
+      <div>
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to your FalFul account</p>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="password">Password</label>
-      <input
-        id="password"
-        type="password"
-        formControlName="password"
-        placeholder="Enter your password"
-        [class.invalid]="form.controls.password.invalid && form.controls.password.touched"
-      />
-      @if (form.controls.password.invalid && form.controls.password.touched) {
-        <span class="error-text">Password must be at least 8 characters.</span>
-      }
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Google sign-in -->
+    <app-google-signin-button (credential)="onGoogleLogin($event)" />
+
+    <div class="divider"><span>or sign in with email</span></div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Email / Phone -->
+      <div class="field" [class.has-error]="form.controls.identifier.invalid && form.controls.identifier.touched">
+        <label for="identifier">Email or Phone <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="bi bi-person-circle input-icon"></i>
+          <input
+            id="identifier"
+            type="text"
+            formControlName="identifier"
+            placeholder="Enter email or phone number"
+            autocomplete="username"
+          />
+        </div>
+        @if (form.controls.identifier.invalid && form.controls.identifier.touched) {
+          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Email or phone is required.</p>
+        }
+      </div>
+
+      <!-- Password -->
+      <div class="field" [class.has-error]="form.controls.password.invalid && form.controls.password.touched">
+        <label for="password">Password <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="bi bi-lock input-icon"></i>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+          />
+        </div>
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Password must be at least 8 characters.</p>
+        }
+      </div>
+
+      <div class="forgot-link">
+        <a routerLink="/auth/forgot-password">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="form.invalid || isLoading()">
+        @if (isLoading()) {
+          <span class="spinner"></span> Signing in…
+        } @else {
+          <i class="bi bi-box-arrow-in-right"></i> Sign In
+        }
+      </button>
+
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a routerLink="/auth/register">Create one</a></p>
+      <p>Registering as organization? <a routerLink="/auth/register-organization">Register here</a></p>
     </div>
 
-    <div class="forgot-link">
-      <a routerLink="/auth/forgot-password">Forgot Password?</a>
+    <div class="trust-bar">
+      <span><i class="bi bi-shield-fill-check"></i> Secure login</span>
+      <span><i class="bi bi-truck"></i> Fast delivery</span>
+      <span><i class="bi bi-leaf-fill"></i> 100% Natural</span>
     </div>
 
-    <button type="submit" class="btn-submit" [disabled]="form.invalid || isLoading()">
-      @if (isLoading()) { <span class="spinner"></span> Signing in... }
-      @else { Sign In }
-    </button>
-  </form>
-
-  <p class="auth-link">
-    Don't have an account? <a routerLink="/auth/register">Create one</a>
-  </p>
-  <p class="auth-link">
-    Registering as organization? <a routerLink="/auth/register-organization">Register here</a>
-  </p>
+  </div>
 </div>
