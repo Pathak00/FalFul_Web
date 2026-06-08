@@ -4,7 +4,6 @@ import { HomepageSection } from '../../core/models/cms.models';
 import { NoticeDto } from '../../core/models/discount.models';
 import { CmsService } from '../../core/services/cms.service';
 import { DiscountService } from '../../core/services/discount.service';
-import { HeroSectionComponent } from './sections/hero-section/hero-section';
 import { HowItWorksComponent } from './sections/how-it-works/how-it-works';
 import { ProductShowcaseComponent } from './sections/product-showcase/product-showcase';
 import { PromoSectionComponent } from './sections/promo-section/promo-section';
@@ -16,14 +15,12 @@ import { ImageUrlService } from '../../core/services/image-url.service';
   standalone: true,
   imports: [
     CommonModule,
-    HeroSectionComponent,
     ProductShowcaseComponent,
     HowItWorksComponent,
     StatsSectionComponent,
     PromoSectionComponent,
   ],
   template: `
-    @if (show('hero'))     { <app-hero-section     [sectionData]="get('hero')"     /> }
     @if (show('products')) { <app-product-showcase [sectionData]="get('products')" /> }
     @if (show('how'))      { <app-how-it-works     [sectionData]="get('how')"      /> }
     @if (show('stats'))    { <app-stats-section    [sectionData]="get('stats')"    /> }

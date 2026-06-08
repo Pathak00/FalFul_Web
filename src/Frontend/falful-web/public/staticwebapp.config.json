@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/**",
+      "/*.{js,mjs,cjs}",
+      "/*.css",
+      "/*.map",
+      "/*.{ico,png,jpg,jpeg,gif,svg,webp}",
+      "/*.{woff,woff2,ttf,eot,otf}",
+      "/*.{json,webmanifest}",
+      "/*.{txt,xml}"
+    ]
+  },
+
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  },
+
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json",
+    ".mjs": "text/javascript"
+  }
+}

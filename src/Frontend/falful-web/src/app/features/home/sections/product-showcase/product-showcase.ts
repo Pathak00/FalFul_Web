@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { HomepageSection } from '../../../../core/models/cms.models';
@@ -6,6 +6,7 @@ import { ScrollAnimateDirective } from '../../../../shared/directives/scroll-ani
 import { ProductService } from '../../../../core/services/product.service';
 import { ProductSummary } from '../../../../core/models/product.models';
 import { ImageUrlService } from '../../../../core/services/image-url.service';
+import { CartService } from '../../../../core/services/cart.service';
 
 @Component({
   selector: 'app-product-showcase',
@@ -19,9 +20,14 @@ export class ProductShowcaseComponent implements OnInit {
 
   private productService = inject(ProductService);
   protected imgSvc       = inject(ImageUrlService);
+  private cartSvc        = inject(CartService);
 
   products: ProductSummary[] = [];
   loading = true;
+
+  /** Tracks which product was just added so the button shows a brief ✓ state */
+  addedId = signal<number | null>(null);
+  private addedTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.productService.getPublicProducts().subscribe({
@@ -31,6 +37,29 @@ export class ProductShowcaseComponent implements OnInit {
       },
       error: () => { this.loading = false; },
     });
+  }
+
+  addToCart(event: Event, p: ProductSummary): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.cartSvc.addItem({
+      itemType:    'PRODUCT',
+      productId:   p.id,
+      productName: p.name,
+      productSlug: p.slug,
+      imageUrl:    p.imageUrl ?? '',
+      unitPrice:   p.price,
+      quantity:    1,
+      unit:        p.unit,
+      totalPrice:  p.price,
+      isCustomBuild: false,
+    });
+
+    // Show ✓ feedback for 1.4 s then reset
+    if (this.addedTimer) clearTimeout(this.addedTimer);
+    this.addedId.set(p.id);
+    this.addedTimer = setTimeout(() => this.addedId.set(null), 1400);
   }
 
   imageUrl(url: string | undefined): string {

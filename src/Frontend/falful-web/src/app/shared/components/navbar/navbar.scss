@@ -320,7 +320,10 @@
   position: fixed;
   top: 0; right: 0;
   width: min(320px, 90vw);
+  /* 100svh = small viewport height: excludes browser chrome (URL bar,
+     bottom nav bar) on Android/iOS so the footer is never hidden. */
   height: 100vh;
+  height: 100svh;
   background: #fff;
   z-index: 150;
   display: flex;
@@ -328,7 +331,7 @@
   box-shadow: -4px 0 30px rgba(0,0,0,.15);
   transform: translateX(100%);
   transition: transform .3s cubic-bezier(.4,0,.2,1);
-  overflow-y: auto;
+  overflow: hidden;
 
   &.open { transform: translateX(0); }
 }
@@ -355,6 +358,7 @@
 
 .drawer-nav {
   flex: 1;
+  min-height: 0; /* allows flex child to shrink; without this footer gets pushed off-screen */
   padding: .75rem 0;
   overflow-y: auto;
 }

@@ -7,6 +7,8 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   imports: [RouterOutlet, RouterLink],
   template: `
     <div class="auth-layout">
+
+      <!-- Left brand panel — hidden on mobile ≤900px -->
       <div class="auth-brand">
         <div class="auth-brand-grain" aria-hidden="true"></div>
         <a routerLink="/" class="logo">
@@ -27,9 +29,20 @@ import { RouterLink, RouterOutlet } from '@angular/router';
           <div class="brand-stat"><strong>100%</strong><span>Natural</span></div>
         </div>
       </div>
+
+      <!-- Right content panel -->
       <div class="auth-content">
+        <!-- Mobile-only logo strip — replaces the hidden left panel -->
+        <div class="mobile-brand-strip">
+          <a routerLink="/" class="mobile-logo">
+            <span>🌿</span>
+            <span class="mobile-logo-text">FalFul</span>
+          </a>
+          <span class="mobile-tagline">Grove-fresh · Delivered daily</span>
+        </div>
         <router-outlet />
       </div>
+
     </div>
   `,
   styleUrl: './auth-layout.scss'

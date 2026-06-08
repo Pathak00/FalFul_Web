@@ -93,9 +93,21 @@
                   </div>
                 }
               </div>
-              <span class="view-btn view-btn-hero">
-                Shop Now <i class="bi bi-arrow-right"></i>
-              </span>
+              <div class="hero-actions-row">
+                <span class="view-btn view-btn-hero">
+                  Shop Now <i class="bi bi-arrow-right"></i>
+                </span>
+                <button class="btn-quick-add"
+                        [class.added]="addedId() === products[0].id"
+                        (click)="addToCart($event, products[0])"
+                        aria-label="Add to cart">
+                  @if (addedId() === products[0].id) {
+                    <i class="bi bi-check2-circle"></i>
+                  } @else {
+                    <i class="bi bi-cart-plus-fill"></i>
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </a>
@@ -147,6 +159,19 @@
                   <i class="bi bi-arrow-right"></i>
                 </span>
               </div>
+            </div>
+
+            <!-- Add to Cart bar — visible always, full-width at card bottom -->
+            <div class="card-cart-bar">
+              <button class="btn-add-cart"
+                      [class.added]="addedId() === p.id"
+                      (click)="addToCart($event, p)">
+                @if (addedId() === p.id) {
+                  <i class="bi bi-check-lg"></i> Added!
+                } @else {
+                  <i class="bi bi-cart-plus"></i> Add to Cart
+                }
+              </button>
             </div>
           </a>
         }
