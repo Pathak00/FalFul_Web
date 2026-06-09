@@ -16,8 +16,6 @@ public class SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> l
         var port    = int.TryParse(section["SmtpPort"], out var p) ? p : 587;
         var user    = section["Username"];
         var pass    = section["Password"];
-        // Brevo requires the From address to be a verified sender in your Brevo account.
-        // If FromAddress is not verified, fall back to the SMTP username (always allowed).
         var from    = section["FromAddress"] is { Length: > 0 } fa ? fa : (user ?? "noreply@falfulfresh.com");
         var name    = section["FromName"] ?? "FalFul Fresh Fruits";
 

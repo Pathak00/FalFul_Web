@@ -35,8 +35,9 @@ builder.Services.AddPersistence();
 builder.Services.AddScoped<FalFul.API.Services.IFileService, FalFul.API.Services.FileService>();
 builder.Services.AddHostedService<ImageUrlNormalizationService>();
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt:Key is not configured. Set it via appsettings.Development.json locally or Jwt__Key in Azure App Service settings.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -10,10 +10,11 @@ obj/
 publish/
 out/
 
-# Secrets (use appsettings.Production.json or secrets manager in prod)
+# Secrets — only the base appsettings.json (with empty placeholders) is tracked.
+# Environment-specific files (appsettings.Development.json, appsettings.Production.json, etc.)
+# are gitignored. Set secrets via Azure App Service Application Settings or local env vars.
 appsettings.*.json
 !appsettings.json
-!appsettings.Development.json
 
 # Angular (each package has its own .gitignore, this is a safety net)
 **/node_modules/
