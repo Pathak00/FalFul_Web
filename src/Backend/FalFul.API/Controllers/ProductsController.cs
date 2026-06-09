@@ -1,4 +1,5 @@
-﻿using FalFul.Application.DTOs.Product;
+using FalFul.API.Services;
+using FalFul.Application.DTOs.Product;
 using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,9 +8,9 @@ namespace FalFul.API.Controllers;
 
 [ApiController]
 [Route("api/products")]
-public class ProductsController(IProductService productService) : ControllerBase
+public class ProductsController(IProductService productService, IFileService fileSvc) : ControllerBase
 {
-    // â”€â”€ Public endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Public endpoints ──────────────────────────────────────────────────────
 
     [HttpGet]
     [AllowAnonymous]
@@ -35,7 +36,7 @@ public class ProductsController(IProductService productService) : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
-    // â”€â”€ Admin endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Admin endpoints ───────────────────────────────────────────────────────
 
     [HttpGet("all")]
     [Authorize(Policy = "Perm:products")]
@@ -67,16 +68,34 @@ public class ProductsController(IProductService productService) : ControllerBase
     [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductDto dto)
     {
+        // Capture the current image URL before the update so we can delete it
+        // if the admin replaced the image with a new one.
+        var existing    = await productService.GetProductByIdAsync(id);
+        var oldImageUrl = existing?.ImageUrl;
+
         var result = await productService.UpdateProductAsync(id, dto);
-        return result.IsSuccess ? Ok() : BadRequest(new { message = result.Error });
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        // Old image is now unreferenced — delete the physical file.
+        if (!string.IsNullOrWhiteSpace(oldImageUrl) && oldImageUrl != dto.ImageUrl)
+            fileSvc.DeleteLocalUpload(oldImageUrl);
+
+        return Ok();
     }
 
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "Perm:products")]
     public async Task<IActionResult> Delete(int id)
     {
+        // Grab the image URL before deleting the record so we can clean up the file.
+        var existing = await productService.GetProductByIdAsync(id);
+        var imageUrl = existing?.ImageUrl;
+
         var result = await productService.DeleteProductAsync(id);
-        return result.IsSuccess ? Ok() : BadRequest(new { message = result.Error });
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        fileSvc.DeleteLocalUpload(imageUrl);
+        return Ok();
     }
 
     [HttpPost("{id:int}/availability")]

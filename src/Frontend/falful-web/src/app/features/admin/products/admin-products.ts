@@ -173,7 +173,7 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
                   <div class="img-uploading"><i class="bi bi-arrow-repeat spin"></i> Uploading…</div>
                 } @else if (form.imageUrl) {
                   <img [src]="imgSvc.resolve(form.imageUrl)" class="img-preview" [alt]="form.name" />
-                  <button type="button" class="img-remove" (click)="$event.stopPropagation(); form.imageUrl = ''">
+                  <button type="button" class="img-remove" (click)="$event.stopPropagation(); removeImage()">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 } @else {
@@ -186,7 +186,7 @@ import { Category, Product, CreateProductRequest, PRODUCT_UNITS } from '../../..
               </div>
               <input #imgInput type="file" accept="image/*" style="display:none" (change)="onImagePicked($event)" />
               @if (uploadError()) {
-                <span style="font-size:.75rem;color:#dc2626">{{ uploadError() }}</span>
+                <p style="font-size:.75rem;color:#dc2626;margin:.25rem 0 0">{{ uploadError() }}</p>
               }
             </div>
             <div class="form-group">
@@ -295,18 +295,46 @@ export class AdminProductsComponent implements OnInit {
   uploading    = signal(false);
   uploadError  = signal('');
 
+  // URL uploaded in this form session but not yet committed to the backend.
+  // Tracked so we can delete it if the form is cancelled or the save fails.
+  private pendingUploadUrl = '';
+
+  // Original image URL of the product being edited.
+  // Tracked so we can delete the old file after a successful image replacement.
+  private originalImageUrl = '';
+
   onImagePicked(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+
+    // If a previous upload in this session is being replaced before saving, delete it.
+    if (this.pendingUploadUrl) {
+      this.upload.deleteUpload(this.pendingUploadUrl);
+      this.pendingUploadUrl = '';
+    }
+
     this.uploading.set(true);
     this.uploadError.set('');
     this.upload.upload(file).subscribe({
-      next: url  => { this.form.imageUrl = url; this.uploading.set(false); },
+      next: url => {
+        this.pendingUploadUrl = url;
+        this.form.imageUrl    = url;
+        this.uploading.set(false);
+      },
       error: (e: { error?: { message?: string } }) => {
         this.uploadError.set(e?.error?.message || 'Upload failed.');
         this.uploading.set(false);
       }
     });
+  }
+
+  removeImage() {
+    // Only delete from server if the displayed image is a fresh upload this session.
+    if (this.form.imageUrl && this.form.imageUrl === this.pendingUploadUrl) {
+      this.upload.deleteUpload(this.pendingUploadUrl);
+      this.pendingUploadUrl = '';
+    }
+    this.form.imageUrl = '';
   }
 
   ngOnInit() {
@@ -331,11 +359,15 @@ export class AdminProductsComponent implements OnInit {
     this.editTarget.set(null);
     this.form = this.emptyForm();
     this.formError.set('');
+    this.pendingUploadUrl = '';
+    this.originalImageUrl = '';
     this.showForm.set(true);
   }
 
   openEdit(p: Product) {
     this.editTarget.set(p);
+    this.originalImageUrl = p.imageUrl ?? '';
+    this.pendingUploadUrl = '';
     this.form = {
       categoryId: p.categoryId, name: p.name, slug: p.slug,
       description: p.description, shortDescription: p.shortDescription,
@@ -349,7 +381,14 @@ export class AdminProductsComponent implements OnInit {
     this.showForm.set(true);
   }
 
-  closeForm() { this.showForm.set(false); }
+  closeForm() {
+    // User cancelled — delete any upload that was never saved.
+    if (this.pendingUploadUrl) {
+      this.upload.deleteUpload(this.pendingUploadUrl);
+      this.pendingUploadUrl = '';
+    }
+    this.showForm.set(false);
+  }
 
   autoSlug() {
     if (!this.editTarget()) {
@@ -359,15 +398,59 @@ export class AdminProductsComponent implements OnInit {
 
   submitForm() {
     this.formError.set('');
-    const target = this.editTarget();
+    const target          = this.editTarget();
+    const pendingUrl      = this.pendingUploadUrl;
+    const originalUrl     = this.originalImageUrl;
     this.saving.set(true);
-    const done = () => { this.saving.set(false); this.closeForm(); this.load(); };
-    const fail = (e: { error?: { message?: string } }) => { this.saving.set(false); this.formError.set(e?.error?.message || 'Save failed.'); };
+
     if (target) {
-      this.svc.updateProduct(target.id, this.form).subscribe({ next: done, error: fail });
+      // ── Update ──────────────────────────────────────────────────────────────
+      this.svc.updateProduct(target.id, this.form).subscribe({
+        next: () => {
+          // Image was replaced — the old file is now unreferenced on the backend
+          // (backend also deletes it, but this guards against any edge cases).
+          if (originalUrl && originalUrl !== this.form.imageUrl)
+            this.upload.deleteUpload(originalUrl);
+          this.pendingUploadUrl = '';
+          this.saving.set(false);
+          this.closeFormAfterSave();
+        },
+        error: (e: { error?: { message?: string } }) => {
+          // Save failed — the freshly uploaded image is now orphaned; clean it up.
+          if (pendingUrl) {
+            this.upload.deleteUpload(pendingUrl);
+            this.form.imageUrl    = originalUrl; // restore previous image in UI
+            this.pendingUploadUrl = '';
+          }
+          this.saving.set(false);
+          this.formError.set(e?.error?.message || 'Save failed.');
+        }
+      });
     } else {
-      this.svc.createProduct(this.form).subscribe({ next: done, error: fail });
+      // ── Create ──────────────────────────────────────────────────────────────
+      this.svc.createProduct(this.form).subscribe({
+        next: () => {
+          this.pendingUploadUrl = ''; // image is now committed
+          this.saving.set(false);
+          this.closeFormAfterSave();
+        },
+        error: (e: { error?: { message?: string } }) => {
+          // Product was never created — delete the orphaned upload.
+          if (pendingUrl) {
+            this.upload.deleteUpload(pendingUrl);
+            this.form.imageUrl    = '';
+            this.pendingUploadUrl = '';
+          }
+          this.saving.set(false);
+          this.formError.set(e?.error?.message || 'Save failed.');
+        }
+      });
     }
+  }
+
+  private closeFormAfterSave() {
+    this.showForm.set(false);
+    this.load();
   }
 
   toggleAvail(p: Product) {

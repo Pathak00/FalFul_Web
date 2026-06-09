@@ -32,6 +32,7 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence();
+builder.Services.AddScoped<FalFul.API.Services.IFileService, FalFul.API.Services.FileService>();
 builder.Services.AddHostedService<ImageUrlNormalizationService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
