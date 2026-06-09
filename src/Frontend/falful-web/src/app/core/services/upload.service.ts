@@ -14,4 +14,12 @@ export class UploadService {
       .post<{ url: string }>(`${environment.apiUrl}/api/upload`, form)
       .pipe(map(r => r.url));
   }
+
+  /** Deletes a previously uploaded file. Fire-and-forget; errors are swallowed. */
+  deleteUpload(relativeUrl: string): void {
+    if (!relativeUrl?.startsWith('uploads/')) return;
+    const filename = relativeUrl.replace(/^uploads\//, '');
+    this.http.delete(`${environment.apiUrl}/api/upload/${encodeURIComponent(filename)}`)
+      .subscribe({ error: () => {} });
+  }
 }

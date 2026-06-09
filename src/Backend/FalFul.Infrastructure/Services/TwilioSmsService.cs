@@ -10,13 +10,15 @@ public class TwilioSmsService(IConfiguration config, ILogger<TwilioSmsService> l
 {
     public async Task SendAsync(string toPhone, string message)
     {
-        var section    = config.GetSection("Sms:Twilio");
-        var accountSid = section["AccountSid"];
-        var authToken  = section["AuthToken"];
-        var fromNumber = section["FromNumber"];
+        var section      = config.GetSection("Sms:Twilio");
+        var accountSid   = section["AccountSid"];
+        var apiKeySid    = section["ApiKeySid"];
+        var apiKeySecret = section["ApiKeySecret"];
+        var fromNumber   = section["FromNumber"];
 
-        if (string.IsNullOrWhiteSpace(accountSid) ||
-            string.IsNullOrWhiteSpace(authToken)  ||
+        if (string.IsNullOrWhiteSpace(accountSid)   ||
+            string.IsNullOrWhiteSpace(apiKeySid)    ||
+            string.IsNullOrWhiteSpace(apiKeySecret) ||
             string.IsNullOrWhiteSpace(fromNumber))
         {
             logger.LogWarning("[DEV-SMS] Twilio not configured. To: {Phone} | Message: {Message}",
@@ -27,7 +29,9 @@ public class TwilioSmsService(IConfiguration config, ILogger<TwilioSmsService> l
         // Ensure E.164 format for Nepal numbers: 98XXXXXXXX → +9779XXXXXXXX
         var to = NormaliseNepalPhone(toPhone);
 
-        TwilioClient.Init(accountSid, authToken);
+        // API Key credentials: scope-limited, can be revoked without changing the account Auth Token.
+        // Init signature: (apiKeySid, apiKeySecret, accountSid)
+        TwilioClient.Init(apiKeySid, apiKeySecret, accountSid);
 
         logger.LogInformation("Twilio → sending to {To} from {From}", to, fromNumber);
 
