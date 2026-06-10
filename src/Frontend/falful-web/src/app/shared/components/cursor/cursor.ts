@@ -5,16 +5,7 @@ import { NgStyle } from '@angular/common';
   selector: 'app-cursor',
   standalone: true,
   imports: [NgStyle],
-  template: `
-    @if (visible()) {
-      <div class="cursor-outer"
-           [ngStyle]="{ transform: 'translate(' + outerX() + 'px, ' + outerY() + 'px)', width: hovered() ? '56px' : '40px', height: hovered() ? '56px' : '40px' }">
-      </div>
-      <div class="cursor-dot"
-           [ngStyle]="{ transform: 'translate(' + dotX() + 'px, ' + dotY() + 'px)' }">
-      </div>
-    }
-  `,
+  templateUrl: './cursor.html',
   styleUrl: './cursor.scss',
 })
 export class CursorComponent implements OnInit {

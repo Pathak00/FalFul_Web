@@ -1,0 +1,44 @@
+
+    .tab-bar { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+
+    .kpi-strip {
+      display: flex; gap: .875rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+    }
+    .kpi-tile {
+      flex: 1; min-width: 140px; background: #fff; border: 1px solid #e2e8f0;
+      border-radius: 10px; padding: 1rem 1.25rem;
+      .kpi-val { font-size: 1.35rem; font-weight: 800; color: #0f172a; }
+      .kpi-lbl { font-size: .75rem; color: #64748b; margin-top: .1rem; }
+      &.kpi-green { border-left: 3px solid #16a34a; .kpi-val { color: #16a34a; } }
+      &.kpi-orange { border-left: 3px solid #ea580c; .kpi-val { color: #ea580c; } }
+      &.kpi-blue  { border-left: 3px solid #1d4ed8; .kpi-val { color: #1d4ed8; } }
+    }
+
+    .method-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: .72rem; font-weight: 700;
+      &.method-cod    { background: #fef9c3; color: #854d0e; }
+      &.method-esewa  { background: #dcfce7; color: #166534; }
+      &.method-khalti { background: #f5f3ff; color: #6d28d9; }
+    }
+
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+    .card-header { display: flex; align-items: center; gap: .5rem; padding: .875rem 1.25rem;
+      border-bottom: 1px solid #f1f5f9; background: #f8fafc;
+      h2 { margin: 0; font-size: .875rem; font-weight: 700; color: #0f172a; }
+    }
+    .settings-group-header { display: flex; align-items: center; gap: .5rem; }
+    .group-icon { color: #16a34a; font-size: 1rem; }
+
+    .toggle-btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .25rem .625rem; border-radius: 20px; border: 1.5px solid;
+      font-size: .72rem; font-weight: 700; cursor: pointer; transition: all .15s;
+      background: #f1f5f9; border-color: #cbd5e1; color: #64748b;
+      .toggle-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+      &.enabled { background: #dcfce7; border-color: #86efac; color: #16a34a;
+        .toggle-dot { background: #16a34a; }
+      }
+      &:disabled { opacity: .5; cursor: not-allowed; }
+    }
+  

@@ -1,0 +1,17 @@
+
+    .notice-banner {
+      display: flex; align-items: center; gap: .75rem; padding: .6rem 1.25rem;
+      font-size: .85rem;
+      i.bi:first-child { font-size: 1rem; flex-shrink: 0; }
+    }
+    .nb--info    { background: #dbeafe; color: #1d4ed8; }
+    .nb--warning { background: #fef3c7; color: #92400e; }
+    .nb--success { background: #dcfce7; color: #15803d; }
+    .nb--error   { background: #fee2e2; color: #b91c1c; }
+    .nb-title { font-weight: 700; flex-shrink: 0; }
+    .nb-msg   { flex: 1; opacity: .9; }
+    .nb-close { background: none; border: none; cursor: pointer; color: inherit; opacity: .7;
+      padding: 0 .25rem; margin-left: auto; flex-shrink: 0;
+      &:hover { opacity: 1; }
+    }
+  

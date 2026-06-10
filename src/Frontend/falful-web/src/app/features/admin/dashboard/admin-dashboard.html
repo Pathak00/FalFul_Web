@@ -1,0 +1,84 @@
+
+    <div class="admin-page">
+      <div class="page-header">
+        <div>
+          <h1>Welcome, {{ user()?.fullName }}</h1>
+          <p class="page-sub">
+            @if (isSystem()) {
+              Full admin access — manage everything from here.
+            } @else {
+              Here are the sections you have access to.
+            }
+          </p>
+        </div>
+      </div>
+
+      @if (isSystem()) {
+        <!-- Stats grid — only for system-level admins -->
+        @if (loading()) {
+          <div class="loading-state"><div class="spinner"></div><p>Loading stats…</p></div>
+        } @else if (loadError()) {
+          <div class="error-state">
+            <i class="bi bi-exclamation-circle"></i>
+            <p>Could not load dashboard stats. The API may be unavailable.</p>
+          </div>
+        } @else if (stats()) {
+          <div class="stats-grid">
+            <a routerLink="/admin/users" class="stat-card stat-blue">
+              <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+              <div class="stat-body">
+                <div class="stat-value">{{ stats()!.totalUsers }}</div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-sub">{{ stats()!.activeUsers }} active</div>
+              </div>
+            </a>
+            <a routerLink="/admin/pages" class="stat-card stat-green">
+              <div class="stat-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+              <div class="stat-body">
+                <div class="stat-value">{{ stats()!.totalPages }}</div>
+                <div class="stat-label">Pages</div>
+                <div class="stat-sub">{{ stats()!.publishedPages }} published</div>
+              </div>
+            </a>
+            <a routerLink="/admin/banners" class="stat-card stat-orange">
+              <div class="stat-icon"><i class="bi bi-images"></i></div>
+              <div class="stat-body">
+                <div class="stat-value">{{ stats()!.totalBanners }}</div>
+                <div class="stat-label">Banners</div>
+                <div class="stat-sub">{{ stats()!.activeBanners }} active</div>
+              </div>
+            </a>
+            <a routerLink="/admin/sections" class="stat-card stat-purple">
+              <div class="stat-icon"><i class="bi bi-layout-text-window-reverse"></i></div>
+              <div class="stat-body">
+                <div class="stat-value">{{ stats()!.visibleSections }}</div>
+                <div class="stat-label">Homepage Sections</div>
+                <div class="stat-sub">currently visible</div>
+              </div>
+            </a>
+          </div>
+        }
+      }
+
+      <!-- Quick actions — sourced from the same DB-driven nav store as the sidebar -->
+      <div class="quick-links">
+        <h2>Quick Actions</h2>
+        <div class="link-grid">
+          @for (item of navActions(); track item.id) {
+            <a [routerLink]="item.route" class="quick-link">
+              <i class="bi {{ item.icon ?? 'bi-grid' }} ql-icon"></i>
+              <div>
+                <strong>{{ item.label }}</strong>
+                @if (item.groupLabel) {
+                  <p>{{ item.groupLabel }}</p>
+                }
+              </div>
+            </a>
+          }
+          @empty {
+            <p class="text-muted">No sections are currently assigned to your role. Contact your administrator.</p>
+          }
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,399 @@
+
+    <div class="rd-page">
+      <div class="page-header">
+        <div>
+          <h1>My Deliveries</h1>
+          <p class="page-sub">Your assigned deliveries for today and upcoming days.</p>
+        </div>
+        <button class="btn-refresh" (click)="load()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          <div class="spinner"></div>
+          <p>Loading…</p>
+        </div>
+      } @else if (deliveries().length === 0) {
+        <div class="empty-state">
+          <i class="bi bi-bicycle" style="font-size:2.5rem;color:#94a3b8"></i>
+          <h3>No deliveries assigned</h3>
+          <p>Check back later or contact your admin.</p>
+        </div>
+      } @else {
+        <div class="delivery-list">
+          @for (d of deliveries(); track d.id) {
+            <div class="delivery-card">
+              <div class="card-top">
+                <div>
+                  <span class="order-num">#{{ d.orderNumber }}</span>
+                  <span class="badge {{ STATUS_BADGE[d.status] ?? 'badge-gray' }}">{{
+                    STATUS_LABELS[d.status] ?? d.statusLabel
+                  }}</span>
+                </div>
+                <div class="card-actions">
+                  @if (d.status === 2) {
+                    <button class="btn-action btn-pickup" (click)="quickStatus(d.id, 3)">
+                      Picked Up
+                    </button>
+                  }
+                  @if (d.status === 3) {
+                    <button class="btn-action btn-out" (click)="quickStatus(d.id, 4)">
+                      Out for Delivery
+                    </button>
+                  }
+                  @if (d.status === 4) {
+                    <button class="btn-action btn-delivered" (click)="openComplete(d)">
+                      Mark Delivered
+                    </button>
+                    <button class="btn-action btn-attempt" (click)="openAttempt(d)">
+                      Log Attempt
+                    </button>
+                  }
+                  <button class="btn-action btn-detail" (click)="viewDetail(d.id)" title="View Details">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <div class="info-row"><i class="bi bi-person"></i> {{ d.customerName }}</div>
+                <div class="info-row"><i class="bi bi-telephone"></i> {{ d.deliveryPhone }}</div>
+                <div class="info-row">
+                  <i class="bi bi-geo-alt"></i> {{ d.fullAddress }}{{ d.city ? ', ' + d.city : '' }}
+                </div>
+                <div class="info-row">
+                  <i class="bi bi-calendar3"></i> {{ d.scheduledDate
+                  }}{{ d.scheduledTimeSlot ? ' · ' + d.scheduledTimeSlot : '' }}
+                </div>
+                @if (d.attemptCount > 0) {
+                  <div class="info-row text-warn">
+                    <i class="bi bi-exclamation-circle"></i> {{ d.attemptCount }}/{{
+                      d.maxAttempts
+                    }}
+                    attempts
+                  </div>
+                }
+              </div>
+
+              <div class="card-footer">
+                <div class="footer-amounts">
+                  <span class="amount">Rs {{ d.remainingBalance | number:'1.0-0' }}</span>
+                  @if (d.advanceAmount > 0) {
+                    <span class="advance-note">to collect · Rs {{ d.advanceAmount | number:'1.0-0' }} advance paid</span>
+                  }
+                </div>
+                <span class="payment">{{ d.paymentMethod ?? 'Cash on Delivery' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Order Detail Modal -->
+    @if (detail()) {
+      <div class="modal-overlay" (click)="detail.set(null)">
+        <div class="modal modal-detail" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>#{{ detail()!.orderNumber }}</h2>
+              <span class="badge {{ STATUS_BADGE[detail()!.status] ?? 'badge-gray' }}">
+                {{ STATUS_LABELS[detail()!.status] ?? detail()!.statusLabel }}
+              </span>
+            </div>
+            <button class="btn-close" (click)="detail.set(null)">✕</button>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Customer</div>
+            <div class="detail-row"><i class="bi bi-person"></i> {{ detail()!.customerName }}</div>
+            <div class="detail-row"><i class="bi bi-telephone"></i> {{ detail()!.deliveryPhone }}</div>
+            <div class="detail-row">
+              <i class="bi bi-geo-alt"></i>
+              {{ detail()!.fullAddress }}{{ detail()!.city ? ', ' + detail()!.city : '' }}
+            </div>
+            @if (detail()!.landmark) {
+              <div class="detail-row"><i class="bi bi-signpost"></i> {{ detail()!.landmark }}</div>
+            }
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Delivery</div>
+            <div class="detail-row">
+              <i class="bi bi-calendar3"></i>
+              {{ detail()!.scheduledDate }}{{ detail()!.scheduledTimeSlot ? ' · ' + detail()!.scheduledTimeSlot : '' }}
+            </div>
+            <div class="detail-row">
+              <i class="bi bi-credit-card"></i>
+              {{ PAYMENT_LABELS[detail()!.paymentMethod] ?? 'Cash on Delivery' }}
+            </div>
+            @if (detail()!.trackingNotes) {
+              <div class="detail-row"><i class="bi bi-sticky"></i> {{ detail()!.trackingNotes }}</div>
+            }
+          </div>
+
+          @if (detail()!.items?.length) {
+            <div class="detail-section">
+              <div class="detail-section-title">Items ({{ detail()!.items.length }})</div>
+              @for (item of detail()!.items; track item.id) {
+                <div class="item-row">
+                  <span class="item-name">
+                    {{ item.productName }}
+                    @if (item.isCustomBuild) { <span class="item-custom">Custom</span> }
+                  </span>
+                  <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
+                  <span class="item-price">Rs {{ item.totalPrice | number:'1.0-0' }}</span>
+                </div>
+                @if (item.isCustomBuild && item.customBuildDetails) {
+                  @let bowl = parseBowlDetails(item.customBuildDetails);
+                  @if (bowl) {
+                    <div class="bowl-comp">
+                      <div class="bowl-comp-header">
+                        <i class="bi bi-scissors"></i>
+                        {{ bowl.container === 'bowl' ? 'Bowl' : 'Box' }} Composition
+                        — {{ bowlTotalGrams(bowl) }}g
+                      </div>
+                      @for (fruit of bowl.fruits; track fruit.productId) {
+                        <div class="bowl-fruit">
+                          <span>{{ fruit.name }}</span>
+                          <span>{{ fruit.grams }}g</span>
+                          @if (fruit.price) {
+                            <span class="bowl-fruit-price">Rs {{ fruit.price | number:'1.0-0' }}</span>
+                          }
+                        </div>
+                      }
+                      @if (bowl.containerFee) {
+                        <div class="bowl-fruit bowl-extra">
+                          <span>Container fee</span>
+                          <span></span>
+                          <span class="bowl-fruit-price">Rs {{ bowl.containerFee | number:'1.0-0' }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                }
+              }
+              <div class="charge-row">
+                <span>Subtotal</span>
+                <span>Rs {{ detail()!.subTotal | number:'1.0-0' }}</span>
+              </div>
+              @if (detail()!.deliveryFee > 0) {
+                <div class="charge-row">
+                  <span>Delivery Fee</span>
+                  <span>Rs {{ detail()!.deliveryFee | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (detail()!.serviceFee > 0) {
+                <div class="charge-row">
+                  <span>Service Fee</span>
+                  <span>Rs {{ detail()!.serviceFee | number:'1.0-0' }}</span>
+                </div>
+              }
+              <div class="item-total">
+                <span>Total</span>
+                <span>Rs {{ detail()!.totalAmount | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          }
+
+          @if (detail()!.orderNotes) {
+            <div class="detail-section">
+              <div class="detail-section-title">Order Notes</div>
+              <div class="detail-row"><i class="bi bi-chat-left-text"></i> {{ detail()!.orderNotes }}</div>
+            </div>
+          }
+
+          @if (detail()!.attempts?.length) {
+            <div class="detail-section">
+              <div class="detail-section-title">Delivery Attempts</div>
+              @for (a of detail()!.attempts; track a.id) {
+                <div class="attempt-row">
+                  <div class="attempt-meta">
+                    <span class="attempt-num">Attempt {{ a.attemptNumber }}</span>
+                    <span class="badge {{ a.wasSuccessful ? 'badge-green' : 'badge-red' }}">
+                      {{ a.wasSuccessful ? 'Successful' : 'Failed' }}
+                    </span>
+                    <span class="attempt-time">{{ a.attemptedAt | date:'dd MMM, HH:mm':'Asia/Kathmandu' }}</span>
+                  </div>
+                  @if (a.failureReasonLabel) {
+                    <div class="attempt-note">{{ a.failureReasonLabel }}</div>
+                  }
+                  @if (a.failureNotes) {
+                    <div class="attempt-note text-muted">{{ a.failureNotes }}</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="detail.set(null)">Close</button>
+            @if (detail()!.status === 5) {
+              <button class="btn-primary btn-receipt"
+                      (click)="printReceipt(detail()!.orderId)"
+                      [disabled]="printingReceiptId() === detail()!.orderId">
+                @if (printingReceiptId() === detail()!.orderId) {
+                  <span class="spinner-xs"></span> Loading…
+                } @else {
+                  <i class="bi bi-printer"></i> Print Receipt
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delivery Completion Modal -->
+    @if (completeTarget()) {
+      <div class="modal-overlay" (click)="completeTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Complete Delivery</h2>
+              <p class="modal-sub">#{{ completeTarget()!.orderNumber }}</p>
+            </div>
+            <button class="btn-close" (click)="completeTarget.set(null)">✕</button>
+          </div>
+
+          <div class="collect-banner">
+            <div class="collect-label">Amount to Collect</div>
+            <div class="collect-amount">Rs {{ completeTarget()!.remainingBalance | number:'1.0-0' }}</div>
+            @if (completeTarget()!.advanceAmount > 0) {
+              <div class="collect-note">Advance of Rs {{ completeTarget()!.advanceAmount | number:'1.0-0' }} already paid</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Collected Amount (Rs) *</label>
+            <input type="number" [(ngModel)]="completeForm.collectedAmount"
+                   [placeholder]="completeTarget()!.remainingBalance" min="0" step="1" />
+          </div>
+
+          <div class="form-group">
+            <label>Proof of Delivery (optional)</label>
+
+            @if (completeForm.proofPhotoUrl) {
+              <div class="proof-preview">
+                @if (isPdfProof(completeForm.proofPhotoUrl)) {
+                  <div class="proof-pdf"><i class="bi bi-file-earmark-pdf-fill"></i> File attached</div>
+                } @else {
+                  <img [src]="completeForm.proofPhotoUrl" alt="Proof of delivery" />
+                }
+                <button type="button" class="proof-remove" (click)="removeProof()" title="Remove">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </div>
+            } @else if (uploadingProof()) {
+              <div class="proof-uploading"><span class="proof-spinner"></span> Uploading…</div>
+            } @else {
+              <div class="proof-actions">
+                <button type="button" class="proof-btn" (click)="proofCamera.click()">
+                  <i class="bi bi-camera-fill"></i> Take Photo
+                </button>
+                <button type="button" class="proof-btn" (click)="proofFile.click()">
+                  <i class="bi bi-upload"></i> Upload File
+                </button>
+              </div>
+              <span class="proof-hint">Photo or file showing the delivered order (optional).</span>
+            }
+
+            <!-- Hidden inputs: camera uses capture; upload allows image or PDF -->
+            <input #proofCamera type="file" accept="image/*" capture="environment"
+                   class="proof-input-hidden" (change)="onProofSelected($event)" />
+            <input #proofFile type="file" accept="image/*,.pdf"
+                   class="proof-input-hidden" (change)="onProofSelected($event)" />
+          </div>
+
+          <div class="form-group">
+            <label>Remarks (optional)</label>
+            <textarea [(ngModel)]="completeForm.collectionRemarks" rows="2"
+                      placeholder="Any notes about the delivery or collection…"></textarea>
+          </div>
+
+          @if (completeError()) {
+            <div class="form-error">{{ completeError() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="completeTarget.set(null)">Cancel</button>
+            <button class="btn-primary btn-green" (click)="submitComplete()" [disabled]="completeSaving()">
+              {{ completeSaving() ? 'Saving…' : 'Confirm Delivery' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Log Attempt Modal -->
+    @if (attemptTarget()) {
+      <div class="modal-overlay" (click)="attemptTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Log Attempt</h2>
+              <p class="modal-sub">
+                Record delivery attempt for #{{ attemptTarget()!.orderNumber }}
+              </p>
+            </div>
+            <button class="btn-close" (click)="attemptTarget.set(null)">✕</button>
+          </div>
+
+          <div class="form-group">
+            <label>Outcome</label>
+            <div class="radio-row">
+              <label class="radio-opt" [class.selected]="attemptForm.wasSuccessful === true">
+                <input type="radio" [value]="true" [(ngModel)]="attemptForm.wasSuccessful" />
+                Successful
+              </label>
+              <label class="radio-opt" [class.selected]="attemptForm.wasSuccessful === false">
+                <input type="radio" [value]="false" [(ngModel)]="attemptForm.wasSuccessful" />
+                Failed
+              </label>
+            </div>
+          </div>
+
+          @if (!attemptForm.wasSuccessful) {
+            <div class="form-group">
+              <label>Failure Reason</label>
+              <select [(ngModel)]="attemptForm.failureReason">
+                <option [value]="undefined">Select reason…</option>
+                @for (r of failureReasons; track r.value) {
+                  <option [value]="r.value">{{ r.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Next Action</label>
+              <select [(ngModel)]="attemptForm.nextAction">
+                <option [value]="undefined">Select action…</option>
+                @for (a of nextActions; track a.value) {
+                  <option [value]="a.value">{{ a.label }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea
+              [(ngModel)]="attemptForm.failureNotes"
+              rows="2"
+              placeholder="Any additional notes…"
+            ></textarea>
+          </div>
+
+          @if (attemptError()) {
+            <div class="form-error">{{ attemptError() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="attemptTarget.set(null)">Cancel</button>
+            <button class="btn-primary" (click)="submitAttempt()" [disabled]="attemptSaving()">
+              {{ attemptSaving() ? 'Saving…' : 'Submit' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  

@@ -1,0 +1,46 @@
+
+    <section class="marquee-section">
+      <div class="marquee-label">Fresh arrivals · Every day</div>
+
+      <!-- Row 1: left to right -->
+      <div class="marquee-track-wrap" (mouseenter)="pauseRow1=true" (mouseleave)="pauseRow1=false">
+        <div class="marquee-track" [class.paused]="pauseRow1">
+          <!-- Duplicate content for seamless loop -->
+          @for (f of row1; track f.name + 'a') {
+            <div class="fruit-tag">
+              <span class="fruit-tag-emoji">{{ f.emoji }}</span>
+              <span class="fruit-tag-name">{{ f.name }}</span>
+              <span class="fruit-tag-origin">{{ f.origin }}</span>
+            </div>
+          }
+          @for (f of row1; track f.name + 'b') {
+            <div class="fruit-tag" aria-hidden="true">
+              <span class="fruit-tag-emoji">{{ f.emoji }}</span>
+              <span class="fruit-tag-name">{{ f.name }}</span>
+              <span class="fruit-tag-origin">{{ f.origin }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Row 2: right to left -->
+      <div class="marquee-track-wrap" (mouseenter)="pauseRow2=true" (mouseleave)="pauseRow2=false">
+        <div class="marquee-track marquee-rtl" [class.paused]="pauseRow2">
+          @for (f of row2; track f.name + 'a') {
+            <div class="fruit-tag fruit-tag-alt">
+              <span class="fruit-tag-emoji">{{ f.emoji }}</span>
+              <span class="fruit-tag-name">{{ f.name }}</span>
+              <span class="fruit-tag-origin">{{ f.origin }}</span>
+            </div>
+          }
+          @for (f of row2; track f.name + 'b') {
+            <div class="fruit-tag fruit-tag-alt" aria-hidden="true">
+              <span class="fruit-tag-emoji">{{ f.emoji }}</span>
+              <span class="fruit-tag-name">{{ f.name }}</span>
+              <span class="fruit-tag-origin">{{ f.origin }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  

@@ -13,14 +13,14 @@ import { CartService } from '../../../../core/services/cart.service';
   standalone: true,
   imports: [RouterLink, ScrollAnimateDirective, DecimalPipe],
   templateUrl: './product-showcase.html',
-  styleUrl: './product-showcase.scss'
+  styleUrl: './product-showcase.scss',
 })
 export class ProductShowcaseComponent implements OnInit {
   @Input() sectionData: HomepageSection | undefined;
 
   private productService = inject(ProductService);
-  protected imgSvc       = inject(ImageUrlService);
-  private cartSvc        = inject(CartService);
+  protected imgSvc = inject(ImageUrlService);
+  private cartSvc = inject(CartService);
 
   products: ProductSummary[] = [];
   loading = true;
@@ -31,11 +31,13 @@ export class ProductShowcaseComponent implements OnInit {
 
   ngOnInit(): void {
     this.productService.getPublicProducts().subscribe({
-      next: list => {
-        this.products = list.slice(0, 7);
+      next: (list) => {
+        this.products = list;
         this.loading = false;
       },
-      error: () => { this.loading = false; },
+      error: () => {
+        this.loading = false;
+      },
     });
   }
 
@@ -44,15 +46,15 @@ export class ProductShowcaseComponent implements OnInit {
     event.stopPropagation();
 
     this.cartSvc.addItem({
-      itemType:    'PRODUCT',
-      productId:   p.id,
+      itemType: 'PRODUCT',
+      productId: p.id,
       productName: p.name,
       productSlug: p.slug,
-      imageUrl:    p.imageUrl ?? '',
-      unitPrice:   p.price,
-      quantity:    1,
-      unit:        p.unit,
-      totalPrice:  p.price,
+      imageUrl: p.imageUrl ?? '',
+      unitPrice: p.price,
+      quantity: 1,
+      unit: p.unit,
+      totalPrice: p.price,
       isCustomBuild: false,
     });
 
@@ -76,15 +78,15 @@ export class ProductShowcaseComponent implements OnInit {
   }
 
   savedAmount(p: ProductSummary): number {
-    return (!p.mrp || p.mrp <= p.price) ? 0 : Math.max(0, p.mrp - p.price);
+    return !p.mrp || p.mrp <= p.price ? 0 : Math.max(0, p.mrp - p.price);
   }
 
   tagColor(tag: string): string {
     const t = tag.toLowerCase();
-    if (t.includes('new'))      return 'red';
+    if (t.includes('new')) return 'red';
     if (t.includes('popular') || t.includes('best')) return 'amber';
-    if (t.includes('organic'))  return 'green';
-    if (t.includes('season'))   return 'green';
+    if (t.includes('organic')) return 'green';
+    if (t.includes('season')) return 'green';
     if (t.includes('featured')) return 'blue';
     return 'gray';
   }

@@ -11,22 +11,8 @@ import { CursorComponent } from '../../components/cursor/cursor';
   selector: 'app-main-layout',
   standalone: true,
   imports: [RouterOutlet, NavbarComponent, FooterComponent, CartSidebarComponent, ToastComponent, NoticesBannerComponent, CursorComponent],
-  template: `
-    <app-cursor />
-    <app-notices-banner />
-    <app-navbar (cartOpen)="cartVisible.set(true)" />
-    <main class="main-content">
-      <router-outlet />
-    </main>
-    <app-footer />
-    @if (cartVisible()) {
-      <app-cart-sidebar (close)="cartVisible.set(false)" />
-    }
-    <app-toast />
-  `,
-  styles: [`
-    .main-content { min-height: calc(100vh - 70px); }
-  `]
+  templateUrl: './main-layout.html',
+  styleUrl: './main-layout.scss'
 })
 export class MainLayoutComponent {
   cartVisible = signal(false);

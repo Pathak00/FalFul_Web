@@ -1,0 +1,50 @@
+
+    <div class="admin-page">
+      <div class="page-header">
+        <div>
+          <h1>Price Configuration</h1>
+          <p class="page-sub">Configure delivery fees, service charges, container fees, and order thresholds. Changes take effect immediately on new orders.</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          <div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>
+        </div>
+      } @else {
+        <div class="price-cards">
+          @for (rule of rules(); track rule.id) {
+            <div class="price-card" [class.inactive]="!rule.isActive">
+              <div class="pc-header">
+                <div>
+                  <span class="pc-name">{{ rule.ruleName }}</span>
+                  <span class="pc-key">{{ rule.ruleKey }}</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="rule.isActive" (change)="saveRule(rule)" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="pc-body">
+                <div class="pc-value-row">
+                  <input type="number" [(ngModel)]="rule.value" min="0" step="0.5"
+                         class="value-input" (change)="saveRule(rule)" />
+                  <span class="unit-badge">{{ rule.unit === 'percent' ? '%' : 'Rs.' }}</span>
+                </div>
+                @if (rule.updatedAt) {
+                  <span class="pc-updated">Last updated: {{ rule.updatedAt | date:'dd MMM yyyy' }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (saveMsg()) {
+          <div class="save-toast" [class.error]="saveMsg()!.startsWith('Error')">
+            <i class="bi" [class.bi-check-circle-fill]="!saveMsg()!.startsWith('Error')" [class.bi-exclamation-circle-fill]="saveMsg()!.startsWith('Error')"></i>
+            {{ saveMsg() }}
+          </div>
+        }
+      }
+    </div>
+  

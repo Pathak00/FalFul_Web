@@ -16,18 +16,8 @@ declare const google: any;
 @Component({
   selector: 'app-google-signin-button',
   standalone: true,
-  template: `
-    <div class="google-btn-wrapper">
-      <div #googleBtn></div>
-    </div>
-  `,
-  styles: [`
-    .google-btn-wrapper {
-      display: flex;
-      justify-content: center;
-      margin: 0.5rem 0;
-    }
-  `]
+  templateUrl: './google-signin-button.html',
+  styleUrl: './google-signin-button.scss'
 })
 export class GoogleSignInButtonComponent implements AfterViewInit {
   @ViewChild('googleBtn', { static: true }) btnRef!: ElementRef;

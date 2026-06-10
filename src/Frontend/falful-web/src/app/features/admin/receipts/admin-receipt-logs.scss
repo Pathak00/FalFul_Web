@@ -1,0 +1,19 @@
+
+    .filter-bar { display:flex; align-items:flex-end; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .filter-group { display:flex; flex-direction:column; gap:.35rem; label { font-size:.75rem; font-weight:600; color:#64748b; } }
+    .input-with-btn { display:flex; gap:.375rem; input { height:36px; border:1px solid #e2e8f0; border-radius:6px; padding:.375rem .625rem; font-size:.85rem; width:140px; } }
+
+    .table-wrap { overflow-x:auto; }
+    .data-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    .data-table th { background:#f8fafc; padding:.625rem .75rem; text-align:left; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#64748b; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
+    .data-table td { padding:.625rem .75rem; border-bottom:1px solid #f1f5f9; color:#374151; vertical-align:middle; }
+    .data-table tr:hover td { background:#f8fafc; }
+    .order-num { font-weight:700; color:#0f172a; font-size:.82rem; }
+    .role-badge { display:inline-block; padding:1px 8px; border-radius:999px; font-size:.72rem; font-weight:600; background:#f1f5f9; color:#475569; }
+    .time-cell { color:#94a3b8; font-size:.8rem; white-space:nowrap; }
+    .text-muted { color:#94a3b8; }
+
+    .pagination { display:flex; align-items:center; gap:.75rem; margin-top:1.25rem; justify-content:center; }
+    .page-info { font-size:.85rem; color:#64748b; }
+    .btn-sm { padding:.3rem .75rem; font-size:.8rem; }
+  

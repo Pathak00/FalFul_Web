@@ -1,0 +1,226 @@
+
+    <div class="admin-page">
+      <div class="page-header">
+        <div>
+          <h1>Navigation</h1>
+          <p class="page-sub">Customise the admin/rider sidebar — rename labels, change icons, reorder, or hide items. Add custom items pointing to any admin route. System items cannot be deleted.</p>
+        </div>
+        <button class="btn-primary" (click)="openCreate()">
+          <i class="bi bi-plus-lg"></i> New Item
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          <div class="spinner"></div>
+          <p>Loading navigation items…</p>
+        </div>
+      } @else {
+        <div class="nav-list">
+          @for (item of items(); track item.id) {
+            <div class="nav-row" [class.nav-row-hidden]="!item.isVisible">
+              <div class="nav-drag-handle">
+                <i class="bi bi-grip-vertical"></i>
+              </div>
+
+              <div class="nav-icon-preview">
+                <i class="bi {{ item.icon }}"></i>
+              </div>
+
+              <div class="nav-row-info">
+                <div class="nav-row-label">
+                  @if (editing()?.id === item.id) {
+                    <input class="inline-edit-input" [(ngModel)]="editForm.label" (keyup.enter)="save(item)" (keyup.escape)="cancelEdit()" />
+                  } @else {
+                    <span class="nav-label-text">{{ item.label }}</span>
+                  }
+                </div>
+                <div class="nav-row-meta">
+                  <span class="meta-route">{{ item.route }}</span>
+                  @if (item.requiredPermission) {
+                    <span class="meta-perm">{{ item.requiredPermission }}</span>
+                  } @else {
+                    <span class="meta-perm meta-perm-open">no permission</span>
+                  }
+                  <span class="meta-scope" [class]="portalScopeClass(item.portalScope)">
+                    {{ portalScopeLabel(item.portalScope) }}
+                  </span>
+                  @if (item.groupLabel) {
+                    <span class="meta-group">{{ item.groupLabel }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="nav-row-actions">
+                @if (!item.isVisible) {
+                  <span class="hidden-badge">Hidden</span>
+                }
+
+                @if (editing()?.id === item.id) {
+                  <div class="edit-panel">
+                    <div class="edit-row">
+                      <label>Label</label>
+                      <input [(ngModel)]="editForm.label" placeholder="Display label" />
+                    </div>
+                    <div class="edit-row">
+                      <label>Icon</label>
+                      <input [(ngModel)]="editForm.icon" placeholder="bi-speedometer2" />
+                      @if (editForm.icon) {
+                        <i class="bi {{ editForm.icon }} icon-preview"></i>
+                      }
+                    </div>
+                    <div class="edit-row">
+                      <label>Section</label>
+                      <input [(ngModel)]="editForm.groupLabel" placeholder="e.g. Operations" />
+                    </div>
+                    <div class="edit-row">
+                      <label>Order</label>
+                      <input type="number" [(ngModel)]="editForm.displayOrder" style="width:80px" />
+                    </div>
+                    <div class="edit-row">
+                      <label>
+                        <input type="checkbox" [(ngModel)]="editForm.isVisible" />
+                        Visible in sidebar
+                      </label>
+                    </div>
+                    @if (!item.isSystem) {
+                      <div class="edit-row">
+                        <label>Permission</label>
+                        <input [(ngModel)]="editForm.requiredPermission" placeholder="e.g. reports (blank = no check)" />
+                      </div>
+                    }
+                    <div class="edit-row portal-row">
+                      <label>Portals</label>
+                      <div class="portal-checks">
+                        @for (pt of portalTypes(); track pt) {
+                          <label class="portal-check-lbl">
+                            <input type="checkbox"
+                                   [checked]="editPortals.has(pt)"
+                                   (change)="toggleEditPortal(pt)" />
+                            {{ pt | titlecase }}
+                          </label>
+                        }
+                      </div>
+                      <span class="hint-xs">Uncheck all = visible in all portals</span>
+                    </div>
+                    @if (saveError()) {
+                      <p class="save-error">{{ saveError() }}</p>
+                    }
+                    <div class="edit-actions">
+                      <button class="btn-primary btn-sm" (click)="save(item)" [disabled]="saving()">
+                        {{ saving() ? 'Saving…' : 'Save' }}
+                      </button>
+                      <button class="btn-secondary btn-sm" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </div>
+                } @else {
+                  <button class="ua-btn ua-btn-edit" (click)="startEdit(item)">
+                    <i class="bi bi-pencil"></i> Edit
+                  </button>
+                  <button class="ua-btn" [class.ua-btn-warn]="item.isVisible" [class.ua-btn-success]="!item.isVisible"
+                          (click)="toggleVisible(item)" [title]="item.isVisible ? 'Hide from sidebar' : 'Show in sidebar'">
+                    <i class="bi" [class.bi-eye-slash]="item.isVisible" [class.bi-eye]="!item.isVisible"></i>
+                    {{ item.isVisible ? 'Hide' : 'Show' }}
+                  </button>
+                  @if (!item.isSystem) {
+                    <button class="ua-btn ua-btn-danger" (click)="confirmDelete(item)" title="Delete this item">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ── Create Nav Item modal ──────────────────────────────────────────── -->
+    @if (showCreate()) {
+      <div class="modal-overlay" (click)="showCreate.set(false)">
+        <div class="modal-box" style="max-width:500px" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>New Navigation Item</h3>
+            <button class="modal-close" (click)="showCreate.set(false)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group-row">
+              <div class="fg">
+                <label>Label *</label>
+                <input [(ngModel)]="createForm.label" placeholder="e.g. Analytics" />
+              </div>
+              <div class="fg">
+                <label>Icon</label>
+                <input [(ngModel)]="createForm.icon" placeholder="bi-graph-up" />
+              </div>
+            </div>
+            <div class="fg">
+              <label>Route * <span class="hint">(must start with /admin/)</span></label>
+              <input [(ngModel)]="createForm.route" placeholder="/admin/analytics" />
+            </div>
+            <div class="form-group-row">
+              <div class="fg">
+                <label>Section (Group)</label>
+                <input [(ngModel)]="createForm.groupLabel" placeholder="e.g. Operations" />
+              </div>
+              <div class="fg">
+                <label>Display Order</label>
+                <input type="number" [(ngModel)]="createForm.displayOrder" min="0" />
+              </div>
+            </div>
+            <div class="fg">
+              <label>Required Permission <span class="hint">(leave blank = no permission check)</span></label>
+              <input [(ngModel)]="createForm.requiredPermission" placeholder="e.g. reports" />
+            </div>
+            <div class="fg">
+              <label>Portals <span class="hint">(uncheck all = no portal restriction)</span></label>
+              <div class="portal-checks" style="flex-direction:row;flex-wrap:wrap;gap:.5rem .75rem;margin-top:.25rem">
+                @for (pt of portalTypes(); track pt) {
+                  <label class="portal-check-lbl">
+                    <input type="checkbox"
+                           [checked]="createPortals.has(pt)"
+                           (change)="toggleCreatePortal(pt)" />
+                    {{ pt | titlecase }}
+                  </label>
+                }
+              </div>
+            </div>
+            <label class="toggle-lbl">
+              <input type="checkbox" [(ngModel)]="createForm.isVisible" />
+              <span>Visible in sidebar</span>
+            </label>
+            @if (createError()) {
+              <p class="err-msg">{{ createError() }}</p>
+            }
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="showCreate.set(false)">Cancel</button>
+            <button class="btn-primary" (click)="saveCreate()" [disabled]="creatingItem()">
+              @if (creatingItem()) { Creating… } @else { <i class="bi bi-plus-lg"></i> Create Item }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Delete confirm modal ───────────────────────────────────────────── -->
+    @if (deleteTarget()) {
+      <div class="modal-overlay" (click)="deleteTarget.set(null)">
+        <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Delete Nav Item</h3>
+            <button class="modal-close" (click)="deleteTarget.set(null)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="modal-body">
+            <p>Delete <strong>"{{ deleteTarget()!.label }}"</strong>? This cannot be undone.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="deleteTarget.set(null)">Cancel</button>
+            <button class="btn-danger" (click)="doDelete()" [disabled]="saving()">
+              @if (saving()) { Deleting… } @else { Delete }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  

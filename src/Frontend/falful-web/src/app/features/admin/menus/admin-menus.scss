@@ -1,0 +1,65 @@
+
+    .page-sub { color: #64748b; margin: .25rem 0 0; font-size: .875rem; }
+
+    .menu-tree {
+      background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .menu-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: .75rem 1rem; border-bottom: 1px solid #f1f5f9;
+      transition: background .1s;
+      &:last-child { border-bottom: none; }
+      &:hover { background: #fafafa; }
+      &.row-hidden { opacity: .5; }
+    }
+
+    .menu-row-top  { background: #fafafa; }
+    .menu-row-child { background: #fff; padding-left: 2rem; }
+    .menu-row-left { display: flex; align-items: center; gap: .625rem; flex: 1; min-width: 0; flex-wrap: wrap; }
+    .menu-row-actions { display: flex; gap: .375rem; flex-shrink: 0; }
+    .menu-icon { font-size: 1rem; width: 18px; text-align: center; color: #475569; flex-shrink: 0; }
+    .menu-label-block {
+      display: flex; flex-direction: column; gap: .125rem;
+      strong { font-size: .875rem; color: #0f172a; }
+    }
+    .menu-url { font-size: .75rem; color: #94a3b8; font-family: monospace; }
+    .order-badge { font-size: .7rem; color: #cbd5e1; font-weight: 600; }
+    .child-indent { font-size: .9rem; color: #cbd5e1; flex-shrink: 0; }
+    .btn-success-soft { background: #f0fdf4; color: #16a34a; &:hover { background: #dcfce7; } }
+
+    .section-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin: 2rem 0 .75rem;
+    }
+    .section-title {
+      font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0 0 .25rem;
+      display: flex; align-items: center; gap: .4rem;
+      i { color: #7c3aed; }
+    }
+    .section-desc {
+      font-size: .8rem; color: #64748b; margin: 0; max-width: 680px; line-height: 1.5;
+    }
+    .menu-tree-portal { border-color: #e9d5ff; }
+    .menu-row-portal { background: #faf5ff !important; &:hover { background: #f3e8ff !important; } }
+    .portal-icon { color: #7c3aed; font-size: 1rem; flex-shrink: 0; width: 18px; text-align: center; }
+    .badge-purple      { background: #ede9fe; color: #7c3aed; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+    .badge-portal-type { background: #fef3c7; color: #b45309; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+
+    .role-picker {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: .875rem 1rem; margin-top: .5rem;
+    }
+    .role-picker-label { font-size: .8rem; font-weight: 600; color: #374151; margin: 0 0 .625rem; }
+    .role-checks { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .role-check-row {
+      display: flex; align-items: center; gap: .4rem; cursor: pointer;
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: .3rem .65rem; font-size: .82rem; color: #374151;
+      transition: border-color .15s, background .15s;
+      input { width: 14px; height: 14px; accent-color: #16a34a; cursor: pointer; }
+      &:has(input:checked) { border-color: #16a34a; background: #f0fdf4; color: #15803d; font-weight: 600; }
+    }
+    .field-hint.warn { color: #b45309; margin-top: .375rem; }
+  

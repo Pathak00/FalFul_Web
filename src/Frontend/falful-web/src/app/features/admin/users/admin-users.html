@@ -1,0 +1,284 @@
+
+    <div class="admin-page">
+      <div class="page-header">
+        <div>
+          <h1>Users</h1>
+          <p class="page-sub">View and manage all registered users. You can activate/deactivate accounts, change roles, reset passwords, or remove users.</p>
+        </div>
+        <button class="btn-primary" (click)="openCreate()">
+          <i class="bi bi-person-plus"></i> Add User
+        </button>
+      </div>
+
+      <!-- Filter bar — roles come from DB, fully dynamic -->
+      <div class="filter-bar">
+        <button class="filter-btn" [class.active]="filter() === 'all'" (click)="filter.set('all')">All ({{ users().length }})</button>
+        @for (role of roles(); track role.id) {
+          <button class="filter-btn" [class.active]="filter() === role.name" (click)="filter.set(role.name)">
+            {{ role.name }}
+          </button>
+        }
+        <button class="filter-btn" [class.active]="filter() === 'inactive'" (click)="filter.set('inactive')">Inactive</button>
+        <button class="filter-btn" [class.active]="filter() === 'norole'" (click)="filter.set('norole')">No Role</button>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          <div class="spinner"></div>
+          <p>Loading users…</p>
+        </div>
+      } @else if (filtered().length === 0) {
+        <div class="empty-state">
+          <i class="bi bi-people empty-icon"></i>
+          <h3>No users found</h3>
+          <p>Try a different filter.</p>
+        </div>
+      } @else {
+        <div class="users-table-scroll">
+          <table class="data-table users-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th class="hide-md">Last Login</th>
+                <th class="actions-th">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (u of filtered(); track u.id) {
+                <tr [class.row-inactive]="!u.isActive">
+                  <td>
+                    <div class="user-avatar-row">
+                      <div class="user-avatar">{{ u.fullName.charAt(0).toUpperCase() }}</div>
+                      <div>
+                        <strong>{{ u.fullName }}</strong>
+                        <div class="text-muted text-sm">#{{ u.id }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="contact-cell">
+                    @if (u.email) { <div class="contact-line">{{ u.email }}</div> }
+                    @if (u.phoneNumber) { <div class="text-muted text-sm">{{ u.phoneNumber }}</div> }
+                  </td>
+                  <td>
+                    <div class="role-cell">
+                      @if (u.roleName) {
+                        <span class="badge badge-role">{{ u.roleName }}</span>
+                      } @else {
+                        <span class="text-muted text-sm">—</span>
+                      }
+                      <span class="portal-tag"
+                            [class.portal-rider]="u.portalType === 'rider'"
+                            [class.portal-admin]="u.portalType === 'admin'"
+                            [class.portal-customer]="u.portalType === 'customer'">
+                        {{ u.portalType === 'rider' ? 'Rider Portal' : u.portalType === 'admin' ? 'Admin Panel' : 'Customer' }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge" [class.badge-green]="u.isActive" [class.badge-gray]="!u.isActive">
+                      {{ u.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="text-muted text-sm">{{ u.createdAt | date:'d MMM y' }}</td>
+                  <td class="text-muted text-sm hide-md">{{ u.lastLoginAt ? (u.lastLoginAt | date:'d MMM y') : '—' }}</td>
+                  <td class="user-actions">
+                    <button class="ua-btn ua-btn-edit" (click)="openRole(u)" title="Assign role">
+                      <i class="bi bi-shield-check"></i><span class="btn-label"> Role</span>
+                    </button>
+                    <button class="ua-btn ua-btn-edit" (click)="openReset(u)" title="Reset password">
+                      <i class="bi bi-key"></i><span class="btn-label"> Reset</span>
+                    </button>
+                    <button class="ua-btn" [class.ua-btn-warn]="u.isActive" [class.ua-btn-success]="!u.isActive"
+                            (click)="toggleActive(u)" [title]="u.isActive ? 'Deactivate' : 'Activate'">
+                      <i class="bi" [class.bi-pause-circle]="u.isActive" [class.bi-play-circle]="!u.isActive"></i>
+                      <span class="btn-label">{{ u.isActive ? ' Deactivate' : ' Activate' }}</span>
+                    </button>
+                    <button class="ua-btn ua-btn-danger" (click)="deleteTarget.set(u)" title="Delete user">
+                      <i class="bi bi-trash"></i><span class="btn-label"> Delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Reset Password Modal -->
+    @if (resetTarget()) {
+      <div class="modal-overlay" (click)="resetTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Reset Password</h2>
+              <p class="modal-sub">Set a new password for <strong>{{ resetTarget()!.fullName }}</strong>.</p>
+            </div>
+            <button class="btn-close" (click)="resetTarget.set(null)">✕</button>
+          </div>
+
+          <div class="form-group">
+            <label>New Password <span class="required">*</span></label>
+            <input type="password" [(ngModel)]="newPassword" placeholder="Minimum 6 characters" />
+            <span class="field-hint">The user will need to use this password to log in next time.</span>
+          </div>
+
+          @if (resetError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ resetError() }}</div> }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="resetTarget.set(null)">Cancel</button>
+            <button class="btn-primary" (click)="confirmReset()" [disabled]="resetting()">
+              {{ resetting() ? 'Updating…' : 'Set New Password' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delete Confirm Modal -->
+    @if (deleteTarget()) {
+      <div class="modal-overlay" (click)="deleteTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="confirm-icon"><i class="bi bi-person-x"></i></div>
+          <h2>Delete User?</h2>
+          <p>Permanently remove <strong>{{ deleteTarget()!.fullName }}</strong>? This cannot be undone.</p>
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="deleteTarget.set(null)">Cancel</button>
+            <button class="btn-danger-solid" (click)="confirmDelete()">Yes, Delete</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Role Assignment Modal -->
+    @if (roleTarget()) {
+      <div class="modal-overlay" (click)="roleTarget.set(null)">
+        <div class="modal modal-sm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Assign Role</h2>
+              <p class="modal-sub">Set the role for <strong>{{ roleTarget()!.fullName }}</strong>. Permissions are inherited from the assigned role.</p>
+            </div>
+            <button class="btn-close" (click)="roleTarget.set(null)">✕</button>
+          </div>
+
+          @if (roleLoading()) {
+            <div style="padding:1rem;text-align:center"><div class="spinner"></div></div>
+          } @else {
+            <div class="form-group">
+              <label>Role</label>
+              <select class="inline-select" style="width:100%;padding:.5rem" [(ngModel)]="selectedRoleId">
+                @for (r of roles(); track r.id) {
+                  <option [value]="r.id">{{ r.name }}{{ r.description ? ' — ' + r.description : '' }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="portal-indicator"
+                 [class.portal-indicator-rider]="selectedRolePortalType === 'rider'"
+                 [class.portal-indicator-admin]="selectedRolePortalType === 'admin'">
+              <i class="bi" [class.bi-bicycle]="selectedRolePortalType === 'rider'"
+                            [class.bi-speedometer2]="selectedRolePortalType === 'admin'"
+                            [class.bi-person]="selectedRolePortalType === 'customer'"></i>
+              <span>
+                @if (selectedRolePortalType === 'rider') {
+                  Will route to <strong>Rider Portal</strong> after login.
+                } @else if (selectedRolePortalType === 'admin') {
+                  Will route to <strong>Admin Panel</strong> after login.
+                } @else {
+                  Will route to the <strong>Customer site</strong> after login.
+                }
+              </span>
+            </div>
+
+            @if (roleError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ roleError() }}</div> }
+
+            <div class="modal-actions">
+              <button class="btn-secondary" (click)="roleTarget.set(null)">Cancel</button>
+              <button class="btn-primary" (click)="saveRole()" [disabled]="roleSaving()">
+                {{ roleSaving() ? 'Saving…' : 'Save Role' }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Create User Modal -->
+    @if (showCreate()) {
+      <div class="modal-overlay" (click)="closeCreate()">
+        <div class="modal modal-lg" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div>
+              <h2>Add New User</h2>
+              <p class="modal-sub">Create an account for a user of any type. They can log in with the password you set.</p>
+            </div>
+            <button class="btn-close" (click)="closeCreate()"><i class="bi bi-x-lg"></i></button>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label>Full Name <span class="required">*</span></label>
+              <input [(ngModel)]="createForm.fullName" placeholder="e.g. Rupak Pathak" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" [(ngModel)]="createForm.email" placeholder="user@example.com" />
+                <span class="field-hint">Required if no phone number is provided.</span>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input [(ngModel)]="createForm.phoneNumber" placeholder="+977 98XXXXXXXX" />
+                <span class="field-hint">Required if no email is provided.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label>Role <span class="required">*</span></label>
+              <div class="role-options">
+                @for (r of roles(); track r.id) {
+                  <label class="type-option" [class.selected]="createForm.roleId === r.id"
+                         (click)="createForm.roleId = r.id">
+                    <div class="type-radio"></div>
+                    <div>
+                      <strong>{{ r.name }}</strong>
+                      @if (r.isDefault) { <span class="default-tag">default</span> }
+                      @if (r.description) { <span>{{ r.description }}</span> }
+                    </div>
+                  </label>
+                }
+                @empty {
+                  <p class="text-muted text-sm">No roles found. Create roles in <a routerLink="/admin/roles">Roles & Permissions</a> first.</p>
+                }
+              </div>
+              <span class="field-hint">The user receives the permissions assigned to this role.</span>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label>Password <span class="required">*</span></label>
+              <input type="password" [(ngModel)]="createForm.password" placeholder="Minimum 6 characters" />
+              <span class="field-hint">The user will use this password to log in. You can reset it later if needed.</span>
+            </div>
+          </div>
+
+          @if (createError()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ createError() }}</div> }
+
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="closeCreate()">Cancel</button>
+            <button class="btn-primary" (click)="submitCreate()" [disabled]="creating()">
+              {{ creating() ? 'Creating…' : 'Create User' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  

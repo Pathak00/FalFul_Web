@@ -1,0 +1,74 @@
+
+    <div class="admin-page">
+      <div class="page-header">
+        <div>
+          <h1>Homepage Sections</h1>
+          <p class="page-sub">The FalFul homepage is divided into sections. Use this page to edit the text content of each section, or hide sections you don't want to show.</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="empty-state">
+          <div class="spinner"></div>
+          <p>Loading sections…</p>
+        </div>
+      } @else {
+        <div class="sections-list">
+          @for (s of sections(); track s.id) {
+            <div class="section-card" [class.section-hidden]="!s.isVisible">
+              <div class="section-card-header">
+                <div class="section-info">
+                  <div class="section-title-row">
+                    <span class="section-badge">{{ sectionLabel(s.sectionKey) }}</span>
+                    <code class="section-key">{{ s.sectionKey }}</code>
+                  </div>
+                  <p class="section-desc">{{ sectionDesc(s.sectionKey) }}</p>
+                </div>
+                <label class="toggle-label compact">
+                  <div class="toggle" [class.on]="s.isVisible" (click)="s.isVisible = !s.isVisible">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  <span>{{ s.isVisible ? 'Visible' : 'Hidden' }}</span>
+                </label>
+              </div>
+
+              <div class="section-fields" [class.section-fields-dim]="!s.isVisible">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Heading / Title</label>
+                    <input [(ngModel)]="s.title" placeholder="Main heading for this section" />
+                  </div>
+                  <div class="form-group">
+                    <label>Subheading</label>
+                    <input [(ngModel)]="s.subtitle" placeholder="Supporting line below the heading" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Body Content</label>
+                  <textarea [(ngModel)]="s.content" rows="3" placeholder="Additional body text (optional, supports HTML)"></textarea>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Display Order</label>
+                    <input type="number" [(ngModel)]="s.displayOrder" min="0" />
+                    <span class="field-hint">Lower = shown higher on the page.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-footer">
+                @if (savingKey() === s.sectionKey) {
+                  <span class="saving-text">Saving…</span>
+                } @else if (savedKey() === s.sectionKey) {
+                  <span class="saved-text">✓ Saved</span>
+                }
+                <button class="btn-primary btn-sm-action" (click)="save(s)" [disabled]="savingKey() === s.sectionKey">
+                  Save Section
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  

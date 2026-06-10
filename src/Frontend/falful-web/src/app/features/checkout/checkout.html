@@ -1,0 +1,390 @@
+
+    <div class="checkout-page">
+      <div class="co-header">
+        <a routerLink="/products" class="back-link"><i class="bi bi-arrow-left"></i> Continue Shopping</a>
+        <h2>Checkout</h2>
+      </div>
+
+      @if (cart.items().length === 0) {
+        <div class="empty-checkout">
+          <i class="bi bi-cart-x"></i>
+          <p>Your cart is empty.</p>
+          <a routerLink="/products" class="btn-shop">Browse Products</a>
+        </div>
+      } @else {
+        <div class="co-layout">
+          <!-- Left: Details -->
+          <div class="co-form">
+
+            <!-- Delivery Address -->
+            <section class="co-section">
+              <h3><i class="bi bi-geo-alt"></i> Delivery Address</h3>
+
+              @if (!isAuthenticated()) {
+                <div class="login-prompt">
+                  <i class="bi bi-person-lock"></i>
+                  <p>Please <a routerLink="/auth/login">login</a> to save and use your addresses.</p>
+                </div>
+              }
+
+              @if (addresses().length > 0) {
+                <div class="saved-addresses">
+                  @for (addr of addresses(); track addr.id) {
+                    <label class="addr-card" [class.selected]="selectedAddressId() === addr.id">
+                      <input type="radio" name="address" [value]="addr.id" [(ngModel)]="selectedAddrId" (change)="onAddressSelect(addr)" />
+                      <div class="addr-info">
+                        <span class="addr-label"><i class="bi bi-house-door"></i> {{ addr.label }}</span>
+                        <span class="addr-full">{{ addr.fullAddress }}, {{ addr.city }}</span>
+                        @if (addr.landmark) { <span class="addr-land">{{ addr.landmark }}</span> }
+                        <span class="addr-phone"><i class="bi bi-telephone"></i> {{ addr.phoneNumber }}</span>
+                      </div>
+                    </label>
+                  }
+                </div>
+                <button class="btn-new-addr" (click)="useManual.set(!useManual())">
+                  <i class="bi bi-plus-circle"></i>
+                  {{ useManual() ? 'Use saved address' : 'Enter different address' }}
+                </button>
+              }
+
+              @if (addresses().length === 0 || useManual()) {
+                <div class="addr-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Full Address *</label>
+                      <input type="text" [(ngModel)]="form.fullAddress" placeholder="Street, area..." />
+                    </div>
+                    <div class="form-group">
+                      <label>City *</label>
+                      <input type="text" [(ngModel)]="form.city" placeholder="Kathmandu" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Phone Number *</label>
+                      <input type="tel" [(ngModel)]="form.deliveryPhone" placeholder="98XXXXXXXX" />
+                    </div>
+                    <div class="form-group">
+                      <label>Landmark</label>
+                      <input type="text" [(ngModel)]="form.landmark" placeholder="Near temple..." />
+                    </div>
+                  </div>
+                </div>
+              }
+            </section>
+
+            <!-- Delivery Schedule -->
+            <section class="co-section">
+              <h3><i class="bi bi-calendar-event"></i> Delivery Schedule
+                <span class="tz-tag">Nepal Time</span>
+              </h3>
+
+              @if (configLoading()) {
+                <div class="slot-loading"><div class="spinner"></div> Loading available slots…</div>
+              } @else {
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Delivery Date *</label>
+                    <input type="date" [(ngModel)]="form.deliveryDate"
+                           [min]="minDate"
+                           (ngModelChange)="onDateChange()" />
+                  </div>
+                  <div class="form-group">
+                    <label>Time Slot *</label>
+                    @if (availableSlots().length === 0 && form.deliveryDate) {
+                      <div class="no-slots">
+                        <i class="bi bi-clock-history"></i>
+                        <span>All delivery slots for this date have passed.</span>
+                        <button class="no-slots-btn" type="button" (click)="selectTomorrow()">
+                          Schedule for tomorrow
+                        </button>
+                      </div>
+                    } @else {
+                      <select [(ngModel)]="form.deliveryTimeSlot">
+                        <option value="">Select time…</option>
+                        @for (slot of availableSlots(); track slot.label) {
+                          <option [value]="slot.label">{{ slot.label }}</option>
+                        }
+                      </select>
+                    }
+                  </div>
+                </div>
+
+                @if (hasCutFruits() && checkoutConfig()) {
+                  <div class="lead-time-note">
+                    <i class="bi bi-info-circle"></i>
+                    Cut-fruit orders require at least <strong>{{ checkoutConfig()!.cutFruitLeadTimeHours }}h</strong> lead time.
+                    Regular orders require <strong>{{ checkoutConfig()!.leadTimeHours }}h</strong>.
+                    Slots reflect current Nepal time.
+                  </div>
+                }
+              }
+            </section>
+
+            <!-- Location (required for cut-fruit orders) -->
+            @if (hasCutFruits() && checkoutConfig() && checkoutConfig()!.cutFruitRadiusKm > 0) {
+              <section class="co-section co-section-location">
+                <h3><i class="bi bi-geo"></i> Delivery Location
+                  <span class="required-tag">Required for Cut Fruits</span>
+                </h3>
+                <p class="location-desc">
+                  Cut-fruit delivery is available within
+                  <strong>{{ checkoutConfig()!.cutFruitRadiusKm }} km</strong> of our store.
+                  We need your location to verify eligibility.
+                </p>
+
+                @if (locationStatus() === 'idle' || locationStatus() === 'denied' || locationStatus() === 'unsupported') {
+                  <button class="btn-locate" (click)="detectLocation()" [disabled]="locationStatus() === 'unsupported'">
+                    <i class="bi bi-crosshair2"></i>
+                    {{ locationStatus() === 'denied' ? 'Retry — allow location in browser' :
+                       locationStatus() === 'unsupported' ? 'Geolocation not supported' :
+                       'Detect My Location' }}
+                  </button>
+                  @if (locationStatus() === 'denied') {
+                    <p class="loc-error">Location access was denied. Please allow it in your browser settings and try again.</p>
+                  }
+                }
+
+                @if (locationStatus() === 'loading') {
+                  <div class="loc-loading"><div class="spinner"></div> Detecting location…</div>
+                }
+
+                @if (locationStatus() === 'granted' && distanceKm() !== null) {
+                  @if (isOutsideRadius()) {
+                    <div class="loc-outside">
+                      <i class="bi bi-x-circle-fill"></i>
+                      <div>
+                        <strong>Outside delivery area</strong>
+                        <p>
+                          Your location is approximately <strong>{{ distanceKm()! | number:'1.1-1' }} km</strong> away.
+                          Cut-fruit delivery is available within {{ checkoutConfig()!.cutFruitRadiusKm }} km only.
+                          You can remove cut-fruit items from your cart to continue.
+                        </p>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="loc-inside">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <div>
+                        <strong>Within delivery area</strong>
+                        <p>Your location ({{ distanceKm()! | number:'1.1-1' }} km away) is within our cut-fruit delivery zone.</p>
+                      </div>
+                    </div>
+                  }
+                  <button class="btn-relocate" (click)="resetLocation()">
+                    <i class="bi bi-arrow-clockwise"></i> Re-detect location
+                  </button>
+                }
+              </section>
+            }
+
+            <!-- Payment -->
+            <section class="co-section">
+              <h3><i class="bi bi-credit-card"></i> Payment Method</h3>
+              @if (paymentMethodsLoading()) {
+                <div style="color:#94a3b8;font-size:.875rem"><i class="bi bi-arrow-repeat spin"></i> Loading methods…</div>
+              } @else if (paymentMethods().length === 0) {
+                <p style="color:#dc2626;font-size:.875rem">No payment methods available. Please contact support.</p>
+              } @else {
+                <div class="payment-options">
+                  @for (pm of paymentMethods(); track pm.id) {
+                    <label class="payment-card" [class.selected]="form.paymentMethodId === pm.id">
+                      <input type="radio" name="payment" [value]="pm.id" [(ngModel)]="form.paymentMethodId" (change)="onPaymentMethodChange()" />
+                      <i class="bi {{ methodIcon(pm.code) }}"></i>
+                      <span>{{ pm.name }}</span>
+                      @if (pm.description) {
+                        <span class="pm-desc">{{ pm.description }}</span>
+                      }
+                    </label>
+                  }
+                </div>
+
+                <!-- Advance method selector: shown when COD selected + advance enabled + order meets threshold -->
+                @if (showAdvanceMethodSelector()) {
+                  <div class="advance-selector">
+                    <p class="advance-note">
+                      <i class="bi bi-info-circle"></i>
+                      Advance payment required: <strong>Rs. {{ advanceAmount() | number:'1.0-0' }}</strong>
+                      ({{ paymentSettings()!.advancePercent }}% of order). Select an online method for the advance:
+                    </p>
+                    <div class="payment-options" style="margin-top:.5rem">
+                      @for (pm of onlinePaymentMethods(); track pm.id) {
+                        <label class="payment-card payment-card-sm" [class.selected]="form.advanceMethodId === pm.id">
+                          <input type="radio" name="advance-payment" [value]="pm.id" [(ngModel)]="form.advanceMethodId" />
+                          <i class="bi {{ methodIcon(pm.code) }}"></i>
+                          <span>{{ pm.name }}</span>
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </section>
+
+            <!-- Notes -->
+            <section class="co-section">
+              <h3><i class="bi bi-chat-text"></i> Order Notes (optional)</h3>
+              <textarea [(ngModel)]="form.notes" rows="2" placeholder="Special instructions..."></textarea>
+            </section>
+
+            <!-- Discount Code -->
+            <section class="co-section">
+              <h3><i class="bi bi-tag"></i> Discount Code</h3>
+              @if (appliedCode()) {
+                <div class="discount-applied">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span><strong>{{ appliedCode() }}</strong> — Rs. {{ appliedDiscount() | number:'1.0-0' }} off applied!</span>
+                  <button class="discount-remove" (click)="removeDiscount()"><i class="bi bi-x-lg"></i></button>
+                </div>
+              } @else {
+                <div class="discount-row">
+                  <input type="text" [ngModel]="discountInput()" (ngModelChange)="discountInput.set($event)"
+                         placeholder="Enter discount code" (keydown.enter)="applyDiscount()" />
+                  <button class="btn-apply" (click)="applyDiscount()" [disabled]="discountApplying()">
+                    @if (discountApplying()) { <span class="spinner-xs"></span> } @else { Apply }
+                  </button>
+                </div>
+                @if (discountMsg()) {
+                  <p class="discount-msg" [class.discount-msg-ok]="discountSuccess()" [class.discount-msg-err]="!discountSuccess()">
+                    <i class="bi {{ discountSuccess() ? 'bi-check-circle' : 'bi-exclamation-circle' }}"></i>
+                    {{ discountMsg() }}
+                  </p>
+                }
+              }
+            </section>
+          </div>
+
+          <!-- Right: Summary -->
+          <div class="co-summary">
+            <h3>Order Summary</h3>
+            <div class="summary-items">
+              @for (item of cart.items(); track $index) {
+                <div class="summary-item">
+                  <span class="si-name">{{ item.productName }}
+                    @if (item.isCustomBuild) { <span class="custom-tag">Custom</span> }
+                  </span>
+                  <span class="si-qty">{{ item.quantity | number:'1.0-2' }} {{ item.unit }}</span>
+                  <span class="si-price">Rs. {{ item.totalPrice | number:'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="summary-totals">
+              <div class="st-row">
+                <span>Subtotal</span>
+                <span>Rs. {{ cart.subTotal() | number:'1.0-0' }}</span>
+              </div>
+              <div class="st-row">
+                <span>Delivery Fee</span>
+                <span>Rs. {{ effectiveDeliveryFee() | number:'1.0-0' }}</span>
+              </div>
+              @if (serviceFeePct() > 0) {
+                <div class="st-row">
+                  <span>Service Fee ({{ serviceFeePct() }}%)</span>
+                  <span>Rs. {{ serviceFeeAmt() | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (appliedDiscount() > 0) {
+                <div class="st-row st-discount">
+                  <span><i class="bi bi-tag-fill"></i> Discount ({{ appliedCode() }})</span>
+                  <span>− Rs. {{ appliedDiscount() | number:'1.0-0' }}</span>
+                </div>
+              }
+              <div class="st-row total">
+                <span>Total</span>
+                <span>Rs. {{ totalAmount() | number:'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <!-- Advance breakdown when applicable -->
+            @if (showAdvanceMethodSelector() && advanceAmount() > 0) {
+              <div class="advance-breakdown">
+                <div class="ab-row ab-now">
+                  <i class="bi bi-lightning-charge-fill"></i>
+                  <span>Pay now (advance)</span>
+                  <span class="ab-amt">Rs. {{ advanceAmount() | number:'1.0-0' }}</span>
+                </div>
+                <div class="ab-row ab-later">
+                  <i class="bi bi-house-door"></i>
+                  <span>Pay on delivery</span>
+                  <span class="ab-amt">Rs. {{ (totalAmount() - advanceAmount()) | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            }
+
+            @if (error()) {
+              <div class="co-error"><i class="bi bi-exclamation-circle"></i> {{ error() }}</div>
+            }
+
+            <!-- Auth hint — shown before clicking Place Order -->
+            @if (!isAuthenticated()) {
+              <div class="co-auth-hint">
+                <i class="bi bi-person-lock"></i>
+                Sign in or create an account to complete your order.
+              </div>
+            } @else if (!isCustomer()) {
+              <div class="co-auth-hint co-auth-hint-warn">
+                <i class="bi bi-exclamation-triangle"></i>
+                This account type cannot place customer orders.
+              </div>
+            }
+
+            <button class="btn-place-order" (click)="placeOrder()" [disabled]="placing() || !canPlaceOrder()">
+              @if (placing()) { <span class="spinner"></span> Processing... }
+              @else { <i class="bi bi-bag-check"></i> Place Order }
+            </button>
+
+            @if (!canPlaceOrder() && !placing()) {
+              @if (isOutsideRadius()) {
+                <p class="co-block-reason">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  Cut-fruit delivery is currently available only within our nearby delivery area.
+                </p>
+              } @else if (hasCutFruits() && locationStatus() !== 'granted' && checkoutConfig()!.cutFruitRadiusKm > 0) {
+                <p class="co-block-reason">
+                  <i class="bi bi-crosshair2"></i>
+                  Please verify your location to order cut fruits.
+                </p>
+              }
+            }
+
+            @if (cancelPolicy()) {
+              <p class="co-cancel-policy"><i class="bi bi-info-circle"></i> {{ cancelPolicy() }}</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ── Auth gate modal ───────────────────────────────────────────────────── -->
+    @if (authGateModal() !== 'none') {
+      <div class="modal-overlay" (click)="authGateModal.set('none')">
+        <div class="modal-box auth-gate-modal" (click)="$event.stopPropagation()">
+          @if (authGateModal() === 'unauthenticated') {
+            <div class="agm-icon"><i class="bi bi-bag-heart-fill"></i></div>
+            <h3>Sign in to place your order</h3>
+            <p>
+              Your cart is saved. Log in or create a free customer account to complete your purchase.
+            </p>
+            <div class="agm-actions">
+              <button class="btn-primary agm-btn" (click)="goToLogin()">
+                <i class="bi bi-box-arrow-in-right"></i> Log In
+              </button>
+              <button class="btn-secondary agm-btn" (click)="goToRegister()">
+                <i class="bi bi-person-plus"></i> Create Account
+              </button>
+            </div>
+            <button class="agm-skip" (click)="authGateModal.set('none')">Continue browsing</button>
+          } @else {
+            <div class="agm-icon agm-icon-warn"><i class="bi bi-shield-exclamation"></i></div>
+            <h3>Customer account required</h3>
+            <p>
+              Orders can only be placed from an Individual or Organization customer account.
+              Rider, staff, and admin accounts cannot place customer orders.
+            </p>
+            <button class="btn-secondary agm-btn" (click)="authGateModal.set('none')">Got it</button>
+          }
+        </div>
+      </div>
+    }
+  

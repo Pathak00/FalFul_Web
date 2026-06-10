@@ -1,0 +1,109 @@
+
+    <div class="cart-overlay" (click)="close.emit()"></div>
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <h3><i class="bi bi-cart3"></i> Your Cart <span class="item-count">({{ cart.itemCount() }})</span></h3>
+        <button class="close-btn" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      @if (cart.items().length === 0) {
+        <div class="cart-empty">
+          <i class="bi bi-cart-x"></i>
+          <p>Your cart is empty</p>
+          <a routerLink="/products" (click)="close.emit()" class="btn-shop">Browse Products</a>
+        </div>
+      } @else {
+        <div class="cart-items">
+
+          <!-- Regular Products section -->
+          @if (productEntries().length > 0) {
+            <div class="section-header">
+              <i class="bi bi-box-seam"></i> Products
+            </div>
+            @for (entry of productEntries(); track entry.index) {
+              <div class="cart-item">
+                <div class="item-img">
+                  @if (entry.item.imageUrl) {
+                    <img [src]="imgSvc.resolve(entry.item.imageUrl)" [alt]="entry.item.productName" />
+                  } @else {
+                    <div class="img-placeholder"><i class="bi bi-image"></i></div>
+                  }
+                </div>
+                <div class="item-info">
+                  <span class="item-name">{{ entry.item.productName }}</span>
+                  <div class="qty-control">
+                    <button class="qty-btn" [disabled]="entry.item.quantity <= 1"
+                            (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <span class="qty-val">{{ entry.item.quantity }}</span>
+                    <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity + 1)">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                    <span class="qty-unit">{{ entry.item.unit }}</span>
+                  </div>
+                  <span class="item-unit-price">Rs. {{ entry.item.unitPrice | number:'1.0-0' }} each</span>
+                </div>
+                <div class="item-right">
+                  <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)" title="Remove item">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Fruit Bowls section -->
+          @if (bowlEntries().length > 0) {
+            <div class="section-header bowl-section-header">
+              <i class="bi bi-scissors"></i> Fruit Bowls
+            </div>
+            @for (entry of bowlEntries(); track entry.index) {
+              <div class="cart-item bowl-item">
+                <div class="item-img bowl-img">
+                  <i class="bi bi-basket2"></i>
+                </div>
+                <div class="item-info">
+                  <span class="item-name">{{ entry.item.productName }}</span>
+                  <span class="bowl-badge"><i class="bi bi-scissors"></i> Custom Build</span>
+                  <div class="qty-control">
+                    <button class="qty-btn" [disabled]="entry.item.quantity <= 1"
+                            (click)="cart.updateQuantity(entry.index, entry.item.quantity - 1)">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <span class="qty-val">{{ entry.item.quantity }}</span>
+                    <button class="qty-btn" (click)="cart.updateQuantity(entry.index, entry.item.quantity + 1)">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                  <span class="item-unit-price">Rs. {{ entry.item.unitPrice | number:'1.0-0' }} each</span>
+                </div>
+                <div class="item-right">
+                  <span class="item-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                  <button class="remove-btn" (click)="cart.removeItem(entry.index)" title="Remove item">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          }
+
+        </div>
+
+        <div class="cart-footer">
+          <div class="subtotal-row">
+            <span>Subtotal</span>
+            <span class="subtotal-val">Rs. {{ cart.subTotal() | number:'1.0-0' }}</span>
+          </div>
+          <p class="fee-note">Delivery fee & service fee calculated at checkout</p>
+          <a routerLink="/checkout" (click)="close.emit()" class="btn-checkout">
+            <i class="bi bi-bag-check"></i> Proceed to Checkout
+          </a>
+          <button class="btn-clear" (click)="cart.clearCart()">
+            <i class="bi bi-trash"></i> Clear Cart
+          </button>
+        </div>
+      }
+    </div>
+  
