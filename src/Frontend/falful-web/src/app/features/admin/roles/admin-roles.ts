@@ -25,29 +25,28 @@ interface Permission {
   selector: 'app-admin-roles',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  styleUrl: '../admin-shared.scss',
   templateUrl: './admin-roles.html',
-  styleUrl: './admin-roles.scss'
+  styleUrl: './admin-roles.scss',
 })
 export class AdminRolesComponent implements OnInit {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
 
-  readonly roles        = signal<Role[]>([]);
-  readonly allPerms     = signal<Permission[]>([]);
+  readonly roles = signal<Role[]>([]);
+  readonly allPerms = signal<Permission[]>([]);
   readonly selectedRole = signal<Role | null>(null);
   readonly selectedPermIds = signal<Set<number>>(new Set());
-  readonly loading      = signal(true);
+  readonly loading = signal(true);
   readonly permsLoading = signal(false);
-  readonly saving       = signal(false);
-  readonly modalOpen    = signal(false);
-  readonly editTarget   = signal<Role | null>(null);
+  readonly saving = signal(false);
+  readonly modalOpen = signal(false);
+  readonly editTarget = signal<Role | null>(null);
   readonly deleteTarget = signal<Role | null>(null);
-  readonly error        = signal('');
+  readonly error = signal('');
 
   readonly form = { name: '', description: '', portalType: 'admin' };
 
-  readonly navItems  = signal<AdminNavItem[]>([]);
+  readonly navItems = signal<AdminNavItem[]>([]);
 
   readonly permGroups = computed(() => {
     const map = new Map<string, { category: string; permissions: Permission[] }>();
@@ -73,22 +72,28 @@ export class AdminRolesComponent implements OnInit {
 
   portalScopeLabel(scope?: string | null): string {
     if (!scope) return 'all portals';
-    const portals = scope.split(',').map(p => p.trim()).filter(Boolean);
+    const portals = scope
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (portals.length === 0) return 'all portals';
     return portals.join('+');
   }
 
   ngOnInit(): void {
     this.loadRoles();
-    this.admin.getPermissions().subscribe(p => this.allPerms.set(p as Permission[]));
-    this.admin.getAllAdminNav().subscribe(items => this.navItems.set(items as AdminNavItem[]));
+    this.admin.getPermissions().subscribe((p) => this.allPerms.set(p as Permission[]));
+    this.admin.getAllAdminNav().subscribe((items) => this.navItems.set(items as AdminNavItem[]));
   }
 
   private loadRoles(): void {
     this.loading.set(true);
     this.admin.getRoles().subscribe({
-      next: r => { this.roles.set(r as Role[]); this.loading.set(false); },
-      error: () => this.loading.set(false)
+      next: (r) => {
+        this.roles.set(r as Role[]);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -96,17 +101,18 @@ export class AdminRolesComponent implements OnInit {
     this.selectedRole.set(role);
     this.permsLoading.set(true);
     this.admin.getRolePermissions(role.id).subscribe({
-      next: perms => {
-        this.selectedPermIds.set(new Set((perms as Permission[]).map(p => p.id)));
+      next: (perms) => {
+        this.selectedPermIds.set(new Set((perms as Permission[]).map((p) => p.id)));
         this.permsLoading.set(false);
       },
-      error: () => this.permsLoading.set(false)
+      error: () => this.permsLoading.set(false),
     });
   }
 
   togglePerm(id: number): void {
     const set = new Set(this.selectedPermIds());
-    if (set.has(id)) set.delete(id); else set.add(id);
+    if (set.has(id)) set.delete(id);
+    else set.add(id);
     this.selectedPermIds.set(set);
   }
 
@@ -120,13 +126,16 @@ export class AdminRolesComponent implements OnInit {
         this.toast.success('Permissions saved.');
         this.admin.triggerNavRefresh();
       },
-      error: () => { this.saving.set(false); this.toast.error('Failed to save permissions.'); }
+      error: () => {
+        this.saving.set(false);
+        this.toast.error('Failed to save permissions.');
+      },
     });
   }
 
   setDefault(role: Role): void {
     this.admin.setDefaultRole(role.id).subscribe(() => {
-      this.roles.update(list => list.map(r => ({ ...r, isDefault: r.id === role.id })));
+      this.roles.update((list) => list.map((r) => ({ ...r, isDefault: r.id === role.id })));
     });
   }
 
@@ -146,7 +155,7 @@ export class AdminRolesComponent implements OnInit {
       error: (err: { error?: { message?: string } }) => {
         this.deleteTarget.set(null);
         this.toast.error(err?.error?.message ?? 'Failed to delete role.');
-      }
+      },
     });
   }
 
@@ -168,17 +177,31 @@ export class AdminRolesComponent implements OnInit {
     this.modalOpen.set(true);
   }
 
-  closeModal(): void { this.modalOpen.set(false); }
+  closeModal(): void {
+    this.modalOpen.set(false);
+  }
 
   save(): void {
-    if (!this.form.name.trim()) { this.error.set('Role name is required.'); return; }
+    if (!this.form.name.trim()) {
+      this.error.set('Role name is required.');
+      return;
+    }
     this.saving.set(true);
     this.error.set('');
     const target = this.editTarget();
 
     const obs: Observable<unknown> = target
-      ? this.admin.updateRole(target.id, this.form.name.trim(), this.form.description || undefined, this.form.portalType)
-      : this.admin.createRole(this.form.name.trim(), this.form.description || undefined, this.form.portalType);
+      ? this.admin.updateRole(
+          target.id,
+          this.form.name.trim(),
+          this.form.description || undefined,
+          this.form.portalType,
+        )
+      : this.admin.createRole(
+          this.form.name.trim(),
+          this.form.description || undefined,
+          this.form.portalType,
+        );
 
     obs.subscribe({
       next: () => {
@@ -189,7 +212,7 @@ export class AdminRolesComponent implements OnInit {
       error: (err: { error?: { message?: string } }) => {
         this.saving.set(false);
         this.error.set(err?.error?.message ?? 'An error occurred.');
-      }
+      },
     });
   }
 }

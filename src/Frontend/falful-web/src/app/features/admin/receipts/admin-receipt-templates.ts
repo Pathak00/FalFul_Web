@@ -4,46 +4,54 @@ import { FormsModule } from '@angular/forms';
 import { ReceiptService } from '../../../core/services/receipt.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
-  ReceiptTemplateSummary, ReceiptTemplate, ReceiptTemplateVersionSummary,
-  CreateReceiptTemplateRequest, UpdateReceiptTemplateRequest,
+  ReceiptTemplateSummary,
+  ReceiptTemplate,
+  ReceiptTemplateVersionSummary,
+  CreateReceiptTemplateRequest,
+  UpdateReceiptTemplateRequest,
 } from '../../../core/models/receipt.models';
 
 @Component({
   selector: 'app-admin-receipt-templates',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  styleUrl: '../admin-shared.scss',
   templateUrl: './admin-receipt-templates.html',
-  styleUrl: './admin-receipt-templates.scss'
+  styleUrl: './admin-receipt-templates.scss',
 })
 export class AdminReceiptTemplatesComponent implements OnInit {
   private receiptSvc = inject(ReceiptService);
-  private toast      = inject(ToastService);
+  private toast = inject(ToastService);
 
   readonly eg1 = '{{variable}}';
   readonly eg2 = '{{#if variable}}…{{/if}}';
 
-  templates    = signal<ReceiptTemplateSummary[]>([]);
-  versions     = signal<ReceiptTemplateVersionSummary[]>([]);
-  loading      = signal(true);
-  saving       = signal(false);
-  restoring    = signal(false);
-  restoringId  = signal<number | null>(null);
-  showModal    = signal(false);
+  templates = signal<ReceiptTemplateSummary[]>([]);
+  versions = signal<ReceiptTemplateVersionSummary[]>([]);
+  loading = signal(true);
+  saving = signal(false);
+  restoring = signal(false);
+  restoringId = signal<number | null>(null);
+  showModal = signal(false);
   showVersions = signal(false);
-  formError    = signal('');
-  editId       = signal<number | null>(null);
+  formError = signal('');
+  editId = signal<number | null>(null);
   deleteTarget = signal<ReceiptTemplateSummary | null>(null);
 
-  form: CreateReceiptTemplateRequest & { isActive?: boolean; versionLabel?: string } = this.blankForm();
+  form: CreateReceiptTemplateRequest & { isActive?: boolean; versionLabel?: string } =
+    this.blankForm();
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+  }
 
   load() {
     this.loading.set(true);
     this.receiptSvc.getTemplates().subscribe({
-      next: list => { this.templates.set(list); this.loading.set(false); },
-      error: () => this.loading.set(false)
+      next: (list) => {
+        this.templates.set(list);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -60,26 +68,39 @@ export class AdminReceiptTemplatesComponent implements OnInit {
     this.formError.set('');
     this.showVersions.set(false);
     this.receiptSvc.getTemplateById(id).subscribe({
-      next: t => {
+      next: (t) => {
         this.form = {
-          name: t.name, htmlContent: t.htmlContent,
-          isDefault: t.isDefault, isActive: t.isActive, versionLabel: ''
+          name: t.name,
+          htmlContent: t.htmlContent,
+          isDefault: t.isDefault,
+          isActive: t.isActive,
+          versionLabel: '',
         };
         this.editId.set(id);
         this.showModal.set(true);
         this.loadVersions(id);
       },
-      error: () => this.toast.error('Could not load template.')
+      error: () => this.toast.error('Could not load template.'),
     });
   }
 
-  closeModal() { this.showModal.set(false); }
+  closeModal() {
+    this.showModal.set(false);
+  }
 
-  schedulePreviewRefresh() { /* preview auto-updates via srcdoc binding */ }
+  schedulePreviewRefresh() {
+    /* preview auto-updates via srcdoc binding */
+  }
 
   save() {
-    if (!this.form.name?.trim())        { this.formError.set('Name is required.');         return; }
-    if (!this.form.htmlContent?.trim()) { this.formError.set('HTML content is required.'); return; }
+    if (!this.form.name?.trim()) {
+      this.formError.set('Name is required.');
+      return;
+    }
+    if (!this.form.htmlContent?.trim()) {
+      this.formError.set('HTML content is required.');
+      return;
+    }
 
     this.saving.set(true);
     const id = this.editId();
@@ -96,26 +117,30 @@ export class AdminReceiptTemplatesComponent implements OnInit {
     };
 
     if (id) {
-      this.receiptSvc.updateTemplate(id, {
-        name: this.form.name.trim(),
-        htmlContent: this.form.htmlContent,
-        isDefault: this.form.isDefault,
-        isActive: this.form.isActive ?? true,
-        versionLabel: this.form.versionLabel || undefined,
-      } as UpdateReceiptTemplateRequest).subscribe({ next: () => onSuccess('Template saved.'), error: onError });
+      this.receiptSvc
+        .updateTemplate(id, {
+          name: this.form.name.trim(),
+          htmlContent: this.form.htmlContent,
+          isDefault: this.form.isDefault,
+          isActive: this.form.isActive ?? true,
+          versionLabel: this.form.versionLabel || undefined,
+        } as UpdateReceiptTemplateRequest)
+        .subscribe({ next: () => onSuccess('Template saved.'), error: onError });
     } else {
-      this.receiptSvc.createTemplate({
-        name: this.form.name.trim(),
-        htmlContent: this.form.htmlContent,
-        isDefault: this.form.isDefault,
-      }).subscribe({ next: () => onSuccess('Template created.'), error: onError });
+      this.receiptSvc
+        .createTemplate({
+          name: this.form.name.trim(),
+          htmlContent: this.form.htmlContent,
+          isDefault: this.form.isDefault,
+        })
+        .subscribe({ next: () => onSuccess('Template created.'), error: onError });
     }
   }
 
   private loadVersions(templateId: number) {
     this.receiptSvc.getVersions(templateId).subscribe({
-      next: list => this.versions.set(list),
-      error: () => {}
+      next: (list) => this.versions.set(list),
+      error: () => {},
     });
   }
 
@@ -135,11 +160,13 @@ export class AdminReceiptTemplatesComponent implements OnInit {
         this.toast.error(e?.error?.message ?? 'Restore failed.');
         this.restoring.set(false);
         this.restoringId.set(null);
-      }
+      },
     });
   }
 
-  confirmDelete(t: ReceiptTemplateSummary) { this.deleteTarget.set(t); }
+  confirmDelete(t: ReceiptTemplateSummary) {
+    this.deleteTarget.set(t);
+  }
 
   doDelete() {
     const t = this.deleteTarget();
@@ -155,7 +182,7 @@ export class AdminReceiptTemplatesComponent implements OnInit {
       error: (e: { error?: { message?: string } }) => {
         this.toast.error(e?.error?.message ?? 'Failed to delete template.');
         this.saving.set(false);
-      }
+      },
     });
   }
 

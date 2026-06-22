@@ -1,15 +1,19 @@
-using System.Text;
 using FalFul.API;
 using FalFul.API.Authorization;
 using FalFul.API.Middleware;
 using FalFul.API.Startup;
 using FalFul.Application;
+using FalFul.Application.Interfaces;
+using FalFul.ChatAI;
 using FalFul.Infrastructure;
 using FalFul.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
-using Scalar.AspNetCore;
+using Microsoft.OpenApi;
+using System.Text;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,13 +23,30 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
         opt.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeConverter());
     });
-builder.Services.AddOpenApi(options =>
+builder.Services.AddSwaggerGen(c =>
 {
-    options.AddDocumentTransformer((document, context, _) =>
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
-        document.Info.Title = "FalFul API";
-        document.Info.Description = "FalFul Fruit eCommerce REST API";
-        return Task.CompletedTask;
+        Title = "FalFul API",
+        Version = "v1"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT token"
+    });
+
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer", document),
+            new List<string>()
+        }
     });
 });
 
@@ -33,6 +54,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence();
 builder.Services.AddScoped<FalFul.API.Services.IFileService, FalFul.API.Services.FileService>();
+builder.Services.AddChatAI();
+
 builder.Services.AddHostedService<ImageUrlNormalizationService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
@@ -67,7 +90,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FalFulPolicy", policy =>
-        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:4200"])
+        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:4300"])
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials());
@@ -75,13 +98,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.MapOpenApi();
-app.MapScalarApiReference(options =>
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    options
-        .WithTitle("FalFul API")
-        .AddPreferredSecuritySchemes("Bearer")
-        .AddHttpAuthentication("Bearer", _ => { });
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "FalFul API v1");
 });
 
 app.MapGet("/env", (IWebHostEnvironment env) => env.EnvironmentName);

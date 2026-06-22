@@ -8,29 +8,31 @@ import { PriceRule } from '../../../core/models/order.models';
   selector: 'app-admin-price-config',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  styleUrl: '../admin-shared.scss',
   templateUrl: './admin-price-config.html',
-  styleUrl: './admin-price-config.scss'
+  styleUrl: './admin-price-config.scss',
 })
 export class AdminPriceConfigComponent implements OnInit {
   private svc = inject(OrderService);
 
-  rules   = signal<PriceRule[]>([]);
+  rules = signal<PriceRule[]>([]);
   loading = signal(true);
   saveMsg = signal<string | null>(null);
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit() {
     this.svc.getPriceRulesAdmin().subscribe({
-      next: list => { this.rules.set(list); this.loading.set(false); },
-      error: () => this.loading.set(false)
+      next: (list) => {
+        this.rules.set(list);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
     });
   }
 
   saveRule(rule: PriceRule): void {
     this.svc.upsertPriceRule(rule.ruleKey, rule.value, rule.isActive).subscribe({
       next: () => this.showToast('Saved successfully'),
-      error: e => this.showToast('Error: ' + (e.error?.message ?? 'Save failed'))
+      error: (e) => this.showToast('Error: ' + (e.error?.message ?? 'Save failed')),
     });
   }
 
