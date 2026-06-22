@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/Backend/">
-    <Project Path="ChatAI/FalFul.ChatAI.csproj" Id="58ee4489-2951-40ed-9e11-69f6e020e76b" />
+    <Project Path="src/Backend/FalFul.ChatAI/FalFul.ChatAI.csproj" />
     <Project Path="src/Backend/FalFul.API/FalFul.API.csproj" />
     <Project Path="src/Backend/FalFul.Application/FalFul.Application.csproj" />
     <Project Path="src/Backend/FalFul.Domain/FalFul.Domain.csproj" />
