@@ -13,6 +13,10 @@ export interface CartItem {
   isCustomBuild: boolean;
   customBuildDetails?: string;
   bowlSignature?: string;
+  // Set to 'chat' for lines added by the AI assistant, so CartService can re-sync just
+  // those lines from the assistant's authoritative cart snapshot without touching items
+  // the customer added by browsing the catalog directly.
+  source?: 'chat';
 }
 
 export interface Address {

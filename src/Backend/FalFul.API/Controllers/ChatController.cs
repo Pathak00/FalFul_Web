@@ -1,4 +1,5 @@
-﻿using FalFul.Application.Interfaces;
+using FalFul.Application.DTOs.ChatAI;
+using FalFul.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FalFul.API.Controllers
@@ -6,6 +7,7 @@ namespace FalFul.API.Controllers
 
     [ApiController]
     [Route("api/chat")]
+
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chat;
@@ -16,20 +18,29 @@ namespace FalFul.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Chat([FromBody] ChatRequest request, CancellationToken ct)
+        public async Task<IActionResult> Chat([FromBody] ChatRequest  request , CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(request.Message))
-                return BadRequest("Message is required");
+                return BadRequest("Messaeg is required");
 
-            var sessionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? Guid.NewGuid().ToString("N")
-                : request.SessionId;
+            var sessionId = string.IsNullOrWhiteSpace(request.SessionId) ? Guid.NewGuid().ToString("N") : request.SessionId;
 
-            var response = await _chat.ChatAsync(sessionId, request.Message, ct);
+            var result = await _chat.ChatAsync(sessionId, request.Message, request.ChatCartItems, request.ManualCartItems, ct);
+            return Ok(new
+            {
+                sessionId,
+                response = result.Reply,
+                cartTouched = result.CartTouched,
+                cart = result.Cart,
+                requiresCart = result.RequiresCart
+            });
 
-            return Ok(new { sessionId, response });
         }
 
-        public record ChatRequest(string Message, string? SessionId);
+        public record ChatRequest(
+            string Message,
+            string? SessionId,
+            List<ChatCartItemDto>? ChatCartItems,
+            List<ManualCartItemDto>? ManualCartItems);
     }
 }

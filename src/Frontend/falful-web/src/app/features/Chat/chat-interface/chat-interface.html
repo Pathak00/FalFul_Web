@@ -1,0 +1,40 @@
+<button class="chat-fab" type="button" (click)="toggleOpen()" [class.open]="isOpen()" aria-label="Toggle chat">
+  <i class="bi" [class.bi-chat-dots-fill]="!isOpen()" [class.bi-x-lg]="isOpen()"></i>
+</button>
+
+@if (isOpen()) {
+<div class="chat-panel" [style.left.px]="left" [style.top.px]="top">
+  <div class="chat-header" (mousedown)="startDrag($event)">
+    <div class="chat-header-info">
+      <i class="bi bi-stars"></i>
+      <span>FalFul Assistant</span>
+    </div>
+    <button class="close-btn" type="button" (click)="close()" aria-label="Close chat">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="chat-messages">
+    @for (msg of messages(); track $index) {
+    <div class="chat-bubble" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
+      {{ msg.content }}
+    </div>
+    }
+    @if (isSending()) {
+    <div class="chat-bubble assistant typing">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+    }
+    <div #messagesEnd></div>
+  </div>
+
+  <div class="chat-input-row">
+    <textarea class="chat-input" rows="1" placeholder="Ask about fruits, prices, nutrition..." [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)" (keydown)="onKeydown($event)" [disabled]="isSending()"></textarea>
+    <button class="send-btn" type="button" (click)="send()" [disabled]="isSending() || !draft().trim()"
+      aria-label="Send message">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+</div>
+}

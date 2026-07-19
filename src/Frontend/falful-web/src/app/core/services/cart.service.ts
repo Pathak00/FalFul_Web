@@ -57,6 +57,17 @@ export class CartService {
     this.lastAdded.update(n => n + 1);
   }
 
+  // Replaces all chat-sourced lines (source === 'chat') with a fresh set from the AI
+  // assistant's latest cart snapshot. The assistant's cart is authoritative for its own
+  // lines each turn (it always returns the full current state, not a delta), so a
+  // straight replace — rather than a merge — keeps this cart in sync without double
+  // counting. Catalog-added items (no source tag) are left untouched.
+  syncChatItems(items: CartItem[]): void {
+    this._items.update(list => [...list.filter(i => i.source !== 'chat'), ...items]);
+    this.persist();
+    if (items.length) this.lastAdded.update(n => n + 1);
+  }
+
   removeItem(index: number): void {
     this._items.update(list => list.filter((_, i) => i !== index));
     this.persist();

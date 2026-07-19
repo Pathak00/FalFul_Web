@@ -28,9 +28,17 @@ namespace FalFul.ChatAI
 
             var json = await res.Content.ReadFromJsonAsync<JsonDocument>(cancellationToken: ct);
 
-            return json!.RootElement.TryGetProperty("extract", out var extract)
-                ? extract.GetString()
-                : null;
+            if (!json!.RootElement.TryGetProperty("extract", out var extract))
+                return null;
+
+            var text = extract.GetString();
+            if (string.IsNullOrWhiteSpace(text)) return null;
+
+            // Keep only the first 3 sentences so the LLM gets a concise fact block
+            var sentences = text.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries);
+            return sentences.Length <= 3
+                ? text
+                : string.Join(". ", sentences[..3]) + ".";
         }
     }
 }

@@ -1,7 +1,14 @@
+using FalFul.Application.DTOs.ChatAI;
+
 namespace FalFul.Application.Interfaces
 {
     public interface IChatService
     {
-        Task<string> ChatAsync(string sessionId, string userMessage, CancellationToken ct = default);
+        Task<ChatResult> ChatAsync(
+            string sessionId,
+            string userMessage,
+            IReadOnlyList<ChatCartItemDto>? chatCartItems,
+            IReadOnlyList<ManualCartItemDto>? manualCartItems,
+            CancellationToken ct = default);
     }
 }

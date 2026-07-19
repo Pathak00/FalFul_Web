@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Read(//tmp/**)",
+      "Bash(> /tmp/falful-api.log)",
+      "Bash(nohup dotnet run --no-build --project src/Backend/FalFul.API/FalFul.API.csproj)",
+      "PowerShell($max=40; for \\($i=0; $i -lt $max; $i++\\) { $c = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -eq 5287 }; if \\($c\\) { \"listening after $i s\"; break }; Start-Sleep -Seconds 1 })"
     ]
   }
 }
