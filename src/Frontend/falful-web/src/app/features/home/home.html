@@ -1,0 +1,22 @@
+@if (show('products')) { <app-product-showcase [sectionData]="get('products')" /> }
+@if (show('how'))      { <app-how-it-works     [sectionData]="get('how')"      /> }
+@if (show('stats'))    { <app-stats-section    [sectionData]="get('stats')"    /> }
+@if (show('promo'))    { <app-promo-section    [sectionData]="get('promo')"    /> }
+
+<!-- Promotional popup overlay — shows for all visitors on home page load, once per session -->
+@if (popup()) {
+  <div class="promo-overlay" (click)="closePopup()">
+    <div class="promo-box" (click)="$event.stopPropagation()">
+      <button class="promo-close" (click)="closePopup()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <img [src]="imgUrl(popup()!.imageUrl!)" [alt]="popup()!.title" class="promo-img" />
+      @if (popup()!.title || popup()!.message) {
+        <div class="promo-body">
+          @if (popup()!.title)   { <h3 class="promo-title">{{ popup()!.title }}</h3> }
+          @if (popup()!.message) { <p  class="promo-msg">{{ popup()!.message }}</p> }
+        </div>
+      }
+    </div>
+  </div>
+}

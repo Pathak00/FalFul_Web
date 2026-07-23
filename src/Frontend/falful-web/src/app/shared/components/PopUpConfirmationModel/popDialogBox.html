@@ -1,0 +1,29 @@
+@if (isOpen) {
+  <div class="overlay" (click)="cancel()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+
+      <div class="icon" [class.icon-warn]="variant === 'warning'">
+        <i class="bi" [class.bi-exclamation-circle-fill]="variant === 'danger'"
+                      [class.bi-shield-exclamation]="variant === 'warning'"
+                      [class.bi-info-circle-fill]="variant === 'info'"></i>
+      </div>
+
+      <h3>{{ title }}</h3>
+
+      <p>{{ message }}</p>
+
+      <div class="actions">
+        <button class="btn-confirm" (click)="confirm()">
+          {{ confirmText }}
+        </button>
+
+        @if (showCancel) {
+          <button class="btn-cancel" (click)="cancel()">
+            {{ cancelText }}
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}

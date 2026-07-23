@@ -20,69 +20,8 @@ import { ImageUrlService } from '../../core/services/image-url.service';
     StatsSectionComponent,
     PromoSectionComponent,
   ],
-  template: `
-    @if (show('products')) { <app-product-showcase [sectionData]="get('products')" /> }
-    @if (show('how'))      { <app-how-it-works     [sectionData]="get('how')"      /> }
-    @if (show('stats'))    { <app-stats-section    [sectionData]="get('stats')"    /> }
-    @if (show('promo'))    { <app-promo-section    [sectionData]="get('promo')"    /> }
-
-    <!-- Promotional popup overlay — shows for all visitors on home page load, once per session -->
-    @if (popup()) {
-      <div class="promo-overlay" (click)="closePopup()">
-        <div class="promo-box" (click)="$event.stopPropagation()">
-          <button class="promo-close" (click)="closePopup()" aria-label="Close">
-            <i class="bi bi-x-lg"></i>
-          </button>
-          <img [src]="imgUrl(popup()!.imageUrl!)" [alt]="popup()!.title" class="promo-img" />
-          @if (popup()!.title || popup()!.message) {
-            <div class="promo-body">
-              @if (popup()!.title)   { <h3 class="promo-title">{{ popup()!.title }}</h3> }
-              @if (popup()!.message) { <p  class="promo-msg">{{ popup()!.message }}</p> }
-            </div>
-          }
-        </div>
-      </div>
-    }
-  `,
-  styles: [`
-    /* ── Promotional popup ──────────────────────────────────── */
-    .promo-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2000; padding: 1rem; animation: poFadeIn .3s ease;
-    }
-    @keyframes poFadeIn { from { opacity: 0 } to { opacity: 1 } }
-
-    .promo-box {
-      position: relative; background: #fff; border-radius: 18px;
-      overflow: hidden; max-width: 540px; width: 100%;
-      box-shadow: 0 24px 80px rgba(0,0,0,.35);
-      animation: poSlideUp .35s cubic-bezier(.22,.68,0,1.2);
-    }
-    @keyframes poSlideUp {
-      from { transform: translateY(40px) scale(.96); opacity: 0 }
-      to   { transform: translateY(0)    scale(1);   opacity: 1 }
-    }
-
-    .promo-close {
-      position: absolute; top: .75rem; right: .75rem;
-      background: rgba(0,0,0,.5); border: none; border-radius: 50%;
-      color: #fff; width: 34px; height: 34px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: .95rem; z-index: 1; transition: background .15s;
-      &:hover { background: rgba(0,0,0,.75); }
-    }
-
-    .promo-img {
-      width: 100%; max-height: 360px; object-fit: cover; display: block;
-    }
-
-    .promo-body {
-      padding: 1.25rem 1.5rem 1.6rem;
-      .promo-title { margin: 0 0 .4rem; font-size: 1.15rem; font-weight: 800; color: #0f172a; }
-      .promo-msg   { margin: 0; color: #475569; font-size: .9rem; line-height: 1.55; }
-    }
-  `]
+  templateUrl: './home.html',
+  styleUrl: './home.scss'
 })
 export class HomeComponent implements OnInit {
   private cms         = inject(CmsService);

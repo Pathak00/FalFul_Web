@@ -1,0 +1,64 @@
+<div class="admin-shell">
+  <!-- Sidebar overlay (mobile) -->
+  @if (sidebarOpen()) {
+    <div class="sidebar-overlay" (click)="sidebarOpen.set(false)"></div>
+  }
+
+  <aside class="admin-sidebar" [class.sidebar-mobile-open]="sidebarOpen()">
+    <div class="sidebar-brand">
+      <a routerLink="/" class="brand-logo">
+        <i class="bi bi-basket2-fill"></i> FalFul
+      </a>
+      <span class="admin-badge">{{ user()?.role ?? 'Admin' }}</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      @if (navLoading()) {
+        <div class="nav-loading">
+          <div class="nav-spinner"></div>
+        </div>
+      } @else {
+        @for (group of navGroups(); track group.label) {
+          @if (group.label) {
+            <p class="nav-section-label">{{ group.label }}</p>
+          }
+          @for (item of group.items; track item.id) {
+            <a [routerLink]="item.route"
+               [routerLinkActiveOptions]="item.route === '/admin' ? { exact: true } : {}"
+               routerLinkActive="active"
+               class="nav-item"
+               (click)="closeSidebarOnMobile()">
+              <i class="bi {{ item.icon }} nav-icon"></i> {{ item.label }}
+            </a>
+          }
+        }
+      }
+
+      <p class="nav-section-label" style="margin-top:auto">Account</p>
+      <a routerLink="/" class="nav-item" (click)="closeSidebarOnMobile()">
+        <i class="bi bi-globe nav-icon"></i> View Site
+      </a>
+      <button class="nav-item nav-btn" (click)="logout()">
+        <i class="bi bi-box-arrow-right nav-icon"></i> Logout
+      </button>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())"
+              [class.is-open]="sidebarOpen()" aria-label="Toggle sidebar">
+        <i class="bi" [class.bi-list]="!sidebarOpen()" [class.bi-x-lg]="sidebarOpen()"></i>
+      </button>
+      <div class="topbar-breadcrumb">FalFul Admin Panel</div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">{{ initial() }}</div>
+        <span class="topbar-name">{{ user()?.fullName }}</span>
+      </div>
+    </header>
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+    <app-toast />
+  </div>
+</div>

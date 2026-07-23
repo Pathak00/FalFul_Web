@@ -1,0 +1,77 @@
+<div class="admin-page" style="max-width:1100px">
+
+  <div class="page-header">
+    <div>
+      <h1>Receipt Print Logs</h1>
+      <p class="page-sub">Audit trail of every receipt printed — who, when, and which template.</p>
+    </div>
+    <button class="btn-secondary" (click)="load()" title="Refresh">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Filter by Order #</label>
+      <div class="input-with-btn">
+        <input type="number" [(ngModel)]="filterOrderId" placeholder="Order ID" min="1" />
+        <button class="btn-primary btn-sm" (click)="applyFilter()"><i class="bi bi-search"></i></button>
+        @if (filterOrderId) {
+          <button class="btn-secondary btn-sm" (click)="clearFilter()"><i class="bi bi-x-lg"></i></button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><div class="spinner"></div> Loading…</div>
+  } @else if (logs().length === 0) {
+    <div class="empty-state">
+      <i class="bi bi-printer"></i>
+      <p>{{ filterOrderId ? 'No print logs found for this order.' : 'No receipt print logs yet.' }}</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Printed By</th>
+            <th>Role</th>
+            <th>Template</th>
+            <th>Printed At</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of logs(); track l.id) {
+            <tr>
+              <td><span class="order-num">#{{ l.orderNumber }}</span></td>
+              <td>{{ l.printedByName }}</td>
+              <td><span class="role-badge">{{ l.printedByRole }}</span></td>
+              <td>
+                @if (l.templateName) {
+                  <span>{{ l.templateName }}</span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td class="time-cell">{{ l.printedAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="btn-secondary btn-sm" (click)="prevPage()" [disabled]="page() === 0">
+        <i class="bi bi-chevron-left"></i> Prev
+      </button>
+      <span class="page-info">Page {{ page() + 1 }}</span>
+      <button class="btn-secondary btn-sm" (click)="nextPage()" [disabled]="logs().length < pageSize">
+        Next <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  }
+</div>

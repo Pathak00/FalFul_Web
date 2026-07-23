@@ -19,6 +19,8 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
         opt.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeConverter());
     });
+
+
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, _) =>
@@ -55,14 +57,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
         };
+
     });
 
 // PermissionPolicyProvider handles any [Authorize(Policy="Perm:<key>")] dynamically.
 // No manual policy registration needed — permission keys are resolved from DB at runtime.
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddAuthorization();
+
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 
 builder.Services.AddCors(options =>
 {
@@ -75,14 +84,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.MapOpenApi();
-app.MapScalarApiReference(options =>
-{
-    options
-        .WithTitle("FalFul API")
-        .AddPreferredSecuritySchemes("Bearer")
-        .AddHttpAuthentication("Bearer", _ => { });
-});
+app.UseSwagger();
+app.UseSwaggerUI();
+
+//app.MapOpenApi();
+
+//app.MapScalarApiReference(options =>
+//{
+//    options
+//        .WithTitle("FalFul API")
+//        .AddPreferredSecuritySchemes("Bearer")
+//        .AddHttpAuthentication("Bearer", _ => { });
+//});
 
 app.MapGet("/env", (IWebHostEnvironment env) => env.EnvironmentName);
 

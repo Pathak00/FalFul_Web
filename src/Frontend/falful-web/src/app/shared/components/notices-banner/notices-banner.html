@@ -1,0 +1,8 @@
+@for (n of visible(); track n.id) {
+  <div class="notice-banner" [class]="'nb--' + typeClass(n.noticeType)">
+    <i class="bi {{ typeIcon(n.noticeType) }}"></i>
+    <span class="nb-title">{{ n.title }}</span>
+    <span class="nb-msg">{{ n.message }}</span>
+    <button class="nb-close" (click)="dismiss(n.id)" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+  </div>
+}

@@ -13,7 +13,7 @@ public class ProductsController(IProductService productService, IFileService fil
     // ── Public endpoints ──────────────────────────────────────────────────────
 
     [HttpGet]
-    [AllowAnonymous]
+    //[AllowAnonymous]
     public async Task<IActionResult> GetPublic(
         [FromQuery] int? categoryId,
         [FromQuery] string? search,

@@ -29,6 +29,7 @@ public class OrdersController(IOrderService orderService, IDeliveryService deliv
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetMyOrders() =>
         Ok(await orderService.GetUserOrdersAsync(GetUserId()));
 

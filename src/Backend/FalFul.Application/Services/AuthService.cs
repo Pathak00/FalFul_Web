@@ -17,6 +17,7 @@ public class AuthService : IAuthService
     private readonly IRoleRepository _roleRepo;
     private readonly IPermissionRepository _permRepo;
 
+
     public AuthService(
         IUserRepository userRepo,
         IOrganizationRepository orgRepo,
@@ -165,7 +166,7 @@ public class AuthService : IAuthService
             await _roleRepo.AssignRoleAsync(userId, defaultRole.Id);
     }
 
-    private async Task<AuthResponseDto> BuildAuthResponseAsync(User user)
+    private async Task<AuthResponseDto>  BuildAuthResponseAsync(User user)
     {
         var role = await _roleRepo.GetUserRoleAsync(user.Id);
         var roleName = role?.Name ?? user.UserType.ToString();
@@ -178,14 +179,14 @@ public class AuthService : IAuthService
         {
             UserId = user.Id,
             Token = refreshToken,
-            ExpiresAt = NepalTime.Now.AddDays(30)
+            ExpiresAt = NepalTime.Now.AddDays(1)
         });
 
         return new AuthResponseDto
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = NepalTime.Now.AddMinutes(60),
+            ExpiresAt = NepalTime.Now.AddMinutes(1),
             User = new UserInfoDto
             {
                 Id = user.Id,

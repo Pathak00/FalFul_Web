@@ -1,0 +1,19 @@
+<div class="page-view">
+  @if (loading()) {
+    <div class="page-loading">
+      <div class="spinner"></div>
+    </div>
+  } @else if (notFound()) {
+    <div class="page-not-found">
+      <h1>404</h1>
+      <p>This page doesn't exist or hasn't been published yet.</p>
+    </div>
+  } @else if (page()) {
+    <article class="cms-article">
+      <header class="article-header">
+        <h1>{{ page()!.title }}</h1>
+      </header>
+      <div class="article-body" [innerHTML]="page()!.content"></div>
+    </article>
+  }
+</div>

@@ -1,0 +1,56 @@
+<div class="auth-card">
+  <button class="back-home" (click)="goBack()"><i class="bi bi-arrow-left"></i> Back</button>
+
+  <div class="step-header">
+    <div class="step-badges">
+      <span class="step-badge done">✓</span>
+      <span class="step-line active"></span>
+      <span class="step-badge active">2</span>
+      <span class="step-line"></span>
+      <span class="step-badge">3</span>
+    </div>
+  </div>
+
+  <h2>Enter Verification Code</h2>
+  <p class="subtitle">
+    We sent a 6-digit code to
+    <strong>{{ svc.flowMasked() || 'your ' + (svc.flowChannel() === 'email' ? 'email' : 'phone') }}</strong>.
+    It expires in {{ svc.flowChannel() === 'sms' ? '10' : '10' }} minutes.
+  </p>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <div class="otp-boxes">
+    @for (i of [0,1,2,3,4,5]; track i) {
+      <input
+        #otpInput
+        type="text"
+        inputmode="numeric"
+        maxlength="1"
+        class="otp-box"
+        [class.filled]="digits[i]"
+        [(ngModel)]="digits[i]"
+        (input)="onInput(i, $event)"
+        (keydown)="onKeydown(i, $event)"
+        (paste)="onPaste($event)"
+      />
+    }
+  </div>
+
+  <button class="btn-submit" (click)="onVerify()" [disabled]="!isComplete() || loading()">
+    @if (loading()) { <span class="spinner"></span> Verifying… }
+    @else { Verify & Continue }
+  </button>
+
+  <div class="resend-row">
+    @if (resendCooldown() > 0) {
+      <span class="resend-disabled">Resend code in {{ resendCooldown() }}s</span>
+    } @else {
+      <button class="btn-link" (click)="onResend()" [disabled]="resending()">
+        {{ resending() ? 'Sending…' : 'Resend Code' }}
+      </button>
+    }
+  </div>
+</div>

@@ -1,0 +1,54 @@
+<div class="rider-shell">
+  @if (sidebarOpen()) {
+    <div class="sidebar-overlay" (click)="sidebarOpen.set(false)"></div>
+  }
+
+  <aside class="rider-sidebar" [class.sidebar-mobile-open]="sidebarOpen()">
+    <div class="sidebar-brand">
+      <a routerLink="/" class="brand-logo" (click)="closeSidebar()">
+        <i class="bi bi-basket2-fill"></i> FalFul
+      </a>
+      <span class="rider-badge">{{ user()?.role }}</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      @if (navLoading()) {
+        <div class="nav-loading"><div class="nav-spinner"></div></div>
+      } @else {
+        @for (item of navItems(); track item.id) {
+          <a [routerLink]="item.route" routerLinkActive="active" class="nav-item"
+             (click)="closeSidebar()">
+            <i class="bi {{ item.icon }} nav-icon"></i> {{ item.label }}
+          </a>
+        }
+      }
+
+      <p class="nav-section-label" style="margin-top:auto">Account</p>
+      <a routerLink="/" class="nav-item" (click)="closeSidebar()">
+        <i class="bi bi-globe nav-icon"></i> View Site
+      </a>
+      <button class="nav-item nav-btn" (click)="logout()">
+        <i class="bi bi-box-arrow-right nav-icon"></i> Logout
+      </button>
+    </nav>
+  </aside>
+
+  <div class="rider-main">
+    <header class="rider-topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())"
+                [class.is-open]="sidebarOpen()" aria-label="Toggle sidebar">
+          <i class="bi" [class.bi-list]="!sidebarOpen()" [class.bi-x-lg]="sidebarOpen()"></i>
+        </button>
+        <div class="topbar-breadcrumb">FalFul Rider Portal</div>
+      </div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">{{ initial() }}</div>
+        <span class="topbar-name">{{ user()?.fullName }}</span>
+      </div>
+    </header>
+    <main class="rider-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

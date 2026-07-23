@@ -1,5 +1,8 @@
 <div class="auth-card">
 
+  <app-pop-dialog-box [(isOpen)]="showDialog" title="Login Failed" [message]="dialogMessage">
+  </app-pop-dialog-box>
+
   <!-- Gradient accent stripe -->
   <div class="card-stripe"></div>
 
@@ -17,12 +20,7 @@
       </div>
     </div>
 
-    @if (errorMessage()) {
-      <div class="alert alert-error">
-        <i class="bi bi-exclamation-circle-fill"></i>
-        {{ errorMessage() }}
-      </div>
-    }
+
 
     <!-- Google sign-in -->
     <app-google-signin-button (credential)="onGoogleLogin($event)" />
@@ -36,16 +34,11 @@
         <label for="identifier">Email or Phone <span class="req">*</span></label>
         <div class="input-wrap">
           <i class="bi bi-person-circle input-icon"></i>
-          <input
-            id="identifier"
-            type="text"
-            formControlName="identifier"
-            placeholder="Enter email or phone number"
-            autocomplete="username"
-          />
+          <input id="identifier" type="text" formControlName="identifier" placeholder="Enter email or phone number"
+            autocomplete="username" />
         </div>
         @if (form.controls.identifier.invalid && form.controls.identifier.touched) {
-          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Email or phone is required.</p>
+        <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Email or phone is required.</p>
         }
       </div>
 
@@ -54,16 +47,11 @@
         <label for="password">Password <span class="req">*</span></label>
         <div class="input-wrap">
           <i class="bi bi-lock input-icon"></i>
-          <input
-            id="password"
-            type="password"
-            formControlName="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-          />
+          <input id="password" type="password" formControlName="password" placeholder="Enter your password"
+            autocomplete="current-password" />
         </div>
         @if (form.controls.password.invalid && form.controls.password.touched) {
-          <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Password must be at least 8 characters.</p>
+        <p class="field-error-msg"><i class="bi bi-exclamation-circle"></i> Password must be at least 8 characters.</p>
         }
       </div>
 
@@ -73,9 +61,9 @@
 
       <button type="submit" class="btn-submit" [disabled]="form.invalid || isLoading()">
         @if (isLoading()) {
-          <span class="spinner"></span> Signing in…
+        <span class="spinner"></span> Signing in…
         } @else {
-          <i class="bi bi-box-arrow-in-right"></i> Sign In
+        <i class="bi bi-box-arrow-in-right"></i> Sign In
         }
       </button>
 

@@ -5,57 +5,7 @@ import { RouterLink } from '@angular/router';
   selector: 'app-footer',
   standalone: true,
   imports: [RouterLink],
-  template: `
-    <footer class="footer">
-
-      <!-- Top section -->
-      <div class="footer-top">
-        <div class="footer-brand">
-          <div class="brand-logo">
-            <span class="brand-icon">🌿</span>
-            <span class="brand-name">FalFul</span>
-          </div>
-          <p class="brand-tagline">Sun-Kissed. Grove-Fresh.<br>Delivered to Your Door.</p>
-          <div class="brand-badges">
-            <span class="brand-badge">🌱 100% Natural</span>
-            <span class="brand-badge">⚡ 48hr Delivery</span>
-          </div>
-        </div>
-
-        <div class="footer-nav-cols">
-          <div class="footer-col">
-            <h4>Shop</h4>
-            <a routerLink="/products">All Fruits</a>
-            <a routerLink="/products">Seasonal Picks</a>
-            <a routerLink="/build-your-bowl">Build a Bowl</a>
-            <a routerLink="/auth/register">Sign Up Free</a>
-          </div>
-          <div class="footer-col">
-            <h4>Company</h4>
-            <a routerLink="/about">About Us</a>
-            <a routerLink="/contact">Contact</a>
-            <a routerLink="/faq">FAQ</a>
-          </div>
-          <div class="footer-col">
-            <h4>Legal</h4>
-            <a routerLink="/privacy">Privacy Policy</a>
-            <a routerLink="/terms">Terms & Conditions</a>
-            <a routerLink="/delivery-info">Delivery Info</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Divider -->
-      <div class="footer-divider"></div>
-
-      <!-- Bottom bar -->
-      <div class="footer-bottom">
-        <p>&copy; {{ year }} FalFul Fresh Fruits. All rights reserved.</p>
-        <p class="footer-bottom-tagline">Bringing Nepal's finest harvest to your table.</p>
-      </div>
-
-    </footer>
-  `,
+  templateUrl: './footer.html',
   styleUrl: './footer.scss'
 })
 export class FooterComponent {

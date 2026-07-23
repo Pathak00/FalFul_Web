@@ -1,0 +1,415 @@
+<div class="od-page">
+  <a routerLink="/orders" class="back-link"><i class="bi bi-arrow-left"></i> My Orders</a>
+
+  @if (loading()) {
+    <div class="od-skeleton"></div>
+  } @else if (!order()) {
+    <div class="od-not-found">
+      <i class="bi bi-exclamation-circle"></i>
+      <p>Order not found.</p>
+    </div>
+  } @else {
+
+    <div class="od-header">
+      <div class="od-title">
+        <h2>{{ order()!.orderNumber }}</h2>
+        <span class="od-date">{{ order()!.createdAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}</span>
+      </div>
+      <span class="od-status" [style.background]="orderStatusBg(order()!.status)" [style.color]="orderStatusColor(order()!.status)">
+        {{ orderStatusLabel(order()!.status) }}
+      </span>
+    </div>
+
+    <!-- Awaiting Payment banner -->
+    @if (order()!.status === 7) {
+      <div class="awaiting-payment-banner">
+        <i class="bi bi-clock-history"></i>
+        <div class="apb-body">
+          <strong>Payment Required</strong>
+          <p>Your order is on hold until the advance payment is completed.</p>
+        </div>
+        <button class="btn-pay-now" (click)="payNow()" [disabled]="payingNow()">
+          @if (payingNow()) { <i class="bi bi-arrow-repeat spin"></i> } @else { <i class="bi bi-credit-card"></i> }
+          {{ payingNow() ? 'Loading…' : 'Pay Now' }}
+        </button>
+      </div>
+    }
+
+    <!-- Order Progress Timeline (active orders only) -->
+    @if (order()!.status >= 1 && order()!.status <= 4) {
+      <div class="progress-section">
+        <p class="ps-title">Order Progress</p>
+        <div class="tracking-timeline">
+          @for (step of orderSteps; track step.status) {
+            <div class="track-step"
+                 [class.done]="order()!.status > step.status"
+                 [class.current]="order()!.status === step.status">
+              <div class="step-icon"><i class="bi {{ step.icon }}"></i></div>
+              <span class="step-label">{{ step.label }}</span>
+            </div>
+            @if (!$last) {
+              <div class="track-line" [class.done]="order()!.status > step.status"></div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Terminal state note -->
+    @if (order()!.status === 5 || order()!.status === 6) {
+      <div class="terminal-note" [class.rejected]="order()!.status === 6">
+        <i class="bi" [class.bi-x-circle-fill]="order()!.status === 5" [class.bi-slash-circle]="order()!.status === 6"></i>
+        <span>
+          {{ order()!.status === 6 ? 'Order Rejected' : 'Order Cancelled' }}
+          @if (order()!.cancelReason) { — {{ order()!.cancelReason }} }
+        </span>
+      </div>
+    }
+
+    <!-- Delivery Progress Timeline (delivery statuses 1–5) -->
+    @if (order()!.delivery && order()!.delivery!.status >= 1 && order()!.delivery!.status <= 5) {
+      <div class="progress-section">
+        <p class="ps-title">Delivery Progress</p>
+        <div class="tracking-timeline">
+          @for (step of deliverySteps; track step.status) {
+            <div class="track-step"
+                 [class.done]="order()!.delivery!.status > step.status"
+                 [class.current]="order()!.delivery!.status === step.status">
+              <div class="step-icon"><i class="bi {{ step.icon }}"></i></div>
+              <span class="step-label">{{ step.label }}</span>
+            </div>
+            @if (!$last) {
+              <div class="track-line" [class.done]="order()!.delivery!.status > step.status"></div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Delivery issue banner (failed / rescheduled / returned states 6–9) -->
+    @if (order()!.delivery && order()!.delivery!.status >= 6) {
+      <div class="delivery-issue-note"
+           [style.border-color]="deliveryStatusColor(order()!.delivery!.status) + '80'"
+           [style.background]="deliveryStatusColor(order()!.delivery!.status) + '15'">
+        <i class="bi {{ deliveryStatusIcon(order()!.delivery!.status) }}"
+           [style.color]="deliveryStatusColor(order()!.delivery!.status)"></i>
+        <div>
+          <strong [style.color]="deliveryStatusColor(order()!.delivery!.status)">
+            {{ order()!.delivery!.statusLabel }}
+          </strong>
+          @if (order()!.delivery!.trackingNotes) {
+            <p class="issue-note-sub">{{ order()!.delivery!.trackingNotes }}</p>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="od-layout">
+      <!-- Left col -->
+      <div class="od-left">
+
+        <!-- Items -->
+        <div class="od-card">
+          <h4>Items Ordered</h4>
+          @for (item of order()!.items; track item.id) {
+            <div class="od-item-group">
+              <div class="od-item">
+                <div class="oi-img">
+                  @if (item.imageUrl) { <img [src]="imgSvc.resolve(item.imageUrl)" [alt]="item.productName" /> }
+                  @else { <div class="oi-no-img"><i class="bi bi-image"></i></div> }
+                </div>
+                <div class="oi-info">
+                  <span class="oi-name">
+                    {{ item.productName }}
+                    @if (item.isCustomBuild) { <span class="custom-tag">Custom Bowl</span> }
+                  </span>
+                  @if (!item.isCustomBuild) {
+                    <span class="oi-qty">{{ item.quantity | number:'1.0-2' }} {{ item.unit }} × Rs. {{ item.unitPrice | number:'1.0-0' }}</span>
+                  } @else {
+                    <span class="oi-qty">{{ item.quantity }} {{ item.unit }}</span>
+                  }
+                </div>
+                <span class="oi-price">Rs. {{ item.totalPrice | number:'1.0-0' }}</span>
+              </div>
+
+              <!-- BYB Composition Breakdown -->
+              @if (item.isCustomBuild && item.customBuildDetails) {
+                @let bowl = parseBowlDetails(item.customBuildDetails);
+                @if (bowl) {
+                  <div class="bowl-composition">
+                    <div class="bc-header">
+                      <i class="bi bi-scissors"></i>
+                      {{ bowl.container === 'bowl' ? 'Bowl' : 'Box' }} Contents
+                      <span class="bc-total-g">{{ bowlTotalGrams(bowl) }}g total</span>
+                    </div>
+                    <div class="bc-grid">
+                      <span class="bc-col-head">Fruit</span>
+                      <span class="bc-col-head center">Weight</span>
+                      <span class="bc-col-head right">Price</span>
+                    </div>
+                    @for (fruit of bowl.fruits; track fruit.productId) {
+                      <div class="bc-row">
+                        <span class="bc-name">{{ fruit.name }}</span>
+                        <span class="bc-grams">{{ fruit.grams }}g</span>
+                        @if (fruit.price != null) {
+                          <span class="bc-price">Rs. {{ fruit.price | number:'1.0-0' }}</span>
+                        } @else {
+                          <span class="bc-price bc-na">—</span>
+                        }
+                      </div>
+                    }
+                    @if (bowl.containerFee != null && bowl.containerFee > 0) {
+                      <div class="bc-row bc-fee-row">
+                        <span class="bc-name">Container</span>
+                        <span class="bc-grams">—</span>
+                        <span class="bc-price">Rs. {{ bowl.containerFee | number:'1.0-0' }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Delivery address -->
+        <div class="od-card">
+          <h4><i class="bi bi-geo-alt"></i> Delivery Details</h4>
+          <div class="detail-grid">
+            <span class="dt-label">Address</span>
+            <span>{{ order()!.fullAddress }}, {{ order()!.city }}</span>
+            @if (order()!.landmark) {
+              <span class="dt-label">Landmark</span><span>{{ order()!.landmark }}</span>
+            }
+            <span class="dt-label">Phone</span><span>{{ order()!.deliveryPhone }}</span>
+            <span class="dt-label">Date</span>
+            <span>{{ order()!.deliveryDate | date:'dd MMM yyyy':'Asia/Kathmandu' }} · {{ order()!.deliveryTimeSlot }}</span>
+            @if (order()!.notes) {
+              <span class="dt-label">Notes</span><span>{{ order()!.notes }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Delivery rider info & attempt history -->
+        @if (order()!.delivery) {
+          <div class="od-card">
+            <h4><i class="bi bi-bicycle"></i> Delivery Tracking</h4>
+
+            @if (order()!.delivery!.riderName || order()!.delivery!.deliveredAt) {
+              <div class="detail-grid" style="margin-bottom:.75rem">
+                @if (order()!.delivery!.riderName) {
+                  <span class="dt-label">Rider</span><span>{{ order()!.delivery!.riderName }}</span>
+                }
+                @if (order()!.delivery!.riderPhone) {
+                  <span class="dt-label">Phone</span><span>{{ order()!.delivery!.riderPhone }}</span>
+                }
+                @if (order()!.delivery!.deliveredAt) {
+                  <span class="dt-label">Delivered</span>
+                  <span>{{ order()!.delivery!.deliveredAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}</span>
+                }
+              </div>
+            }
+
+            @if (order()!.delivery!.attempts?.length) {
+              <div class="attempts-list">
+                <p class="attempts-title">Delivery Attempts</p>
+                @for (a of order()!.delivery!.attempts; track a.id) {
+                  <div class="attempt-card" [class.success]="a.wasSuccessful" [class.fail]="!a.wasSuccessful">
+                    <div class="attempt-header">
+                      <span class="attempt-num">#{{ a.attemptNumber }}</span>
+                      <span class="attempt-time">{{ a.attemptedAt | date:'dd MMM, h:mm a':'Asia/Kathmandu' }}</span>
+                      <span class="attempt-result">
+                        @if (a.wasSuccessful) { <i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Delivered }
+                        @else { <i class="bi bi-x-circle-fill" style="color:#ef4444"></i> Failed }
+                      </span>
+                    </div>
+                    @if (!a.wasSuccessful && a.failureReasonLabel) {
+                      <div class="attempt-reason">
+                        <i class="bi bi-exclamation-triangle"></i> {{ a.failureReasonLabel }}
+                        @if (a.failureNotes) { — {{ a.failureNotes }} }
+                      </div>
+                    }
+                    @if (a.nextActionLabel) {
+                      <div class="attempt-next">
+                        <i class="bi bi-arrow-right"></i> {{ a.nextActionLabel }}
+                        @if (a.rescheduledDate) { on {{ a.rescheduledDate | date:'dd MMM' }} }
+                        @if (a.rescheduledTimeSlot) { {{ a.rescheduledTimeSlot }} }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Print receipt button (once delivered) -->
+        @if (order()!.delivery?.status === 5) {
+          <div class="od-card" style="padding:.75rem 1rem">
+            <button class="btn-print-receipt" (click)="openPrintReceipt()">
+              <i class="bi bi-printer"></i> Print Receipt
+            </button>
+          </div>
+        }
+
+        <!-- Rating section (delivered, not yet rated) -->
+        @if (order()!.delivery?.status === 5 && !order()!.rating && !ratingSubmitted()) {
+          <div class="od-card rating-card">
+            <h4><i class="bi bi-star"></i> Rate Your Order</h4>
+            <div class="rating-row">
+              <label>Overall</label>
+              <div class="stars">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <button class="star-btn" [class.filled]="ratingForm.overallRating >= s"
+                          (click)="ratingForm.overallRating = s">
+                    <i class="bi bi-star-fill"></i>
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="rating-row">
+              <label>Delivery</label>
+              <div class="stars">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <button class="star-btn" [class.filled]="(ratingForm.deliveryRating ?? 0) >= s"
+                          (click)="ratingForm.deliveryRating = s">
+                    <i class="bi bi-star-fill"></i>
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="rating-row">
+              <label>Product Quality</label>
+              <div class="stars">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <button class="star-btn" [class.filled]="(ratingForm.productQualityRating ?? 0) >= s"
+                          (click)="ratingForm.productQualityRating = s">
+                    <i class="bi bi-star-fill"></i>
+                  </button>
+                }
+              </div>
+            </div>
+            <textarea [(ngModel)]="ratingForm.comment" placeholder="Leave a comment (optional)" rows="2"
+                      style="width:100%;margin-top:.5rem;padding:.5rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem"></textarea>
+            <label class="ack-label">
+              <input type="checkbox" [(ngModel)]="ratingForm.receiptAcknowledged" />
+              <span>I have received the delivery receipt</span>
+            </label>
+            <button class="btn-submit-rating" (click)="submitRating()"
+                    [disabled]="ratingForm.overallRating === 0 || submittingRating()">
+              @if (submittingRating()) { Submitting... } @else { Submit Rating }
+            </button>
+          </div>
+        }
+
+        <!-- Existing rating display -->
+        @if (order()!.rating) {
+          <div class="od-card">
+            <h4><i class="bi bi-star-fill" style="color:#f59e0b"></i> Your Rating</h4>
+            <div class="existing-rating">
+              <div class="rating-display">
+                <span>Overall</span>
+                <span class="stars-display">{{ '★'.repeat(order()!.rating!.overallRating) }}{{ '☆'.repeat(5 - order()!.rating!.overallRating) }}</span>
+              </div>
+              @if (order()!.rating!.comment) {
+                <p style="color:#6b7280;font-size:.85rem;margin:.5rem 0 0">"{{ order()!.rating!.comment }}"</p>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- Right: order summary + payment -->
+      <div class="od-summary-card">
+        <h4>Order Summary</h4>
+        <div class="ps-row"><span>Subtotal</span><span>Rs. {{ order()!.subTotal | number:'1.0-0' }}</span></div>
+        <div class="ps-row"><span>Delivery Fee</span><span>Rs. {{ order()!.deliveryFee | number:'1.0-0' }}</span></div>
+        <div class="ps-row"><span>Service Fee</span><span>Rs. {{ order()!.serviceFee | number:'1.0-0' }}</span></div>
+        <div class="ps-row total"><span>Total</span><span>Rs. {{ order()!.totalAmount | number:'1.0-0' }}</span></div>
+        @if ((order()!.advanceAmount ?? 0) > 0) {
+          <div class="ps-row advance-row"><span><i class="bi bi-check-circle-fill" style="color:#22c55e;font-size:.75rem"></i> Advance Paid</span><span>Rs. {{ order()!.advanceAmount | number:'1.0-0' }}</span></div>
+          <div class="ps-row remaining-row"><span><i class="bi bi-hourglass-split" style="color:#f59e0b;font-size:.75rem"></i> On Delivery</span><span>Rs. {{ (order()!.totalAmount - order()!.advanceAmount) | number:'1.0-0' }}</span></div>
+        }
+
+        <!-- Payment details (live from Payments table) -->
+        @if (payments().length > 0) {
+          <div class="ps-payment-section">
+            <p class="ps-section-title">Payment</p>
+            @for (p of payments(); track p.id) {
+              <div class="payment-row">
+                <div class="payment-row-left">
+                  <span class="payment-method-name">{{ p.paymentMethodName }}</span>
+                  @if (payments().length > 1) {
+                    <span class="payment-type-tag">{{ p.paymentTypeLabel }}</span>
+                  }
+                </div>
+                <div class="payment-row-right">
+                  <span class="payment-amount">Rs. {{ p.amount | number:'1.0-0' }}</span>
+                  <span class="pstatus-badge" [ngClass]="paymentStatusClass(p.status)">
+                    {{ p.statusLabel }}
+                  </span>
+                </div>
+              </div>
+              @if (p.paidAt) {
+                <div class="payment-paid-at">
+                  Paid {{ p.paidAt | date:'dd MMM yyyy, h:mm a':'Asia/Kathmandu' }}
+                </div>
+              }
+            }
+          </div>
+        } @else {
+          <!-- Fallback for legacy orders without payment records -->
+          <div class="ps-payment-section">
+            <div class="ps-row">
+              <span>Method</span>
+              <span>{{ paymentMethodLabel(order()!.paymentMethod) }}</span>
+            </div>
+            <div class="ps-row">
+              <span>Payment</span>
+              <span class="pstatus-badge"
+                    [style.background]="paymentStatusColor(order()!) + '20'"
+                    [style.color]="paymentStatusColor(order()!)">
+                {{ paymentStatusLabel(order()!) }}
+              </span>
+            </div>
+          </div>
+        }
+
+        @if (canCancel()) {
+          <button class="btn-cancel" (click)="cancelModalOpen.set(true)" [disabled]="cancelling()">
+            @if (cancelling()) { Cancelling... }
+            @else { <i class="bi bi-x-circle"></i> Cancel Order }
+          </button>
+          @if (cancelPolicy()) {
+            <p class="cancel-policy-text">{{ cancelPolicy() }}</p>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Cancel order modal -->
+@if (cancelModalOpen()) {
+  <div class="modal-backdrop" (click)="cancelModalOpen.set(false)">
+    <div class="cancel-modal" (click)="$event.stopPropagation()">
+      <div class="cm-header">
+        <h3>Cancel Order</h3>
+        <button class="cm-close" (click)="cancelModalOpen.set(false)"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="cm-body">
+        <p>Please tell us why you're cancelling this order.</p>
+        <textarea class="cm-textarea" [(ngModel)]="cancelReason" rows="3"
+                  placeholder="e.g. Changed my mind, ordered by mistake…"></textarea>
+      </div>
+      <div class="cm-footer">
+        <button class="cm-btn-ghost" (click)="cancelModalOpen.set(false)">Back</button>
+        <button class="cm-btn-danger" (click)="executeCancelOrder()" [disabled]="cancelling() || !cancelReason.trim()">
+          @if (cancelling()) { <i class="bi bi-arrow-repeat spin"></i> Cancelling… }
+          @else { Confirm Cancel }
+        </button>
+      </div>
+    </div>
+  </div>
+}

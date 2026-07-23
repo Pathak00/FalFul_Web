@@ -1,0 +1,218 @@
+<div class="bowl-page">
+  <div class="bowl-hero">
+    <h1><i class="bi bi-scissors"></i> Build Your Fruit Bowl</h1>
+    <p>Choose your fruits, set the weight in grams, and we'll create a custom fruit bowl just for you.</p>
+  </div>
+
+  <div class="bowl-layout">
+    <!-- Left: Fruit Picker -->
+    <div class="fruit-picker">
+      <h3>Select Fruits</h3>
+
+      @if (loading()) {
+        <div class="picker-loading">
+          @for (s of [1,2,3,4,5,6]; track s) {
+            <div class="fruit-card skeleton"></div>
+          }
+        </div>
+      } @else if (available().length === 0) {
+        <div class="no-cut-fruits">
+          <i class="bi bi-scissors"></i>
+          <p>No cut-fruit products are configured yet.</p>
+        </div>
+      } @else {
+        <div class="fruit-grid">
+          @for (p of available(); track p.id) {
+            <div class="fruit-card"
+                 [class.added]="isAdded(p.id)"
+                 [class.popping]="isPopping(p.id)"
+                 (click)="toggleFruit(p, $event)">
+              <div class="fruit-img">
+                @if (p.imageUrl) { <img [src]="imgSvc.resolve(p.imageUrl)" [alt]="p.name" /> }
+                @else { <div class="no-img"><i class="bi bi-image"></i></div> }
+              </div>
+              <div class="fruit-info">
+                <span class="fruit-name">{{ p.name }}</span>
+                @if (p.cutFruitPrice && p.minOrderGrams) {
+                  <span class="fruit-price">Rs. {{ p.cutFruitPrice }}/{{ p.minOrderGrams }}g</span>
+                } @else {
+                  <span class="fruit-price">Rs. {{ p.price }}/{{ p.unit }}</span>
+                }
+                <span class="fruit-min">
+                  Min {{ effectiveMin(p) }}g · step {{ p.gramStep ?? cutFruitGramStep() }}g
+                </span>
+              </div>
+              <div class="fruit-check"><i class="bi bi-check-circle-fill"></i></div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Right: Build Summary -->
+    <div class="bowl-summary" #bowlPanel [class.bowl-pulse]="bowlPulsing()">
+      <h3>Your Bowl</h3>
+
+      <!-- Container type -->
+      <div class="container-select">
+        <label>Container Type</label>
+        <div class="container-options">
+          <button [class.selected]="container() === 'bowl'" (click)="container.set('bowl')">
+            <i class="bi bi-basket2"></i> Bowl
+            @if (bowlFee() > 0) { <span class="fee-tag">+Rs. {{ bowlFee() }}</span> }
+          </button>
+          <button [class.selected]="container() === 'box'" (click)="container.set('box')">
+            <i class="bi bi-box-seam"></i> Box
+            @if (boxFee() > 0) { <span class="fee-tag">+Rs. {{ boxFee() }}</span> }
+          </button>
+        </div>
+      </div>
+
+      <!-- Added fruits + weights -->
+      @if (entries().length === 0) {
+        <div class="empty-bowl">
+          <i class="bi bi-basket2"></i>
+          <p>Click fruits on the left to add them</p>
+        </div>
+      } @else {
+        <div class="entries-list">
+          @for (entry of entries(); track entry.product.id) {
+            <div class="entry-row">
+              <span class="entry-name">{{ entry.product.name }}</span>
+              <div class="weight-control">
+                <button (click)="decreaseGrams(entry)"
+                        [disabled]="entry.grams <= entryMin(entry)">
+                  <i class="bi bi-dash"></i>
+                </button>
+                <div class="weight-display">
+                  <span class="weight-val" [class.flashing]="isFlashingGram(entry.product.id)">{{ entry.grams }}g</span>
+                  <span class="weight-min">min {{ entryMin(entry) }}g</span>
+                </div>
+                <button (click)="increaseGrams(entry)"><i class="bi bi-plus"></i></button>
+              </div>
+              <span class="entry-price">Rs. {{ entryPrice(entry) | number:'1.0-0' }}</span>
+              <button class="remove-entry" (click)="removeEntry(entry.product.id)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Pricing breakdown -->
+      <div class="price-breakdown">
+        <div class="pb-row">
+          <span>Fruits subtotal</span>
+          <span>Rs. {{ fruitsSubtotal() | number:'1.0-0' }}</span>
+        </div>
+        <div class="pb-row">
+          <span>Container fee</span>
+          <span>Rs. {{ containerFee() | number:'1.0-0' }}</span>
+        </div>
+        @if (serviceFeePct() > 0) {
+          <div class="pb-row">
+            <span>Service fee ({{ serviceFeePct() }}%)</span>
+            <span>Rs. {{ serviceFeeAmt() | number:'1.0-0' }}</span>
+          </div>
+        }
+        <div class="pb-row total">
+          <span>Total</span>
+          <span>Rs. {{ bowlTotal() | number:'1.0-0' }}</span>
+        </div>
+      </div>
+
+      @if (entries().length > 0) {
+        <div class="bowl-qty-row">
+          <span class="bowl-qty-label">Quantity</span>
+          <div class="bowl-qty-control">
+            <button (click)="decreaseBowlQty()" [disabled]="bowlQty() <= 1">
+              <i class="bi bi-dash"></i>
+            </button>
+            <span class="bowl-qty-val">{{ bowlQty() }}</span>
+            <button (click)="increaseBowlQty()">
+              <i class="bi bi-plus"></i>
+            </button>
+          </div>
+          @if (bowlQty() > 1) {
+            <span class="bowl-qty-total">Rs. {{ bowlTotal() * bowlQty() | number:'1.0-0' }}</span>
+          }
+        </div>
+
+        <button class="btn-add-bowl"
+                [class.cart-popping]="cartPopping()"
+                (click)="addToCart()"
+                [disabled]="bowlTotal() <= 0">
+          <i class="bi bi-cart-plus"></i>
+          @if (bowlQty() > 1) { Add {{ bowlQty() }} Bowls to Cart }
+          @else { Add Bowl to Cart }
+        </button>
+      }
+
+      @if (addedSuccess()) {
+        <div class="added-success">
+          <i class="bi bi-check-circle-fill"></i> Bowl added to cart!
+        </div>
+      }
+
+      <!-- Bowls in Cart -->
+      @if (bowlsInCart().length > 0) {
+        <div class="bowls-in-cart">
+          <div class="bic-header">
+            <span>Bowls in Cart</span>
+            <span class="bic-count">{{ bowlsInCart().length }}</span>
+          </div>
+          <div class="bic-list">
+            @for (entry of bowlsInCart(); track entry.index) {
+              <div class="bic-row">
+                <div class="bic-info">
+                  <span class="bic-name">{{ entry.item.productName }}</span>
+                  <span class="bic-detail">{{ entry.item.quantity }} × Rs. {{ entry.item.unitPrice | number:'1.0-0' }}</span>
+                </div>
+                <span class="bic-price">Rs. {{ entry.item.totalPrice | number:'1.0-0' }}</span>
+                <button class="bic-remove" (click)="cartSvc.removeItem(entry.index)" title="Remove">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            }
+          </div>
+          <a routerLink="/checkout" class="btn-checkout">
+            <i class="bi bi-bag-check"></i> Go to Checkout
+          </a>
+        </div>
+      }
+
+      <a routerLink="/products" class="btn-browse">
+        <i class="bi bi-box-seam"></i> Browse Regular Products
+      </a>
+    </div>
+  </div>
+
+  <!-- Mobile sticky bottom bar — visible only on ≤900px when bowl has entries -->
+  @if (entries().length > 0) {
+    <div class="mobile-add-bar">
+      <div class="mob-bar-total">
+        <span class="mob-bar-label">Total</span>
+        <strong class="mob-bar-price">Rs. {{ bowlTotal() | number:'1.0-0' }}</strong>
+      </div>
+      <button class="mob-bar-btn"
+              [class.cart-popping]="cartPopping()"
+              (click)="addToCart()"
+              [disabled]="bowlTotal() <= 0">
+        <i class="bi bi-cart-plus"></i>
+        @if (bowlQty() > 1) { Add {{ bowlQty() }} Bowls }
+        @else { Add to Cart }
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Flying fruit particles — fixed overlay, clips outside scroll context -->
+@for (p of particles(); track p.id) {
+  <div class="fp"
+       [style.left.px]="p.sx"
+       [style.top.px]="p.sy"
+       [style.--tx]="p.tx"
+       [style.--ty]="p.ty">
+    🍃
+  </div>
+}

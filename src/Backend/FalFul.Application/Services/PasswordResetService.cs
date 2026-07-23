@@ -45,8 +45,8 @@ public class PasswordResetService(
             ? await otpRepo.CountRecentAsync(null, ipAddress, RateLimitWindow)
             : 0;
 
-        if (recentUser >= RateLimitMax || recentIp >= RateLimitMax)
-            return Result<ForgotPasswordResponseDto>.Success(BuildFakeResponse(isEmail, identifier));
+        //if (recentUser >= RateLimitMax || recentIp >= RateLimitMax)
+        //    return Result<ForgotPasswordResponseDto>.Success(BuildFakeResponse(isEmail, identifier));
 
         // Generate + hash OTP
         var plainOtp = Random.Shared.Next(100_000, 1_000_000).ToString();

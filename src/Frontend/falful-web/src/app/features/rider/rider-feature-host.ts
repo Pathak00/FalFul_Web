@@ -44,15 +44,7 @@ const ADMIN_FEATURE_REGISTRY: Record<string, LazyLoader> = {
   selector: 'app-rider-feature-host',
   standalone: true,
   imports: [],
-  template: `
-    <ng-container #host></ng-container>
-    @if (notFound()) {
-      <div style="text-align:center;padding:3rem;color:#94a3b8">
-        <i class="bi bi-exclamation-circle" style="font-size:2rem"></i>
-        <p style="margin:.5rem 0 0;font-size:.9rem">Page not found or not yet available in the rider portal.</p>
-      </div>
-    }
-  `
+  templateUrl: './rider-feature-host.html'
 })
 export class RiderFeatureHostComponent implements OnInit {
   @ViewChild('host', { read: ViewContainerRef, static: true })

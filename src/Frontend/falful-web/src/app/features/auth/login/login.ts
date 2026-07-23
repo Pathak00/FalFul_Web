@@ -6,11 +6,12 @@ import { CartService } from '../../../core/services/cart.service';
 import { HomeRouteService } from '../../../core/services/home-route.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { GoogleSignInButtonComponent } from '../../../shared/components/google-signin-button/google-signin-button';
+import { PopDialogBoxComponent } from '../../../shared/components/PopUpConfirmationModel/popDialogBox';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, GoogleSignInButtonComponent],
+  imports: [ReactiveFormsModule, RouterLink, GoogleSignInButtonComponent, PopDialogBoxComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
@@ -24,7 +25,8 @@ export class LoginComponent {
   private route       = inject(ActivatedRoute);
 
   isLoading    = signal(false);
-  errorMessage = signal('');
+  showDialog   = false;
+  dialogMessage = '';
 
   form = this.fb.group({
     identifier: ['', [Validators.required]],
@@ -45,13 +47,12 @@ export class LoginComponent {
   onGoogleLogin(idToken: string): void {
     console.log('[Google] token received, length:', idToken?.length);
     this.isLoading.set(true);
-    this.errorMessage.set('');
     this.authService.googleLogin(idToken).subscribe({
       next: () => this.redirectAfterLogin(),
       error: (err) => {
         console.error('[Google] sign-in error — status:', err.status, 'body:', err.error);
         const msg = err.error?.message ?? err.message ?? `HTTP ${err.status}: Google sign-in failed.`;
-        this.errorMessage.set(msg);
+        this.showLoginError(msg);
         this.isLoading.set(false);
       }
     });
@@ -61,14 +62,18 @@ export class LoginComponent {
     if (this.form.invalid || this.isLoading()) return;
 
     this.isLoading.set(true);
-    this.errorMessage.set('');
 
     this.authService.login(this.form.value as any).subscribe({
       next: () => this.redirectAfterLogin(),
       error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Login failed. Please try again.');
+        this.showLoginError(err.error?.message ?? 'Login failed. Please try again.');
         this.isLoading.set(false);
       }
     });
+  }
+
+  private showLoginError(message: string): void {
+    this.dialogMessage = message;
+    this.showDialog = true;
   }
 }

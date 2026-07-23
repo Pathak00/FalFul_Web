@@ -1,0 +1,185 @@
+<div class="admin-page" style="max-width:1100px">
+
+  <div class="page-header">
+    <div>
+      <h1>Notices & Announcements</h1>
+      <p class="page-sub">Create notices that appear as banners on the site. Add an image to show a popup banner (e.g. flash sales).</p>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">
+      <i class="bi bi-plus-lg"></i> New Notice
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><div class="spinner"></div> Loading…</div>
+  } @else if (notices().length === 0) {
+    <div class="empty-state">
+      <i class="bi bi-megaphone"></i>
+      <p>No notices yet. Create one to show announcements on the site.</p>
+    </div>
+  } @else {
+    <div class="notices-list">
+      @for (n of notices(); track n.id) {
+        <div class="notice-card" [class]="'notice-card--' + typeClass(n.noticeType)">
+          @if (n.imageUrl) {
+            <div class="notice-thumb">
+              <img [src]="imgSvc.resolve(n.imageUrl)" alt="notice image" />
+              <span class="img-badge"><i class="bi bi-image"></i> Image Banner</span>
+            </div>
+          }
+          <div class="notice-meta">
+            <span class="notice-type-badge" [class]="'ntb--' + typeClass(n.noticeType)">
+              <i class="bi {{ typeIcon(n.noticeType) }}"></i> {{ n.noticeTypeLabel }}
+            </span>
+            <span class="notice-target"><i class="bi bi-people"></i> {{ n.targetLabel }}</span>
+            @if (n.startDate || n.endDate) {
+              <span class="notice-dates"><i class="bi bi-calendar3"></i>
+                {{ n.startDate ?? '—' }} → {{ n.endDate ?? '∞' }}
+              </span>
+            }
+            <span class="status-badge" [class.active]="n.isActive" [class.inactive]="!n.isActive">
+              {{ n.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <div class="notice-content">
+            <h4>{{ n.title }}</h4>
+            <p>{{ n.message }}</p>
+          </div>
+          <div class="notice-actions">
+            <button class="btn-icon" title="Edit" (click)="openEdit(n)"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon btn-danger" title="Delete" (click)="confirmDelete(n)"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- ── Create / Edit modal ─────────────────────────────────────────────── -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-box" style="max-width:600px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editId() ? 'Edit Notice' : 'New Notice' }}</h3>
+        <button class="modal-close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+
+          <div class="form-group full-span">
+            <label>Title *</label>
+            <input type="text" [(ngModel)]="form.title" placeholder="Flash Sale — 20% off all fruit baskets!" />
+          </div>
+
+          <div class="form-group full-span">
+            <label>Message *</label>
+            <textarea [(ngModel)]="form.message" rows="2" placeholder="Use code FLASH20 at checkout. Valid today only!"></textarea>
+          </div>
+
+          <!-- Image / PDF upload -->
+          <div class="form-group full-span">
+            <label>Banner Image or PDF <span class="hint-inline">(optional — shows as popup on page load and on the Promotions page)</span></label>
+
+            @if (form.imageUrl) {
+              <div class="img-preview-wrap">
+                @if (isPdf(form.imageUrl)) {
+                  <div class="pdf-preview-thumb">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                    <span>{{ pdfName(form.imageUrl) }}</span>
+                  </div>
+                } @else {
+                  <img [src]="imgSvc.resolve(form.imageUrl)" class="img-preview" alt="preview" />
+                }
+                <button type="button" class="btn-remove-img" (click)="removeImage()" title="Remove file">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </div>
+            } @else {
+              <div class="img-upload-zone" (click)="fileInput.click()" (dragover)="$event.preventDefault()" (drop)="onDrop($event)">
+                @if (uploading()) {
+                  <div class="spinner-sm"></div> <span>Uploading…</span>
+                } @else {
+                  <i class="bi bi-cloud-upload fs-2"></i>
+                  <span>Click or drag & drop an image or PDF here</span>
+                  <span class="hint-inline">JPG, PNG, WebP, PDF — max 10 MB</span>
+                }
+              </div>
+              <input #fileInput type="file" accept="image/*,.pdf" class="d-none" (change)="onFileChange($event)" />
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Type *</label>
+            <select [(ngModel)]="form.noticeType">
+              <option [ngValue]="1">ℹ️ Info</option>
+              <option [ngValue]="2">⚠️ Warning</option>
+              <option [ngValue]="3">✅ Success</option>
+              <option [ngValue]="4">❌ Error</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Target Audience *</label>
+            <select [(ngModel)]="form.target">
+              <option [ngValue]="1">All Users</option>
+              <option [ngValue]="2">Customers Only</option>
+              <option [ngValue]="3">Organizations Only</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Start Date <span class="hint-inline">(blank = immediate)</span></label>
+            <input type="date" [(ngModel)]="form.startDate" />
+          </div>
+
+          <div class="form-group">
+            <label>End Date <span class="hint-inline">(blank = no expiry)</span></label>
+            <input type="date" [(ngModel)]="form.endDate" />
+          </div>
+
+          <div class="form-group full-span">
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="form.isActive" />
+              <span>Active (show this notice on the site)</span>
+            </label>
+          </div>
+
+        </div>
+
+        @if (formError()) {
+          <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ formError() }}</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" (click)="save()" [disabled]="saving() || uploading()">
+          @if (saving()) { <span class="spinner-sm"></span> Saving… }
+          @else { <i class="bi bi-check-lg"></i> {{ editId() ? 'Save Changes' : 'Create Notice' }} }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Delete confirm ─────────────────────────────────────────────────── -->
+@if (deleteTarget()) {
+  <div class="modal-overlay" (click)="deleteTarget.set(null)">
+    <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Delete Notice</h3>
+        <button class="modal-close" (click)="deleteTarget.set(null)"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>Delete notice <strong>"{{ deleteTarget()!.title }}"</strong>? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="deleteTarget.set(null)">Cancel</button>
+        <button class="btn-danger" (click)="doDelete()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner-sm"></span> } @else { Delete }
+        </button>
+      </div>
+    </div>
+  </div>
+}

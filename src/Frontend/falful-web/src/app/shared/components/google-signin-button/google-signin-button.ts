@@ -16,18 +16,8 @@ declare const google: any;
 @Component({
   selector: 'app-google-signin-button',
   standalone: true,
-  template: `
-    <div class="google-btn-wrapper">
-      <div #googleBtn></div>
-    </div>
-  `,
-  styles: [`
-    .google-btn-wrapper {
-      display: flex;
-      justify-content: center;
-      margin: 0.5rem 0;
-    }
-  `]
+  templateUrl: './google-signin-button.html',
+  styleUrl: './google-signin-button.scss',
 })
 export class GoogleSignInButtonComponent implements AfterViewInit {
   @ViewChild('googleBtn', { static: true }) btnRef!: ElementRef;
@@ -47,8 +37,10 @@ export class GoogleSignInButtonComponent implements AfterViewInit {
       client_id: environment.googleClientId,
       ux_mode: 'popup',
       callback: (response: { credential: string }) => {
+        console.log(response);
+        console.log(response.credential);
         this.ngZone.run(() => this.credential.emit(response.credential));
-      }
+      },
     });
 
     // Use the actual wrapper width so the button never overflows its container.
@@ -62,7 +54,7 @@ export class GoogleSignInButtonComponent implements AfterViewInit {
       width: renderWidth,
       text: 'continue_with',
       shape: 'rectangular',
-      logo_alignment: 'left'
+      logo_alignment: 'left',
     });
   }
 }

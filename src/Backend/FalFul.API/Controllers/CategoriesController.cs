@@ -10,7 +10,8 @@ namespace FalFul.API.Controllers;
 public class CategoriesController(IProductService products) : ControllerBase
 {
     [HttpGet]
-    [AllowAnonymous]
+    //[AllowAnonymous]
+    [Authorize]
     public async Task<IActionResult> GetActive() =>
         Ok(await products.GetActiveCategoriesAsync());
 

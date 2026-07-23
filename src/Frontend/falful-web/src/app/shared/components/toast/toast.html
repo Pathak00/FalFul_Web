@@ -1,0 +1,11 @@
+<div class="toast-container">
+  @for (t of svc.toasts(); track t.id) {
+    <div class="toast toast-{{ t.type }}" role="alert">
+      <i class="bi {{ icon(t.type) }} toast-icon"></i>
+      <span class="toast-msg">{{ t.message }}</span>
+      <button class="toast-close" (click)="svc.dismiss(t.id)" aria-label="Dismiss">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  }
+</div>

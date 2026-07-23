@@ -1,0 +1,110 @@
+<div class="customer-dash">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div class="dash-welcome">
+      <div class="dash-avatar">{{ initial() }}</div>
+      <div class="dash-greeting">
+        <h1>Welcome back, {{ user()?.fullName }}!</h1>
+        <p>Here's a quick look at your account.</p>
+      </div>
+    </div>
+    <a routerLink="/products" class="btn-shop-now">
+      <i class="bi bi-basket2-fill"></i> Shop Now
+    </a>
+  </div>
+
+  <!-- ── Quick Actions ───────────────────────────────────────────────────── -->
+  <section class="dash-section">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="quick-actions">
+      <a routerLink="/products" class="action-card green">
+        <div class="action-icon"><i class="bi bi-basket2-fill"></i></div>
+        <div class="action-label">Browse Products</div>
+        <div class="action-sub">Fresh fruits &amp; veggies</div>
+      </a>
+      <a routerLink="/build-your-bowl" class="action-card blue">
+        <div class="action-icon"><i class="bi bi-cup-hot-fill"></i></div>
+        <div class="action-label">Build Your Bowl</div>
+        <div class="action-sub">Customise your combo</div>
+      </a>
+      <a routerLink="/orders" class="action-card purple">
+        <div class="action-icon"><i class="bi bi-bag-check-fill"></i></div>
+        <div class="action-label">My Orders</div>
+        <div class="action-sub">Track &amp; manage</div>
+      </a>
+      <a routerLink="/checkout" class="action-card orange">
+        <div class="action-icon"><i class="bi bi-cart-check-fill"></i></div>
+        <div class="action-label">Checkout</div>
+        <div class="action-sub">Complete your cart</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── Recent Orders ───────────────────────────────────────────────────── -->
+  <section class="dash-section">
+    <div class="section-header">
+      <h2 class="section-title">Recent Orders</h2>
+      <a routerLink="/orders" class="see-all">See all <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    @if (loading()) {
+      <div class="orders-skeleton">
+        @for (s of [1,2,3]; track s) {
+          <div class="order-skeleton-row"></div>
+        }
+      </div>
+    } @else if (recentOrders().length === 0) {
+      <div class="orders-empty">
+        <i class="bi bi-bag-x"></i>
+        <p>You haven't placed any orders yet.</p>
+        <a routerLink="/products" class="btn-browse">Browse Products</a>
+      </div>
+    } @else {
+      <div class="orders-list">
+        @for (order of recentOrders(); track order.id) {
+          <a [routerLink]="['/orders', order.id]" class="order-row">
+            <div class="or-left">
+              <span class="or-number">{{ order.orderNumber }}</span>
+              <span class="or-date">{{ order.createdAt | date:'dd MMM yyyy':'Asia/Kathmandu' }}</span>
+            </div>
+            <div class="or-middle">
+              <span class="or-items">{{ order.itemCount }} item{{ order.itemCount !== 1 ? 's' : '' }}</span>
+              <span class="or-delivery">{{ order.deliveryDate | date:'dd MMM':'Asia/Kathmandu' }} · {{ order.deliveryTimeSlot }}</span>
+            </div>
+            <div class="or-right">
+              <span class="or-amount">Rs. {{ order.totalAmount | number:'1.0-0' }}</span>
+              <span class="or-badge"
+                    [style.background]="statusBg(order)"
+                    [style.color]="statusColor(order)">
+                {{ statusLabel(order) }}
+              </span>
+            </div>
+            <i class="bi bi-chevron-right or-arrow"></i>
+          </a>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ── Account ─────────────────────────────────────────────────────────── -->
+  <section class="dash-section">
+    <h2 class="section-title">My Account</h2>
+    <div class="account-card">
+      <div class="account-info">
+        <div class="account-avatar">{{ initial() }}</div>
+        <div class="account-details">
+          <div class="account-name">{{ user()?.fullName }}</div>
+          @if (user()?.email) {
+            <div class="account-meta"><i class="bi bi-envelope"></i> {{ user()?.email }}</div>
+          }
+          @if (user()?.phoneNumber) {
+            <div class="account-meta"><i class="bi bi-telephone"></i> {{ user()?.phoneNumber }}</div>
+          }
+          <div class="account-meta"><i class="bi bi-person-badge"></i> {{ user()?.role }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

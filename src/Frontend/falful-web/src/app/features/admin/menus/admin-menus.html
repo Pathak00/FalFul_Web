@@ -1,0 +1,251 @@
+<div class="admin-page">
+  <div class="page-header">
+    <div>
+      <h1>Navigation Menus</h1>
+      <p class="page-sub">Build the public website navigation. Create top-level links and nest items under them to make dropdowns. Control who sees each link using the "Visible To" setting.</p>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">+ Add Menu Item</button>
+  </div>
+
+  @if (loading()) {
+    <div class="empty-state"><div class="spinner"></div><p>Loading…</p></div>
+  } @else {
+    <!-- Public navigation items -->
+    <div class="menu-tree">
+      @for (item of publicTopLevel(); track item.id) {
+        <div class="menu-row menu-row-top" [class.row-hidden]="!item.isVisible">
+          <div class="menu-row-left">
+            @if (item.icon) {
+              @if (item.icon.startsWith('bi-')) { <i class="bi {{ item.icon }} menu-icon"></i> }
+              @else { <span class="menu-icon">{{ item.icon }}</span> }
+            }
+            <div class="menu-label-block">
+              <strong>{{ item.label }}</strong>
+              @if (item.url) { <span class="menu-url">{{ item.url }}</span> }
+            </div>
+            <span class="badge badge-blue">{{ visibilityLabel(item) }}</span>
+            @if (!item.isVisible) { <span class="badge badge-gray">Hidden</span> }
+            <span class="order-badge">#{{ item.displayOrder }}</span>
+          </div>
+          <div class="menu-row-actions">
+            <button class="btn-sm btn-success-soft" (click)="openCreate(item.id)">+ Sub-item</button>
+            <button class="btn-sm btn-edit" (click)="openEdit(item)">Edit</button>
+            <button class="btn-sm btn-danger" (click)="deleteTarget.set(item)">Delete</button>
+          </div>
+        </div>
+
+        @for (child of childrenOf(item.id); track child.id) {
+          <div class="menu-row menu-row-child" [class.row-hidden]="!child.isVisible">
+            <div class="menu-row-left">
+              <span class="child-indent">↳</span>
+              @if (child.icon) {
+                @if (child.icon.startsWith('bi-')) { <i class="bi {{ child.icon }} menu-icon"></i> }
+                @else { <span class="menu-icon">{{ child.icon }}</span> }
+              }
+              <div class="menu-label-block">
+                <strong>{{ child.label }}</strong>
+                @if (child.url) { <span class="menu-url">{{ child.url }}</span> }
+              </div>
+              <span class="badge badge-blue">{{ visibilityLabel(child) }}</span>
+              @if (!child.isVisible) { <span class="badge badge-gray">Hidden</span> }
+              <span class="order-badge">#{{ child.displayOrder }}</span>
+            </div>
+            <div class="menu-row-actions">
+              <button class="btn-sm btn-edit" (click)="openEdit(child)">Edit</button>
+              <button class="btn-sm btn-danger" (click)="deleteTarget.set(child)">Delete</button>
+            </div>
+          </div>
+        }
+      }
+
+      @if (publicTopLevel().length === 0) {
+        <div class="empty-state">
+          <i class="bi bi-list-nested empty-icon"></i>
+          <h3>No public menu items yet</h3>
+          <p>Create your first navigation link above.</p>
+        </div>
+      }
+    </div>
+
+    <!-- Portal Shortcuts section -->
+    @if (portalShortcuts().length > 0) {
+      <div class="section-header">
+        <div>
+          <h2 class="section-title"><i class="bi bi-door-open"></i> Portal Shortcuts</h2>
+          <p class="section-desc">These links appear in the public navbar for role-specific users (e.g. "Dashboard" for customers, "Admin" for admin users). They link into a portal — not the public website. Visibility is controlled by role assignment, not general navigation.</p>
+        </div>
+      </div>
+      <div class="menu-tree menu-tree-portal">
+        @for (item of portalShortcuts(); track item.id) {
+          <div class="menu-row menu-row-top menu-row-portal" [class.row-hidden]="!item.isVisible">
+            <div class="menu-row-left">
+              <i class="bi bi-door-open-fill portal-icon"></i>
+              <div class="menu-label-block">
+                <strong>{{ item.label }}</strong>
+                @if (item.url) { <span class="menu-url">{{ item.url }}</span> }
+              </div>
+              <span class="badge badge-purple">Portal Shortcut</span>
+              @if (item.requiredPortalType) {
+                <span class="badge badge-portal-type">{{ item.requiredPortalType }} portal</span>
+              } @else {
+                <span class="badge badge-blue">{{ visibilityLabel(item) }}</span>
+              }
+              @if (!item.isVisible) { <span class="badge badge-gray">Hidden</span> }
+            </div>
+            <div class="menu-row-actions">
+              <button class="btn-sm btn-edit" (click)="openEdit(item)">Edit</button>
+              <button class="btn-sm btn-danger" (click)="deleteTarget.set(item)">Delete</button>
+            </div>
+          </div>
+
+          @for (child of childrenOf(item.id); track child.id) {
+            <div class="menu-row menu-row-child menu-row-portal" [class.row-hidden]="!child.isVisible">
+              <div class="menu-row-left">
+                <span class="child-indent">↳</span>
+                <div class="menu-label-block">
+                  <strong>{{ child.label }}</strong>
+                  @if (child.url) { <span class="menu-url">{{ child.url }}</span> }
+                </div>
+                <span class="badge badge-blue">{{ visibilityLabel(child) }}</span>
+              </div>
+              <div class="menu-row-actions">
+                <button class="btn-sm btn-edit" (click)="openEdit(child)">Edit</button>
+                <button class="btn-sm btn-danger" (click)="deleteTarget.set(child)">Delete</button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- Create / Edit Modal -->
+@if (showForm()) {
+  <div class="modal-overlay" (click)="closeForm()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ editing() ? 'Edit Menu Item' : 'New Menu Item' }}</h2>
+          <p class="modal-sub">{{ form.parentId ? 'Adding a sub-item under "' + parentLabel() + '".' : 'Adding a top-level navigation link.' }}</p>
+        </div>
+        <button class="btn-close" (click)="closeForm()">✕</button>
+      </div>
+
+      <div class="form-section">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Label <span class="required">*</span></label>
+            <input [(ngModel)]="form.label" placeholder="e.g. Products, About Us, My Orders" />
+          </div>
+          <div class="form-group">
+            <label>Icon</label>
+            <input [(ngModel)]="form.icon" placeholder="e.g. bi-house-fill, bi-cart" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Link URL</label>
+          <input [(ngModel)]="form.url" placeholder="e.g. /products, /dashboard" />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-group">
+          <label>Parent (for sub-menus)</label>
+          <select [(ngModel)]="form.parentId">
+            <option [ngValue]="undefined">— Top-level item —</option>
+            @for (item of topLevel(); track item.id) {
+              <option [ngValue]="item.id">{{ item.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Visible To</label>
+          <select [(ngModel)]="form.visibleTo">
+            @for (opt of baseOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }} — {{ opt.desc }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Role checkboxes shown only when Specific roles is selected -->
+        @if (+form.visibleTo === 3) {
+          <div class="role-picker">
+            <p class="role-picker-label">Select which roles can see this item:</p>
+            @if (roles().length === 0) {
+              <p class="text-muted" style="font-size:.8rem">No roles found. Create roles first in Roles &amp; Permissions.</p>
+            }
+            <div class="role-checks">
+              @for (role of roles(); track role.id) {
+                <label class="role-check-row">
+                  <input type="checkbox"
+                         [checked]="form.requiredRoleIds.includes(role.id)"
+                         (change)="toggleRole(role.id)" />
+                  <span>{{ role.name }}</span>
+                </label>
+              }
+            </div>
+            @if (+form.visibleTo === 3 && form.requiredRoleIds.length === 0) {
+              <p class="field-hint warn">Select at least one role, otherwise no one will see this item.</p>
+            }
+          </div>
+        }
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Display Order</label>
+            <input type="number" [(ngModel)]="form.displayOrder" min="0" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-toggle-row">
+        <label class="toggle-label" style="margin-bottom:.75rem">
+          <div class="toggle" [class.on]="form.isVisible" (click)="form.isVisible = !form.isVisible">
+            <div class="toggle-thumb"></div>
+          </div>
+          <div>
+            <strong>{{ form.isVisible ? 'Visible' : 'Hidden' }}</strong>
+            <span>{{ form.isVisible ? 'This link shows in the navigation' : 'This link is hidden from all users' }}</span>
+          </div>
+        </label>
+        <label class="toggle-label">
+          <div class="toggle" [class.on]="form.openInNewTab" (click)="form.openInNewTab = !form.openInNewTab">
+            <div class="toggle-thumb"></div>
+          </div>
+          <div>
+            <strong>{{ form.openInNewTab ? 'Opens in new tab' : 'Opens in same tab' }}</strong>
+          </div>
+        </label>
+      </div>
+
+      @if (error()) { <div class="form-error-box"><i class="bi bi-exclamation-triangle"></i> {{ error() }}</div> }
+
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeForm()">Cancel</button>
+        <button class="btn-primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : (editing() ? 'Save Changes' : 'Add Item') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete confirm -->
+@if (deleteTarget()) {
+  <div class="modal-overlay" (click)="deleteTarget.set(null)">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="confirm-icon"><i class="bi bi-trash3"></i></div>
+      <h2>Delete "{{ deleteTarget()!.label }}"?</h2>
+      <p>
+        @if (!deleteTarget()!.parentId) { This will also delete all sub-items nested under it. }
+        @else { This sub-item will be removed from the navigation. }
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="deleteTarget.set(null)">Cancel</button>
+        <button class="btn-danger-solid" (click)="confirmDelete()">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+}

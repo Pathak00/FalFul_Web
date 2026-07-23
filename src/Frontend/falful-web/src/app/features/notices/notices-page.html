@@ -1,0 +1,140 @@
+<div class="np-page">
+
+  <!-- ── Hero ───────────────────────────────────────────── -->
+  <div class="np-hero">
+    <div class="np-hero-inner">
+      <span class="np-eyebrow">
+        <i class="bi bi-megaphone-fill"></i> Live Updates
+      </span>
+      <h1>Promotions &amp; Notices</h1>
+      <p>Stay up to date with our latest deals, flash sales, and important announcements.</p>
+    </div>
+    <div class="np-hero-wave">
+      <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#f4f4f5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Body ───────────────────────────────────────────── -->
+  <div class="np-body">
+
+    @if (loading()) {
+      <div class="np-state">
+        <div class="np-spinner"></div>
+        <span>Loading notices…</span>
+      </div>
+
+    } @else if (notices().length === 0) {
+      <div class="np-state np-empty">
+        <div class="np-empty-icon"><i class="bi bi-megaphone"></i></div>
+        <h3>Nothing here right now</h3>
+        <p>Check back soon — we'll post flash sales, discount codes, and announcements here.</p>
+      </div>
+
+    } @else {
+      <div class="np-grid">
+        @for (n of notices(); track n.id) {
+
+          @if (n.imageUrl && isPdf(n.imageUrl)) {
+            <!-- ── PDF notice ──────────────────────────── -->
+            <div class="np-card np-card--pdf" [style.--tc]="typeColor(n.noticeType)">
+              <div class="np-card-pdf-thumb" (click)="openLightbox(n)">
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+                <span class="np-pdf-label">PDF Document</span>
+                <span class="np-pdf-hint">Click to view</span>
+              </div>
+              <div class="np-card-content">
+                <div class="np-meta">
+                  <span class="np-badge" [style.background]="typeBg(n.noticeType)" [style.color]="typeColor(n.noticeType)">
+                    <i class="bi {{ typeIcon(n.noticeType) }}"></i> {{ n.noticeTypeLabel }}
+                  </span>
+                  @if (n.endDate) {
+                    <span class="np-expiry"><i class="bi bi-clock"></i> Until {{ n.endDate }}</span>
+                  }
+                </div>
+                <h2 class="np-card-title">{{ n.title }}</h2>
+                <p class="np-card-msg">{{ n.message }}</p>
+                <button class="np-btn-view" (click)="openLightbox(n)">
+                  <i class="bi bi-eye"></i> View PDF
+                </button>
+              </div>
+            </div>
+
+          } @else if (n.imageUrl) {
+            <!-- ── Image notice ────────────────────────── -->
+            <div class="np-card np-card--img" [style.--tc]="typeColor(n.noticeType)">
+              <div class="np-card-thumb" (click)="openLightbox(n)">
+                <img [src]="fileUrl(n.imageUrl)" [alt]="n.title" loading="lazy" />
+                <div class="np-thumb-overlay">
+                  <span><i class="bi bi-arrows-fullscreen"></i> View Full</span>
+                </div>
+              </div>
+              <div class="np-card-content">
+                <div class="np-meta">
+                  <span class="np-badge" [style.background]="typeBg(n.noticeType)" [style.color]="typeColor(n.noticeType)">
+                    <i class="bi {{ typeIcon(n.noticeType) }}"></i> {{ n.noticeTypeLabel }}
+                  </span>
+                  @if (n.endDate) {
+                    <span class="np-expiry"><i class="bi bi-clock"></i> Until {{ n.endDate }}</span>
+                  }
+                </div>
+                <h2 class="np-card-title">{{ n.title }}</h2>
+                <p class="np-card-msg">{{ n.message }}</p>
+                <button class="np-btn-view" (click)="openLightbox(n)">
+                  <i class="bi bi-arrows-fullscreen"></i> View Full Image
+                </button>
+              </div>
+            </div>
+
+          } @else {
+            <!-- ── Text-only notice ────────────────────── -->
+            <div class="np-card np-card--text" [style.--tc]="typeColor(n.noticeType)" [style.--bg]="typeBg(n.noticeType)">
+              <div class="np-card-text-accent"></div>
+              <div class="np-card-content">
+                <div class="np-meta">
+                  <span class="np-badge" [style.background]="typeBg(n.noticeType)" [style.color]="typeColor(n.noticeType)">
+                    <i class="bi {{ typeIcon(n.noticeType) }}"></i> {{ n.noticeTypeLabel }}
+                  </span>
+                  @if (n.endDate) {
+                    <span class="np-expiry"><i class="bi bi-clock"></i> Until {{ n.endDate }}</span>
+                  }
+                </div>
+                <h2 class="np-card-title">{{ n.title }}</h2>
+                <p class="np-card-msg">{{ n.message }}</p>
+              </div>
+            </div>
+          }
+
+        }
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ── Lightbox overlay ──────────────────────────────────── -->
+@if (lightbox()) {
+  <div class="lb-overlay" (click)="closeLightbox()">
+    <div class="lb-panel" [class.lb-panel--pdf]="lightbox()!.type === 'pdf'" (click)="$event.stopPropagation()">
+      <div class="lb-header">
+        <span class="lb-title">{{ lightbox()!.title }}</span>
+        <div class="lb-actions">
+          <a [href]="lightbox()!.url" target="_blank" rel="noopener" class="lb-btn" title="Open in new tab">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+          <button class="lb-btn lb-btn--close" (click)="closeLightbox()" title="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+      <div class="lb-body">
+        @if (lightbox()!.type === 'image') {
+          <img [src]="lightbox()!.url" class="lb-img" [alt]="lightbox()!.title" />
+        } @else {
+          <iframe [src]="lightbox()!.safeUrl" class="lb-pdf" title="PDF viewer"></iframe>
+        }
+      </div>
+    </div>
+  </div>
+}

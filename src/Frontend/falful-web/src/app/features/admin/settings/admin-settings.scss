@@ -1,0 +1,41 @@
+.settings-page { max-width: 780px; }
+.settings-groups { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: .875rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: #f8fafc; h2 { margin: 0; font-size: .875rem; font-weight: 700; color: #0f172a; } }
+
+.settings-card .card-header { padding: .875rem 1.25rem; }
+.settings-group-header { display: flex; align-items: center; gap: .5rem; h2 { font-size: .875rem; font-weight: 700; margin: 0; } }
+.group-icon { color: #16a34a; font-size: 1rem; }
+
+.settings-list { display: flex; flex-direction: column; }
+
+.setting-row {
+  padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9; transition: background .1s;
+  &:first-child { border-top: none; }
+  &.editing { background: rgba(22,163,74,.04); border-left: 3px solid #16a34a; padding-left: calc(1.25rem - 3px); }
+}
+
+.setting-meta { margin-bottom: .5rem; }
+.setting-label { display: block; font-weight: 600; font-size: .875rem; color: #111827; }
+.setting-desc  { display: block; font-size: .78rem; color: #6b7280; margin-top: .15rem; }
+.setting-updated { display: block; font-size: .68rem; color: #9ca3af; margin-top: .2rem; }
+
+.setting-value-row { display: flex; align-items: flex-start; gap: 1rem; }
+.setting-value { flex: 1; margin: 0; font-size: .875rem; color: #374151; line-height: 1.5; white-space: pre-wrap; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 6px; padding: .4rem .625rem; min-height: 2rem; }
+
+.setting-editor { display: flex; flex-direction: column; gap: .5rem; }
+.setting-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+.form-control {
+  width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 7px;
+  padding: .5rem .75rem; font-size: .875rem; color: #0f172a; font-family: inherit;
+  background: #fff; outline: none; transition: border-color .15s, box-shadow .15s;
+  resize: vertical;
+  &:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.1); }
+}
+
+.btn-xs { font-size: .7rem; padding: .2rem .5rem; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin .7s linear infinite; }
+  

@@ -1,0 +1,25 @@
+<div class="cb-page">
+  @if (status() === 'verifying') {
+    <div class="cb-card">
+      <div class="cb-spinner"></div>
+      <h2>Verifying payment…</h2>
+      <p>Please wait while we confirm your payment.</p>
+    </div>
+  } @else if (status() === 'success') {
+    <div class="cb-card cb-success">
+      <i class="bi bi-check-circle-fill cb-icon"></i>
+      <h2>Payment Successful!</h2>
+      <p>Your payment has been verified. Your order is being processed.</p>
+      <a routerLink="/orders" class="cb-btn-primary">View My Orders</a>
+    </div>
+  } @else {
+    <div class="cb-card cb-fail">
+      <i class="bi bi-x-circle-fill cb-icon"></i>
+      <h2>Payment Failed</h2>
+      <p>{{ errorMsg() || 'Your payment could not be verified. Please try again or contact support.' }}</p>
+      <div class="cb-actions">
+        <a routerLink="/orders" class="cb-btn-secondary">My Orders</a>
+      </div>
+    </div>
+  }
+</div>
