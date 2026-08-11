@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<INoticeService, NoticeService>();
         services.AddScoped<IReceiptService, ReceiptService>();
         services.AddScoped<IPasswordResetService, PasswordResetService>();
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
         return services;
     }
 }

@@ -1,0 +1,37 @@
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dialog-box {
+    background: white;
+    width: 350px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.3);
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-ok {
+    background: #16A34A;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 5px;
+}
+
+.btn-cancel {
+    background: #ddd;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 5px;
+}

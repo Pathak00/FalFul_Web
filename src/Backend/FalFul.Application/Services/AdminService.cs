@@ -64,7 +64,7 @@ public class AdminService : IAdminService
             if (roleId != null)
                 await _roles.AssignRoleAsync(id, roleId.Value, adminId);
 
-            return Result<int>.Success(id);
+            return Result<int>.Success(id,"");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
@@ -74,7 +74,7 @@ public class AdminService : IAdminService
         try
         {
             await _users.SetActiveAsync(dto.UserId, dto.IsActive, adminId);
-            return Result.Success();
+            return Result.Success("User Inactive");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -84,7 +84,7 @@ public class AdminService : IAdminService
         try
         {
             await _users.SetUserTypeAsync(dto.UserId, dto.UserType, adminId);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -97,7 +97,7 @@ public class AdminService : IAdminService
                 return Result.Failure("Password must be at least 6 characters.");
             var hash = _hasher.Hash(dto.NewPassword);
             await _users.ResetPasswordAsync(dto.UserId, hash, adminId);
-            return Result.Success();
+            return Result.Success("Password Reset Completed");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -107,7 +107,7 @@ public class AdminService : IAdminService
         try
         {
             await _users.SoftDeleteAsync(userId, adminId);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }

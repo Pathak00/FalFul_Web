@@ -43,7 +43,7 @@ public class ReceiptService(
         try
         {
             var id = await templates.CreateAsync(entity, publishedByUserId);
-            return Result<int>.Success(id);
+            return Result<int>.Success(id,"");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
@@ -64,7 +64,7 @@ public class ReceiptService(
         try
         {
             await templates.UpdateAsync(existing, saveVersion: true, dto.VersionLabel, publishedByUserId);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -74,7 +74,7 @@ public class ReceiptService(
         var existing = await templates.GetByIdAsync(id);
         if (existing is null) return Result.Failure("Template not found.");
 
-        try { await templates.DeleteAsync(id); return Result.Success(); }
+        try { await templates.DeleteAsync(id); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -103,7 +103,7 @@ public class ReceiptService(
         {
             await templates.UpdateAsync(template, saveVersion: true,
                 $"Restored from v{version.VersionNumber}", restoredByUserId);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -143,7 +143,7 @@ public class ReceiptService(
         {
             var id = await printLogs.CreateAsync(orderId, printedByUserId,
                 dto.Role, dto.TemplateId, dto.TemplateVersionId);
-            return Result<int>.Success(id);
+            return Result<int>.Success(id,"");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }

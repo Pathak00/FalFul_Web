@@ -1,3 +1,4 @@
+using FalFul.Application.DTOs.Product;
 using FalFul.Domain.Entities;
 
 namespace FalFul.Application.Interfaces;
@@ -13,4 +14,6 @@ public interface IProductRepository
     Task UpdateAsync(Product product);
     Task DeleteAsync(int id);
     Task SetAvailabilityAsync(int id, bool isAvailable);
+
+    Task<IEnumerable<SubscriptionProduct>> GetAllSubProduct();
 }

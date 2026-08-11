@@ -30,7 +30,7 @@ public class NoticeService(INoticeRepository notices) : INoticeService
                 IsActive   = dto.IsActive,
                 ImageUrl   = dto.ImageUrl
             });
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -53,14 +53,14 @@ public class NoticeService(INoticeRepository notices) : INoticeService
                 IsActive   = dto.IsActive,
                 ImageUrl   = dto.ImageUrl
             });
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeleteAsync(int id)
     {
-        try { await notices.DeleteAsync(id); return Result.Success(); }
+        try { await notices.DeleteAsync(id); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 

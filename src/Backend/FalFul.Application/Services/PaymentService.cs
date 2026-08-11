@@ -25,7 +25,7 @@ public class PaymentService(
         try
         {
             await methods.UpdateAsync(id, dto.IsEnabled, dto.DisplayOrder, dto.IconUrl?.Trim(), dto.Description?.Trim());
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -54,7 +54,7 @@ public class PaymentService(
             await settings.UpsertAsync("payment:advance:enabled",    dto.AdvanceEnabled ? "1" : "0");
             await settings.UpsertAsync("payment:advance:percent",    dto.AdvancePercent.ToString("F0"));
             await settings.UpsertAsync("payment:advance:min_amount", dto.MinAdvanceAmount.ToString("F0"));
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -101,7 +101,7 @@ public class PaymentService(
                 FormFields       = retryResult.FormFields,
                 AdvanceAmount    = pendingOnline.Amount,
                 Message          = "Retrying payment…"
-            });
+            },"");
         }
 
         if (order.Status != OrderStatus.Pending)
@@ -160,7 +160,7 @@ public class PaymentService(
                 AdvanceAmount    = advance,
                 BalanceAmount    = order.TotalAmount - advance,
                 Message          = $"Pay Rs {advance:F0} advance now. Remaining Rs {order.TotalAmount - advance:F0} on delivery."
-            });
+            },"");
         }
         else
         {
@@ -173,7 +173,7 @@ public class PaymentService(
                 {
                     RequiresRedirect = false,
                     Message          = "Order confirmed. Pay cash on delivery."
-                });
+                },"");
             }
 
             var gateway = ResolveGateway(chosenMethod.Code);
@@ -204,7 +204,7 @@ public class PaymentService(
                 FormFields       = result.FormFields,
                 AdvanceAmount    = order.TotalAmount,
                 Message          = "Redirecting to payment gateway."
-            });
+            }, "");
         }
     }
 
@@ -248,7 +248,7 @@ public class PaymentService(
         if (order?.Status == OrderStatus.AwaitingPayment)
             await orders.UpdateStatusAsync(payment.OrderId, OrderStatus.Pending);
 
-        return Result.Success();
+        return Result.Success("");
     }
 
     public async Task<Result> ConfirmCodBalanceAsync(int paymentId)
@@ -263,7 +263,7 @@ public class PaymentService(
         await payments.UpdateStatusAsync(paymentId, PaymentStatus.Completed,
             verify.GatewayTransactionId, verify.RawResponse);
 
-        return Result.Success();
+        return Result.Success("");
     }
 
     // ── Queries ────────────────────────────────────────────────────────────────

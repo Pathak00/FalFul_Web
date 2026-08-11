@@ -16,6 +16,7 @@ public class AuthService : IAuthService
     private readonly IGoogleAuthService _googleAuth;
     private readonly IRoleRepository _roleRepo;
     private readonly IPermissionRepository _permRepo;
+    private readonly ISubscriptionService _subSer;
 
     public AuthService(
         IUserRepository userRepo,
@@ -25,7 +26,8 @@ public class AuthService : IAuthService
         IPasswordHasher passwordHasher,
         IGoogleAuthService googleAuth,
         IRoleRepository roleRepo,
-        IPermissionRepository permRepo)
+        IPermissionRepository permRepo,
+        ISubscriptionService subSer)
     {
         _userRepo = userRepo;
         _orgRepo = orgRepo;
@@ -35,6 +37,7 @@ public class AuthService : IAuthService
         _googleAuth = googleAuth;
         _roleRepo = roleRepo;
         _permRepo = permRepo;
+        _subSer = subSer;
     }
 
     public async Task<Result<AuthResponseDto>> RegisterUserAsync(RegisterUserDto dto)
@@ -56,7 +59,7 @@ public class AuthService : IAuthService
 
         user.Id = await _userRepo.CreateAsync(user);
         await AssignCustomerRoleAsync(user.Id);
-        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
+        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user),"User Registered");
     }
 
     public async Task<Result<AuthResponseDto>> RegisterOrganizationAsync(RegisterOrganizationDto dto)
@@ -91,7 +94,7 @@ public class AuthService : IAuthService
 
         await _orgRepo.CreateAsync(org);
         await AssignCustomerRoleAsync(owner.Id);
-        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(owner));
+        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(owner),"Organization Registered");
     }
 
     public async Task<Result<AuthResponseDto>> LoginAsync(LoginDto dto)
@@ -108,7 +111,7 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             return Result<AuthResponseDto>.Failure("Account is deactivated.");
 
-        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
+        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user),"Login Sucessfully");
     }
 
     public async Task<Result<AuthResponseDto>> RefreshTokenAsync(string refreshToken)
@@ -123,7 +126,7 @@ public class AuthService : IAuthService
             return Result<AuthResponseDto>.Failure("User not found.");
 
         await _tokenRepo.RevokeAsync(refreshToken);
-        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
+        return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user),"Refresh token");
     }
 
     public async Task<Result<AuthResponseDto>> GoogleLoginAsync(string idToken)
@@ -144,7 +147,7 @@ public class AuthService : IAuthService
             if (existingRole == null)
                 await AssignCustomerRoleAsync(userId);
 
-            return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user));
+            return Result<AuthResponseDto>.Success(await BuildAuthResponseAsync(user),"Google Login Sucessed");
         }
         catch (Exception ex)
         {
@@ -155,7 +158,7 @@ public class AuthService : IAuthService
     public async Task<Result> LogoutAsync(string refreshToken)
     {
         await _tokenRepo.RevokeAsync(refreshToken);
-        return Result.Success();
+        return Result.Success("Logout Sucessfully");
     }
 
     private async Task AssignCustomerRoleAsync(int userId)
@@ -174,18 +177,32 @@ public class AuthService : IAuthService
         var accessToken = _jwtService.GenerateAccessToken(user, roleName, permissions);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
+        var subscriptionDetails = await _subSer.getUserSubscription(user.Id);
+
+        if (subscriptionDetails.IsSuccess)
+        {
+            if (subscriptionDetails.Data.CurrentPeriodEnd < DateTime.Now )
+            {
+                var result = await _subSer.RenewUserSubscription(user.Id, DateTime.Now.AddMonths(1));
+
+
+            }
+
+
+        }
+
         await _tokenRepo.SaveAsync(new RefreshToken
         {
             UserId = user.Id,
             Token = refreshToken,
-            ExpiresAt = NepalTime.Now.AddDays(30)
+            ExpiresAt = NepalTime.Now.AddDays(1)
         });
 
         return new AuthResponseDto
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = NepalTime.Now.AddMinutes(60),
+            ExpiresAt = NepalTime.Now.AddMinutes(5),
             User = new UserInfoDto
             {
                 Id = user.Id,

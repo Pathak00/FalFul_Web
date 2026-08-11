@@ -37,7 +37,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
             IsActive     = true
         };
 
-        try { var id = await categories.CreateAsync(entity); return Result<int>.Success(id); }
+        try { var id = await categories.CreateAsync(entity); return Result<int>.Success(id, ""); }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
 
@@ -57,7 +57,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         existing.DisplayOrder = dto.DisplayOrder;
         existing.IsActive     = dto.IsActive;
 
-        try { await categories.UpdateAsync(existing); return Result.Success(); }
+        try { await categories.UpdateAsync(existing); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -66,7 +66,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         var existing = await categories.GetByIdAsync(id);
         if (existing is null) return Result.Failure("Category not found.");
 
-        try { await categories.DeleteAsync(id); return Result.Success(); }
+        try { await categories.DeleteAsync(id); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -131,7 +131,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
             ShowInCatalog    = dto.ShowInCatalog
         };
 
-        try { var id = await products.CreateAsync(entity); return Result<int>.Success(id); }
+        try { var id = await products.CreateAsync(entity); return Result<int>.Success(id, ""); }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
 
@@ -164,7 +164,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         existing.CutFruitPrice    = dto.CutFruitPrice > 0 ? dto.CutFruitPrice : null;
         existing.ShowInCatalog    = dto.ShowInCatalog;
 
-        try { await products.UpdateAsync(existing); return Result.Success(); }
+        try { await products.UpdateAsync(existing); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -174,7 +174,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         if (existing is null) return Result.Failure("Product not found.");
 
         await products.DeleteAsync(id);
-        return Result.Success();
+        return Result.Success("");
     }
 
     public async Task<Result> SetProductAvailabilityAsync(int id, bool isAvailable)
@@ -183,7 +183,7 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         if (existing is null) return Result.Failure("Product not found.");
 
         await products.SetAvailabilityAsync(id, isAvailable);
-        return Result.Success();
+        return Result.Success("");
     }
 
     // ── Mappers ───────────────────────────────────────────────────────────────
@@ -216,4 +216,10 @@ public class ProductService(ICategoryRepository categories, IProductRepository p
         MinOrderGrams = p.MinOrderGrams, GramStep = p.GramStep, CutFruitPrice = p.CutFruitPrice,
         ShowInCatalog = p.ShowInCatalog
     };
+
+    public Task<IEnumerable<SubscriptionProduct>> GetSubProduct()
+    {
+        var subProduct = products.GetAllSubProduct();
+        return subProduct;
+    }
 }
