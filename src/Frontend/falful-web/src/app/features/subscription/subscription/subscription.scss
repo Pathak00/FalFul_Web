@@ -1,0 +1,157 @@
+.subscription-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.header h2 {
+  font-size: 2rem;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: #718096;
+}
+
+/* Plan Grid */
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.plan-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.plan-card.premium-card {
+  border: 2px solid #3b82f6;
+  position: relative;
+}
+
+/* Badges */
+.card-header {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge.tier {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.badge.tier.premium {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge.interval {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  color: #718096;
+}
+
+/* Content */
+.plan-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+}
+
+.plan-description {
+  color: #718096;
+  font-size: 0.925rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+/* Footer & Price */
+.card-footer {
+  border-top: 1px solid #edf2f7;
+  padding-top: 1.25rem;
+}
+
+.price-wrapper {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.currency-symbol {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.price-amount {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1a202c;
+  line-height: 1;
+}
+
+.price-period {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin-left: 0.25rem;
+}
+
+/* Button */
+.btn-select {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #16A34A;
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-select:hover {
+  background-color: #035521;
+}
+
+/* Loading & Empty States */
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #718096;
+}
+
+.empty-state .icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}

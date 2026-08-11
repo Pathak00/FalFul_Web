@@ -22,4 +22,6 @@ public interface IProductService
     Task<Result> UpdateProductAsync(int id, UpdateProductDto dto);
     Task<Result> DeleteProductAsync(int id);
     Task<Result> SetProductAvailabilityAsync(int id, bool isAvailable);
+
+    Task<IEnumerable<SubscriptionProduct>> GetSubProduct();
 }

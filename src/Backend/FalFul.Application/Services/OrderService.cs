@@ -40,7 +40,7 @@ public class OrderService(
             IsDefault   = dto.IsDefault
         };
 
-        try { var id = await addresses.CreateAsync(entity); return Result<int>.Success(id); }
+        try { var id = await addresses.CreateAsync(entity); return Result<int>.Success(id, ""); }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
 
@@ -60,7 +60,7 @@ public class OrderService(
         existing.PhoneNumber = dto.PhoneNumber.Trim();
         existing.IsDefault   = dto.IsDefault;
 
-        try { await addresses.UpdateAsync(existing); return Result.Success(); }
+        try { await addresses.UpdateAsync(existing); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -70,7 +70,7 @@ public class OrderService(
         if (existing is null || existing.UserId != userId) return Result.Failure("Address not found.");
 
         await addresses.DeleteAsync(id, userId);
-        return Result.Success();
+        return Result.Success("");
     }
 
     // ── Price Rules ───────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ public class OrderService(
         if (string.IsNullOrWhiteSpace(dto.RuleKey)) return Result.Failure("RuleKey is required.");
         if (dto.Value < 0)                           return Result.Failure("Value cannot be negative.");
 
-        try { await priceRules.UpsertAsync(dto.RuleKey.Trim(), dto.Value, dto.IsActive); return Result.Success(); }
+        try { await priceRules.UpsertAsync(dto.RuleKey.Trim(), dto.Value, dto.IsActive); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -206,7 +206,7 @@ public class OrderService(
             // Delivery record is NOT created at order placement.
             // It is created when admin transitions the order to ReadyForDelivery(4).
 
-            return Result<PlaceOrderResultDto>.Success(new PlaceOrderResultDto { OrderId = orderId, OrderNumber = orderNumber });
+            return Result<PlaceOrderResultDto>.Success(new PlaceOrderResultDto { OrderId = orderId, OrderNumber = orderNumber },"");
         }
         catch (Exception ex) { return Result<PlaceOrderResultDto>.Failure(ex.Message); }
     }
@@ -248,7 +248,7 @@ public class OrderService(
         if (order.Status != OrderStatus.Pending)
             return Result.Failure("Order cannot be cancelled at this stage. Cancellation is only allowed before admin confirmation.");
 
-        try { await orders.CancelAsync(id, userId, dto.CancelReason.Trim()); return Result.Success(); }
+        try { await orders.CancelAsync(id, userId, dto.CancelReason.Trim()); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -284,7 +284,7 @@ public class OrderService(
                 });
             }
 
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }

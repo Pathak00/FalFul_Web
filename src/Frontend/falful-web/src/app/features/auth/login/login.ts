@@ -12,23 +12,23 @@ import { GoogleSignInButtonComponent } from '../../../shared/components/google-s
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, GoogleSignInButtonComponent],
   templateUrl: './login.html',
-  styleUrl: './login.scss'
+  styleUrl: './login.scss',
 })
 export class LoginComponent {
-  private fb          = inject(FormBuilder);
+  private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-  private cart        = inject(CartService);
-  private homeRoute   = inject(HomeRouteService);
-  private perms       = inject(PermissionService);
-  private router      = inject(Router);
-  private route       = inject(ActivatedRoute);
+  private cart = inject(CartService);
+  private homeRoute = inject(HomeRouteService);
+  private perms = inject(PermissionService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
-  isLoading    = signal(false);
+  isLoading = signal(false);
   errorMessage = signal('');
 
   form = this.fb.group({
     identifier: ['', [Validators.required]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
   private redirectAfterLogin(): void {
@@ -44,16 +44,18 @@ export class LoginComponent {
 
   onGoogleLogin(idToken: string): void {
     console.log('[Google] token received, length:', idToken?.length);
+    console.log('[Google] token received, length:', idToken);
     this.isLoading.set(true);
     this.errorMessage.set('');
     this.authService.googleLogin(idToken).subscribe({
       next: () => this.redirectAfterLogin(),
       error: (err) => {
         console.error('[Google] sign-in error — status:', err.status, 'body:', err.error);
-        const msg = err.error?.message ?? err.message ?? `HTTP ${err.status}: Google sign-in failed.`;
+        const msg =
+          err.error?.message ?? err.message ?? `HTTP ${err.status}: Google sign-in failed.`;
         this.errorMessage.set(msg);
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -68,7 +70,7 @@ export class LoginComponent {
       error: (err) => {
         this.errorMessage.set(err.error?.message ?? 'Login failed. Please try again.');
         this.isLoading.set(false);
-      }
+      },
     });
   }
 }

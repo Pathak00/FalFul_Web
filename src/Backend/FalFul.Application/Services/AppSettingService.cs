@@ -28,7 +28,7 @@ public class AppSettingService(IAppSettingRepository repo) : IAppSettingService
         if (string.IsNullOrWhiteSpace(key))   return Result.Failure("Key is required.");
         if (string.IsNullOrWhiteSpace(value))  return Result.Failure("Value is required.");
 
-        try { await repo.UpsertAsync(key.Trim(), value.Trim()); return Result.Success(); }
+        try { await repo.UpsertAsync(key.Trim(), value.Trim()); return Result.Success("Upserted Sucessfully"); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 }

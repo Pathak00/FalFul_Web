@@ -35,7 +35,7 @@ public class DeliveryService(
 
         if (await deliveries.GetByIdAsync(id) is null) return Result.Failure("Delivery not found.");
 
-        try { await deliveries.AssignRiderAsync(id, dto.RiderUserId); return Result.Success(); }
+        try { await deliveries.AssignRiderAsync(id, dto.RiderUserId); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -50,7 +50,7 @@ public class DeliveryService(
         try
         {
             await deliveries.UpdateStatusAsync(id, dto.Status, dto.TrackingNotes?.Trim(), scheduledDate, dto.ScheduledTimeSlot?.Trim());
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -76,7 +76,7 @@ public class DeliveryService(
             RescheduledTimeSlot = dto.RescheduledTimeSlot?.Trim()
         };
 
-        try { await attempts.LogAsync(attempt); return Result.Success(); }
+        try { await attempts.LogAsync(attempt); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -93,13 +93,13 @@ public class DeliveryService(
             Description = dto.Description.Trim()
         };
 
-        try { await issues.CreateAsync(issue); return Result.Success(); }
+        try { await issues.CreateAsync(issue); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> ResolveIssueAsync(int issueId, ResolveIssueDto dto)
     {
-        try { await issues.ResolveAsync(issueId, dto.ResolutionNotes?.Trim()); return Result.Success(); }
+        try { await issues.ResolveAsync(issueId, dto.ResolutionNotes?.Trim()); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -129,7 +129,7 @@ public class DeliveryService(
         try
         {
             await deliveries.CompleteAsync(id, dto.CollectedAmount, dto.ProofPhotoUrl?.Trim(), dto.CollectionRemarks?.Trim());
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -156,7 +156,7 @@ public class DeliveryService(
             Comment              = dto.Comment?.Trim()
         };
 
-        try { await ratings.UpsertAsync(rating); return Result.Success(); }
+        try { await ratings.UpsertAsync(rating); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 

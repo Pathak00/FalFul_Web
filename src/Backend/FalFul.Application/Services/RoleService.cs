@@ -26,7 +26,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
             return Result.Failure("Role not found.");
 
         await roleRepo.AssignRoleAsync(userId, roleId, adminId);
-        return Result.Success();
+        return Result.Success("");
     }
 
     public async Task<Result<RoleDto>> CreateAsync(CreateRoleDto dto)
@@ -38,7 +38,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
         {
             var portalType = NormalisePortalType(dto.PortalType);
             var id = await roleRepo.CreateAsync(dto.Name.Trim(), dto.Description?.Trim(), portalType);
-            return Result<RoleDto>.Success(new RoleDto { Id = id, Name = dto.Name.Trim(), Description = dto.Description, PortalType = portalType });
+            return Result<RoleDto>.Success(new RoleDto { Id = id, Name = dto.Name.Trim(), Description = dto.Description, PortalType = portalType }, "");
         }
         catch (Exception ex)
         {
@@ -54,7 +54,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
         try
         {
             await roleRepo.UpdateAsync(id, dto.Name.Trim(), dto.Description?.Trim(), NormalisePortalType(dto.PortalType));
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex)
         {
@@ -81,7 +81,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
     public async Task<Result> SetRolePermissionsAsync(int roleId, SetRolePermissionsDto dto)
     {
         await roleRepo.SetRolePermissionsAsync(roleId, dto.PermissionIds);
-        return Result.Success();
+        return Result.Success("");
     }
 
     public async Task<Result> SetDefaultAsync(int roleId)
@@ -91,7 +91,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
             return Result.Failure("Role not found.");
 
         await roleRepo.SetDefaultAsync(roleId);
-        return Result.Success();
+        return Result.Success("");
     }
 
     public async Task<Result> DeleteAsync(int roleId)
@@ -99,7 +99,7 @@ public class RoleService(IRoleRepository roleRepo) : IRoleService
         try
         {
             await roleRepo.DeleteAsync(roleId);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex)
         {

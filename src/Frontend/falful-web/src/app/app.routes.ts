@@ -1,16 +1,23 @@
 import { Routes } from '@angular/router';
-import { anyPermGuard, authGuard, dynamicNavGuard, guestGuard, riderGuard } from './core/guards/auth.guard';
+import {
+  anyPermGuard,
+  authGuard,
+  dynamicNavGuard,
+  guestGuard,
+  riderGuard,
+} from './core/guards/auth.guard';
 import { AdminLayoutComponent } from './shared/layouts/admin-layout/admin-layout';
 import { AuthLayoutComponent } from './shared/layouts/auth-layout/auth-layout';
 import { MainLayoutComponent } from './shared/layouts/main-layout/main-layout';
+import { Subscription } from './features/subscription/subscription/subscription';
 
 export const routes: Routes = [
-
   /* ── /home: redirect authenticated users to their correct dashboard ──────── */
   {
     path: 'home',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/home-redirect/home-redirect').then(m => m.HomeRedirectComponent)
+    loadComponent: () =>
+      import('./features/home-redirect/home-redirect').then((m) => m.HomeRedirectComponent),
   },
 
   /* ── Main (public) site ──────────────────────────────────────────────────── */
@@ -20,95 +27,232 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/home/home').then(m => m.HomeComponent)
+        loadComponent: () => import('./features/home/home').then((m) => m.HomeComponent),
       },
       {
         path: 'dashboard',
         canActivate: [authGuard],
-        loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent)
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       {
         path: 'pages/:slug',
-        loadComponent: () => import('./features/pages/page-view/page-view').then(m => m.PageViewComponent)
+        loadComponent: () =>
+          import('./features/pages/page-view/page-view').then((m) => m.PageViewComponent),
       },
       {
         path: 'products',
-        loadComponent: () => import('./features/products/product-list/product-list').then(m => m.ProductListComponent)
+        loadComponent: () =>
+          import('./features/products/product-list/product-list').then(
+            (m) => m.ProductListComponent,
+          ),
       },
       {
         path: 'products/:slug',
-        loadComponent: () => import('./features/products/product-detail/product-detail').then(m => m.ProductDetailComponent)
+        loadComponent: () =>
+          import('./features/products/product-detail/product-detail').then(
+            (m) => m.ProductDetailComponent,
+          ),
       },
       {
         path: 'build-your-bowl',
-        loadComponent: () => import('./features/build-your-bowl/build-your-bowl').then(m => m.BuildYourBowlComponent)
+        loadComponent: () =>
+          import('./features/build-your-bowl/build-your-bowl').then(
+            (m) => m.BuildYourBowlComponent,
+          ),
       },
       {
         path: 'contact',
-        loadComponent: () => import('./features/contact/contact').then(m => m.ContactComponent)
+        loadComponent: () => import('./features/contact/contact').then((m) => m.ContactComponent),
       },
       {
         path: 'about',
-        loadComponent: () => import('./features/about/about').then(m => m.AboutComponent)
+        loadComponent: () => import('./features/about/about').then((m) => m.AboutComponent),
       },
       {
         path: 'notices',
-        loadComponent: () => import('./features/notices/notices-page').then(m => m.NoticesPageComponent)
+        loadComponent: () =>
+          import('./features/notices/notices-page').then((m) => m.NoticesPageComponent),
       },
       {
         /* Everyone can browse checkout; auth + role enforced at "Place Order" by the API */
         path: 'checkout',
-        loadComponent: () => import('./features/checkout/checkout').then(m => m.CheckoutComponent)
+        loadComponent: () =>
+          import('./features/checkout/checkout').then((m) => m.CheckoutComponent),
       },
       {
         path: 'orders',
         canActivate: [authGuard],
-        loadComponent: () => import('./features/orders/order-list/order-list').then(m => m.OrderListComponent)
+        loadComponent: () =>
+          import('./features/orders/order-list/order-list').then((m) => m.OrderListComponent),
       },
       {
         path: 'payment/callback',
-        loadComponent: () => import('./features/payment-callback/payment-callback').then(m => m.PaymentCallbackComponent)
+        loadComponent: () =>
+          import('./features/payment-callback/payment-callback').then(
+            (m) => m.PaymentCallbackComponent,
+          ),
       },
       {
         path: 'orders/:id',
         canActivate: [authGuard],
-        loadComponent: () => import('./features/orders/order-detail/order-detail').then(m => m.OrderDetailComponent)
+        loadComponent: () =>
+          import('./features/orders/order-detail/order-detail').then((m) => m.OrderDetailComponent),
       },
       {
         path: 'orders/:id/receipt',
         canActivate: [authGuard],
-        loadComponent: () => import('./features/orders/receipt/receipt').then(m => m.ReceiptPrintComponent)
-      }
-    ]
+        loadComponent: () =>
+          import('./features/orders/receipt/receipt').then((m) => m.ReceiptPrintComponent),
+      },
+      {
+        path: 'subscription',
+        loadComponent: () =>
+          import('./features/subscription/subscription/subscription').then((m) => m.Subscription),
+      },
+    ],
   },
 
   /* ── Admin panel ─────────────────────────────────────────────────────────── */
   {
     path: 'admin',
     component: AdminLayoutComponent,
-    canActivate: [authGuard, anyPermGuard],  // anyPermGuard now requires canEnterAdmin()
+    canActivate: [authGuard, anyPermGuard], // anyPermGuard now requires canEnterAdmin()
     children: [
-      { path: 'roles',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/roles/admin-roles').then(m => m.AdminRolesComponent) },
-      { path: 'menus',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/menus/admin-menus').then(m => m.AdminMenusComponent) },
-      { path: 'pages',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent) },
-      { path: 'banners',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/banners/admin-banners').then(m => m.AdminBannersComponent) },
-      { path: 'sections',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent) },
-      { path: 'users',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent) },
-      { path: 'categories',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/categories/admin-categories').then(m => m.AdminCategoriesComponent) },
-      { path: 'products',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent) },
-      { path: 'orders',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
-      { path: 'deliveries',   canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/deliveries/admin-deliveries').then(m => m.AdminDeliveriesComponent) },
-      { path: 'reports',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
-      { path: 'payments',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/payments/admin-payments').then(m => m.AdminPaymentsComponent) },
-      { path: 'price-config', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
-      { path: 'settings',     canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
-      { path: 'nav',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
-      { path: 'discounts',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
-      { path: 'notices',            canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
-      { path: 'receipt-templates',  canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-templates').then(m => m.AdminReceiptTemplatesComponent) },
-      { path: 'receipt-logs',       canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-logs').then(m => m.AdminReceiptLogsComponent) },
-      { path: '', loadComponent: () => import('./features/admin/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent) }
-    ]
+      {
+        path: 'roles',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/roles/admin-roles').then((m) => m.AdminRolesComponent),
+      },
+      {
+        path: 'menus',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/menus/admin-menus').then((m) => m.AdminMenusComponent),
+      },
+      {
+        path: 'pages',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-pages').then((m) => m.AdminPagesComponent),
+      },
+      {
+        path: 'banners',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/banners/admin-banners').then((m) => m.AdminBannersComponent),
+      },
+      {
+        path: 'sections',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/sections/admin-sections').then((m) => m.AdminSectionsComponent),
+      },
+      {
+        path: 'users',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/users/admin-users').then((m) => m.AdminUsersComponent),
+      },
+      {
+        path: 'categories',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/categories/admin-categories').then(
+            (m) => m.AdminCategoriesComponent,
+          ),
+      },
+      {
+        path: 'products',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/products/admin-products').then((m) => m.AdminProductsComponent),
+      },
+      {
+        path: 'orders',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/orders/admin-orders').then((m) => m.AdminOrdersComponent),
+      },
+      {
+        path: 'deliveries',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/deliveries/admin-deliveries').then(
+            (m) => m.AdminDeliveriesComponent,
+          ),
+      },
+      {
+        path: 'reports',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/reports/admin-reports').then((m) => m.AdminReportsComponent),
+      },
+      {
+        path: 'payments',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/payments/admin-payments').then((m) => m.AdminPaymentsComponent),
+      },
+      {
+        path: 'price-config',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/price-config/admin-price-config').then(
+            (m) => m.AdminPriceConfigComponent,
+          ),
+      },
+      {
+        path: 'settings',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/settings/admin-settings').then((m) => m.AdminSettingsComponent),
+      },
+      {
+        path: 'nav',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/nav/admin-nav').then((m) => m.AdminNavComponent),
+      },
+      {
+        path: 'discounts',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/discounts/admin-discounts').then(
+            (m) => m.AdminDiscountsComponent,
+          ),
+      },
+      {
+        path: 'notices',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/notices/admin-notices').then((m) => m.AdminNoticesComponent),
+      },
+      {
+        path: 'receipt-templates',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/receipts/admin-receipt-templates').then(
+            (m) => m.AdminReceiptTemplatesComponent,
+          ),
+      },
+      {
+        path: 'receipt-logs',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/receipts/admin-receipt-logs').then(
+            (m) => m.AdminReceiptLogsComponent,
+          ),
+      },
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/admin/dashboard/admin-dashboard').then(
+            (m) => m.AdminDashboardComponent,
+          ),
+      },
+    ],
   },
 
   /* ── Rider portal ────────────────────────────────────────────────────────── */
@@ -121,31 +265,136 @@ export const routes: Routes = [
   {
     path: 'rider',
     canActivate: [authGuard, riderGuard],
-    loadComponent: () => import('./features/rider/rider-layout').then(m => m.RiderLayoutComponent),
+    loadComponent: () =>
+      import('./features/rider/rider-layout').then((m) => m.RiderLayoutComponent),
     children: [
       // Rider-specific delivery view (replaces admin-deliveries for riders)
-      { path: 'deliveries',        loadComponent: () => import('./features/rider/rider-deliveries').then(m => m.RiderDeliveriesComponent) },
+      {
+        path: 'deliveries',
+        loadComponent: () =>
+          import('./features/rider/rider-deliveries').then((m) => m.RiderDeliveriesComponent),
+      },
       // All admin features — guarded by dynamicNavGuard (checks permission via /admin/* mapping)
-      { path: 'orders',            canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/orders/admin-orders').then(m => m.AdminOrdersComponent) },
-      { path: 'products',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/products/admin-products').then(m => m.AdminProductsComponent) },
-      { path: 'categories',        canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/categories/admin-categories').then(m => m.AdminCategoriesComponent) },
-      { path: 'reports',           canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/reports/admin-reports').then(m => m.AdminReportsComponent) },
-      { path: 'payments',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/payments/admin-payments').then(m => m.AdminPaymentsComponent) },
-      { path: 'discounts',         canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/discounts/admin-discounts').then(m => m.AdminDiscountsComponent) },
-      { path: 'notices',           canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/notices/admin-notices').then(m => m.AdminNoticesComponent) },
-      { path: 'users',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/users/admin-users').then(m => m.AdminUsersComponent) },
-      { path: 'roles',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/roles/admin-roles').then(m => m.AdminRolesComponent) },
-      { path: 'settings',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/settings/admin-settings').then(m => m.AdminSettingsComponent) },
-      { path: 'price-config',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/price-config/admin-price-config').then(m => m.AdminPriceConfigComponent) },
-      { path: 'menus',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/menus/admin-menus').then(m => m.AdminMenusComponent) },
-      { path: 'pages',             canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/pages/admin-pages').then(m => m.AdminPagesComponent) },
-      { path: 'banners',           canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/banners/admin-banners').then(m => m.AdminBannersComponent) },
-      { path: 'sections',          canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/sections/admin-sections').then(m => m.AdminSectionsComponent) },
-      { path: 'nav',               canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/nav/admin-nav').then(m => m.AdminNavComponent) },
-      { path: 'receipt-templates', canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-templates').then(m => m.AdminReceiptTemplatesComponent) },
-      { path: 'receipt-logs',      canActivate: [dynamicNavGuard], loadComponent: () => import('./features/admin/receipts/admin-receipt-logs').then(m => m.AdminReceiptLogsComponent) },
-      { path: '', redirectTo: 'deliveries', pathMatch: 'full' }
-    ]
+      {
+        path: 'orders',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/orders/admin-orders').then((m) => m.AdminOrdersComponent),
+      },
+      {
+        path: 'products',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/products/admin-products').then((m) => m.AdminProductsComponent),
+      },
+      {
+        path: 'categories',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/categories/admin-categories').then(
+            (m) => m.AdminCategoriesComponent,
+          ),
+      },
+      {
+        path: 'reports',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/reports/admin-reports').then((m) => m.AdminReportsComponent),
+      },
+      {
+        path: 'payments',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/payments/admin-payments').then((m) => m.AdminPaymentsComponent),
+      },
+      {
+        path: 'discounts',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/discounts/admin-discounts').then(
+            (m) => m.AdminDiscountsComponent,
+          ),
+      },
+      {
+        path: 'notices',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/notices/admin-notices').then((m) => m.AdminNoticesComponent),
+      },
+      {
+        path: 'users',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/users/admin-users').then((m) => m.AdminUsersComponent),
+      },
+      {
+        path: 'roles',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/roles/admin-roles').then((m) => m.AdminRolesComponent),
+      },
+      {
+        path: 'settings',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/settings/admin-settings').then((m) => m.AdminSettingsComponent),
+      },
+      {
+        path: 'price-config',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/price-config/admin-price-config').then(
+            (m) => m.AdminPriceConfigComponent,
+          ),
+      },
+      {
+        path: 'menus',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/menus/admin-menus').then((m) => m.AdminMenusComponent),
+      },
+      {
+        path: 'pages',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-pages').then((m) => m.AdminPagesComponent),
+      },
+      {
+        path: 'banners',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/banners/admin-banners').then((m) => m.AdminBannersComponent),
+      },
+      {
+        path: 'sections',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/sections/admin-sections').then((m) => m.AdminSectionsComponent),
+      },
+      {
+        path: 'nav',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/nav/admin-nav').then((m) => m.AdminNavComponent),
+      },
+      {
+        path: 'receipt-templates',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/receipts/admin-receipt-templates').then(
+            (m) => m.AdminReceiptTemplatesComponent,
+          ),
+      },
+      {
+        path: 'receipt-logs',
+        canActivate: [dynamicNavGuard],
+        loadComponent: () =>
+          import('./features/admin/receipts/admin-receipt-logs').then(
+            (m) => m.AdminReceiptLogsComponent,
+          ),
+      },
+      { path: '', redirectTo: 'deliveries', pathMatch: 'full' },
+    ],
   },
 
   /* ── Auth ────────────────────────────────────────────────────────────────── */
@@ -154,15 +403,44 @@ export const routes: Routes = [
     component: AuthLayoutComponent,
     canActivate: [guestGuard],
     children: [
-      { path: 'login',                 loadComponent: () => import('./features/auth/login/login').then(m => m.LoginComponent) },
-      { path: 'register',              loadComponent: () => import('./features/auth/register/register').then(m => m.RegisterComponent) },
-      { path: 'register-organization', loadComponent: () => import('./features/auth/register-organization/register-organization').then(m => m.RegisterOrganizationComponent) },
-      { path: 'forgot-password',       loadComponent: () => import('./features/auth/forgot-password/forgot-password').then(m => m.ForgotPasswordComponent) },
-      { path: 'verify-otp',            loadComponent: () => import('./features/auth/verify-otp/verify-otp').then(m => m.VerifyOtpComponent) },
-      { path: 'reset-password',        loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPasswordComponent) },
-      { path: '', redirectTo: 'login', pathMatch: 'full' }
-    ]
+      {
+        path: 'login',
+        loadComponent: () => import('./features/auth/login/login').then((m) => m.LoginComponent),
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./features/auth/register/register').then((m) => m.RegisterComponent),
+      },
+      {
+        path: 'register-organization',
+        loadComponent: () =>
+          import('./features/auth/register-organization/register-organization').then(
+            (m) => m.RegisterOrganizationComponent,
+          ),
+      },
+      {
+        path: 'forgot-password',
+        loadComponent: () =>
+          import('./features/auth/forgot-password/forgot-password').then(
+            (m) => m.ForgotPasswordComponent,
+          ),
+      },
+      {
+        path: 'verify-otp',
+        loadComponent: () =>
+          import('./features/auth/verify-otp/verify-otp').then((m) => m.VerifyOtpComponent),
+      },
+      {
+        path: 'reset-password',
+        loadComponent: () =>
+          import('./features/auth/reset-password/reset-password').then(
+            (m) => m.ResetPasswordComponent,
+          ),
+      },
+      { path: '', redirectTo: 'login', pathMatch: 'full' },
+    ],
   },
 
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];

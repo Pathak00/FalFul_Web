@@ -65,7 +65,7 @@ public class DiscountService(IDiscountRepository discounts) : IDiscountService
                 EndDate        = dto.EndDate,
                 IsActive       = dto.IsActive
             });
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
@@ -94,14 +94,14 @@ public class DiscountService(IDiscountRepository discounts) : IDiscountService
                 EndDate        = dto.EndDate,
                 IsActive       = dto.IsActive
             });
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeleteAsync(int id)
     {
-        try { await discounts.DeleteAsync(id); return Result.Success(); }
+        try { await discounts.DeleteAsync(id); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 

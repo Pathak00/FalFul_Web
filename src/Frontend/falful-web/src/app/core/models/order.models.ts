@@ -1,4 +1,4 @@
-export type CartItemType = 'PRODUCT' | 'BUILD_BOWL';
+export type CartItemType = 'PRODUCT' | 'BUILD_BOWL' | 'SUBSCRIPTION';
 
 export interface CartItem {
   itemType: CartItemType;
@@ -207,7 +207,7 @@ export interface DeliveryReport {
   avgAttempts: number;
   avgRating?: number;
   failureBreakdown: { failureReason: number; failureReasonLabel: string; count: number }[];
-  statusBreakdown:  { status: number; statusLabel: string; count: number }[];
+  statusBreakdown: { status: number; statusLabel: string; count: number }[];
 }
 
 export interface OrderReport {
@@ -218,8 +218,13 @@ export interface OrderReport {
   totalRevenue: number;
   avgOrderValue: number;
   deliveredRevenue: number;
-  statusBreakdown:  { status: number; statusLabel: string; count: number; revenue: number }[];
-  paymentBreakdown: { paymentMethod: number; paymentMethodLabel: string; count: number; revenue: number }[];
+  statusBreakdown: { status: number; statusLabel: string; count: number; revenue: number }[];
+  paymentBreakdown: {
+    paymentMethod: number;
+    paymentMethodLabel: string;
+    count: number;
+    revenue: number;
+  }[];
 }
 
 export interface PlaceOrderRequest {
@@ -264,37 +269,37 @@ export interface PlaceOrderItemRequest {
 }
 
 export const ORDER_STATUSES: Record<number, { label: string; color: string }> = {
-  7: { label: 'Awaiting Payment',     color: '#f97316' },
-  1: { label: 'Pending',              color: '#f59e0b' },
-  2: { label: 'Confirmed',            color: '#3b82f6' },
-  3: { label: 'Preparing',            color: '#8b5cf6' },
-  4: { label: 'Ready for Delivery',   color: '#06b6d4' },
-  5: { label: 'Cancelled',            color: '#ef4444' },
-  6: { label: 'Rejected',             color: '#dc2626' },
+  7: { label: 'Awaiting Payment', color: '#f97316' },
+  1: { label: 'Pending', color: '#f59e0b' },
+  2: { label: 'Confirmed', color: '#3b82f6' },
+  3: { label: 'Preparing', color: '#8b5cf6' },
+  4: { label: 'Ready for Delivery', color: '#06b6d4' },
+  5: { label: 'Cancelled', color: '#ef4444' },
+  6: { label: 'Rejected', color: '#dc2626' },
 };
 
 export const DELIVERY_STATUSES: Record<number, { label: string; color: string; icon: string }> = {
-  1: { label: 'Awaiting Rider',       color: '#94a3b8', icon: 'bi-calendar-check'       },
-  2: { label: 'Rider Assigned',       color: '#3b82f6', icon: 'bi-person-check'         },
-  3: { label: 'Picked Up',            color: '#8b5cf6', icon: 'bi-box-seam'             },
-  4: { label: 'Out for Delivery',     color: '#06b6d4', icon: 'bi-bicycle'              },
-  5: { label: 'Delivered',            color: '#22c55e', icon: 'bi-house-check'          },
-  6: { label: 'Delivery Failed',      color: '#f59e0b', icon: 'bi-exclamation-triangle' },
-  7: { label: 'Customer Unavailable', color: '#fb923c', icon: 'bi-person-dash'          },
-  8: { label: 'Rescheduled',          color: '#a78bfa', icon: 'bi-calendar-plus'        },
-  9: { label: 'Returned',             color: '#ef4444', icon: 'bi-box-arrow-left'       },
+  1: { label: 'Awaiting Rider', color: '#94a3b8', icon: 'bi-calendar-check' },
+  2: { label: 'Rider Assigned', color: '#3b82f6', icon: 'bi-person-check' },
+  3: { label: 'Picked Up', color: '#8b5cf6', icon: 'bi-box-seam' },
+  4: { label: 'Out for Delivery', color: '#06b6d4', icon: 'bi-bicycle' },
+  5: { label: 'Delivered', color: '#22c55e', icon: 'bi-house-check' },
+  6: { label: 'Delivery Failed', color: '#f59e0b', icon: 'bi-exclamation-triangle' },
+  7: { label: 'Customer Unavailable', color: '#fb923c', icon: 'bi-person-dash' },
+  8: { label: 'Rescheduled', color: '#a78bfa', icon: 'bi-calendar-plus' },
+  9: { label: 'Returned', color: '#ef4444', icon: 'bi-box-arrow-left' },
 };
 
 export const DELIVERY_FAILURE_REASONS: Record<number, string> = {
-  1:  'Customer Not Home',
-  2:  'Wrong Address',
-  3:  'Customer Refused',
-  4:  'Payment Refused',
-  5:  'Product Damaged',
-  6:  'Weather Conditions',
-  7:  'Vehicle Breakdown',
-  8:  'Contact Not Reachable',
-  9:  'Address Not Found',
+  1: 'Customer Not Home',
+  2: 'Wrong Address',
+  3: 'Customer Refused',
+  4: 'Payment Refused',
+  5: 'Product Damaged',
+  6: 'Weather Conditions',
+  7: 'Vehicle Breakdown',
+  8: 'Contact Not Reachable',
+  9: 'Address Not Found',
   10: 'Other',
 };
 
@@ -314,5 +319,3 @@ export const PAYMENT_METHODS: Record<number, string> = {
   2: 'eSewa',
   3: 'Khalti',
 };
-
-;

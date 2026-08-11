@@ -1,4 +1,5 @@
 using Dapper;
+using FalFul.Application.DTOs.Product;
 using FalFul.Application.Interfaces;
 using FalFul.Domain.Entities;
 using FalFul.Persistence.Context;
@@ -122,5 +123,14 @@ public class ProductRepository(DapperContext context) : IProductRepository
             "sp_Product_SetAvailability",
             new { Id = id, IsAvailable = isAvailable },
             commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<IEnumerable<SubscriptionProduct>> GetAllSubProduct()
+    {
+        using var conn = context.CreateConnection();
+        var Subscriptionproduct = await conn.QueryAsync<SubscriptionProduct>("sp_GetSubscriptionProduct",
+            new {flag='A'}
+            , commandType: CommandType.StoredProcedure);
+        return Subscriptionproduct;
     }
 }

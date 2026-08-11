@@ -41,7 +41,7 @@ public class CmsService : ICmsService
             var item = new MenuItem { ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab, RequiredPortalType = dto.RequiredPortalType };
             var id = await _menus.CreateAsync(item, adminId);
             await _menus.SetRolesAsync(id, dto.RequiredRoleIds);
-            return Result<int>.Success(id);
+            return Result<int>.Success(id, "");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
@@ -53,14 +53,16 @@ public class CmsService : ICmsService
             var item = new MenuItem { Id = dto.Id, ParentId = dto.ParentId, Label = dto.Label, Url = dto.Url, Icon = dto.Icon, DisplayOrder = dto.DisplayOrder, IsVisible = dto.IsVisible, VisibleTo = dto.VisibleTo, OpenInNewTab = dto.OpenInNewTab, RequiredPortalType = dto.RequiredPortalType };
             await _menus.UpdateAsync(item, adminId);
             await _menus.SetRolesAsync(dto.Id, dto.RequiredRoleIds);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeleteMenuItemAsync(int id, int? adminId)
     {
-        try { await _menus.DeleteAsync(id, adminId); return Result.Success(); }
+        try { 
+             await _menus.DeleteAsync(id, adminId); 
+            return Result.Success("Deleted Sucessfully"); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -88,7 +90,7 @@ public class CmsService : ICmsService
                 IsPublished = dto.IsPublished
             };
             var id = await _pages.CreateAsync(page, adminId);
-            return Result<int>.Success(id);
+            return Result<int>.Success(id,"");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
@@ -104,14 +106,14 @@ public class CmsService : ICmsService
                 IsPublished = dto.IsPublished
             };
             await _pages.UpdateAsync(page, adminId);
-            return Result.Success();
+            return Result.Success("Updated sucessfully");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeletePageAsync(int id, int? adminId)
     {
-        try { await _pages.DeleteAsync(id, adminId); return Result.Success(); }
+        try { await _pages.DeleteAsync(id, adminId); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -129,14 +131,14 @@ public class CmsService : ICmsService
     {
         var p = await _pages.GetByIdAsync(id);
         if (p == null) return Result<PageDetailDto>.Failure("Page not found.");
-        return Result<PageDetailDto>.Success(MapDetail(p));
+        return Result<PageDetailDto>.Success(MapDetail(p),"");
     }
 
     public async Task<Result<PageDetailDto>> GetPageBySlugAsync(string slug, bool adminMode = false)
     {
         var p = await _pages.GetBySlugAsync(slug, adminMode);
         if (p == null) return Result<PageDetailDto>.Failure("Page not found.");
-        return Result<PageDetailDto>.Success(MapDetail(p));
+        return Result<PageDetailDto>.Success(MapDetail(p),"");
     }
 
     private static PageDetailDto MapDetail(Page p) => new()
@@ -154,7 +156,7 @@ public class CmsService : ICmsService
         {
             var banner = MapBannerFromCreate(dto);
             var id = await _banners.CreateAsync(banner, adminId);
-            return Result<int>.Success(id);
+            return Result<int>.Success(id, "");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }
@@ -166,14 +168,14 @@ public class CmsService : ICmsService
             var banner = MapBannerFromCreate(dto);
             banner.Id = dto.Id;
             await _banners.UpdateAsync(banner, adminId);
-            return Result.Success();
+            return Result.Success("");
         }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
     public async Task<Result> DeleteBannerAsync(int id, int? adminId)
     {
-        try { await _banners.DeleteAsync(id, adminId); return Result.Success(); }
+        try { await _banners.DeleteAsync(id, adminId); return Result.Success(""); }
         catch (Exception ex) { return Result.Failure(ex.Message); }
     }
 
@@ -229,7 +231,7 @@ public class CmsService : ICmsService
                 Content = dto.Content, IsVisible = dto.IsVisible, DisplayOrder = dto.DisplayOrder
             };
             var id = await _sections.UpsertAsync(section, adminId);
-            return Result<int>.Success(id);
+            return Result<int>.Success(id,"");
         }
         catch (Exception ex) { return Result<int>.Failure(ex.Message); }
     }

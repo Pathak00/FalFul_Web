@@ -37,7 +37,7 @@ public class PasswordResetService(
 
         // Always succeed to prevent user enumeration
         if (user is null || !user.IsActive)
-            return Result<ForgotPasswordResponseDto>.Success(BuildFakeResponse(isEmail, identifier));
+            return Result<ForgotPasswordResponseDto>.Success(BuildFakeResponse(isEmail, identifier),"forget Password");
 
         // Rate-limit: max 3 OTPs per user / IP in 15 minutes
         var recentUser = await otpRepo.CountRecentAsync(user.Id, null, RateLimitWindow);
@@ -46,7 +46,7 @@ public class PasswordResetService(
             : 0;
 
         if (recentUser >= RateLimitMax || recentIp >= RateLimitMax)
-            return Result<ForgotPasswordResponseDto>.Success(BuildFakeResponse(isEmail, identifier));
+            return Result<ForgotPasswordResponseDto>.Success(BuildFakeResponse(isEmail, identifier),"Forget Password");
 
         // Generate + hash OTP
         var plainOtp = Random.Shared.Next(100_000, 1_000_000).ToString();
@@ -76,7 +76,7 @@ public class PasswordResetService(
             MaskedDestination = masked,
             Channel           = isEmail ? "email" : "sms",
             ExpiresInMinutes  = OtpExpiryMinutes,
-        });
+        },"Forget PAssword");
     }
 
     // ── Step 2: verify OTP → return reset token ───────────────────────────────
@@ -131,7 +131,7 @@ public class PasswordResetService(
         {
             ResetToken       = rawToken,
             ExpiresInMinutes = TokenExpiryMinutes,
-        });
+        },"");
     }
 
     // ── Step 3: set new password ──────────────────────────────────────────────
@@ -152,7 +152,7 @@ public class PasswordResetService(
         await tokenRepo.MarkUsedAsync(record.Id);
         await refreshTokens.RevokeAllByUserAsync(record.UserId);
 
-        return Result.Success();
+        return Result.Success( "");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

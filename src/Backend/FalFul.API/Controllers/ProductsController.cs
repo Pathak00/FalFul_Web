@@ -23,6 +23,13 @@ public class ProductsController(IProductService productService, IFileService fil
         return Ok(list);
     }
 
+
+    [HttpGet("SubscriptionProduct")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSubProduct() =>
+       Ok(await productService.GetSubProduct());
+
+
     [HttpGet("featured")]
     [AllowAnonymous]
     public async Task<IActionResult> GetFeatured() =>

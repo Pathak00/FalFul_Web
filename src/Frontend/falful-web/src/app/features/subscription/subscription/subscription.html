@@ -1,0 +1,71 @@
+<div class="subscription-container">
+
+    <div class="header">
+        <h2>Choose Your Subscription Plan</h2>
+        <p>Select the plan tier and billing cycle that best fits your lifestyle.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading subscription plans...</p>
+    </div>
+
+    <!-- Cards Grid View -->
+    <div *ngIf="!loading() && subscriptionProduct().length > 0" class="plan-grid">
+        <div *ngFor="let product of subscriptionProduct()" class="plan-card"
+            [class.premium-card]="product.subsType === 'Premium'">
+
+            <!-- Top Header & Badges -->
+            <div class="card-header">
+                <span class="badge tier" [class.premium]="product.subsType === 'Premium'">
+                    {{ product.subsType || 'Standard' }}
+                </span>
+                <span class="badge interval" *ngIf="product.billingInterval">
+                    {{ product.billingInterval | titlecase }}
+                </span>
+            </div>
+
+            <!-- Plan Name & Description -->
+            <div class="card-body">
+                <h3 class="plan-title">{{ product.name }}</h3>
+                <p class="plan-description">{{ product.description }}</p>
+            </div>
+
+            <!-- Price & Action CTA -->
+            <div class="card-footer">
+                <div class="price-wrapper">
+                    <span class="currency-symbol">$</span>
+                    <span class="price-amount">{{ product.price }}</span>
+                    <span class="price-period" *ngIf="product.billingInterval">
+                        / {{ product.billingInterval }}
+                    </span>
+                </div>
+
+                <!-- <a routerLink="/checkout" (click)="close.emit()" class="btn-checkout">
+                    <i class="bi bi-bag-check"></i> Proceed to Checkout
+                </a> -->
+                <!-- <button type="button" routerLink="/checkout" (click)="AddToCart"  class="btn-select">
+                    Select Plan
+                </button> -->
+
+                <button type="button" class="btn-select" (click)="onSelectPlan(product)">
+                    Select Plan
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading() && subscriptionProduct().length === 0">
+        <div class="icon">📦</div>
+        <h3>No Plans Available</h3>
+        <p>Check back later for updated subscription packages.</p>
+    </div>
+
+    <app-pop-up-dialog *ngIf="showDialog" [title]="dialogTitle" [message]="dialogMessage" [okText]="'ok'"
+        [cancelText]="'Cancel'" (confirm)="handleDialogResult($event)">
+    </app-pop-up-dialog>
+
+</div>
