@@ -1,4 +1,3 @@
-using System.Text;
 using FalFul.API;
 using FalFul.API.Authorization;
 using FalFul.API.Middleware;
@@ -9,7 +8,9 @@ using FalFul.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,15 +20,33 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
         opt.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeConverter());
     });
+
+
 builder.Services.AddOpenApi(options =>
 {
-    options.AddDocumentTransformer((document, context, _) =>
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
         document.Info.Title = "FalFul API";
         document.Info.Description = "FalFul Fruit eCommerce REST API";
+
+        document.Components ??= new OpenApiComponents();
+
+        document.Components.SecuritySchemes ??=
+            new Dictionary<string, IOpenApiSecurityScheme>();
+
+        document.Components.SecuritySchemes["Bearer"] =
+            new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Enter your JWT token"
+            };
+
         return Task.CompletedTask;
     });
 });
+
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -76,14 +95,21 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.MapOpenApi();
-app.MapScalarApiReference(options =>
+//app.MapScalarApiReference("/scalar",options =>
+//{
+//    options
+//        .WithTitle("FalFul API")
+//        .AddPreferredSecuritySchemes("Bearer")
+//        .AddHttpAuthentication("Bearer", _ => { });
+//});
+
+app.MapScalarApiReference("/scalar", options =>
 {
     options
         .WithTitle("FalFul API")
         .AddPreferredSecuritySchemes("Bearer")
         .AddHttpAuthentication("Bearer", _ => { });
 });
-
 app.MapGet("/env", (IWebHostEnvironment env) => env.EnvironmentName);
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
