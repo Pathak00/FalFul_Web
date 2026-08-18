@@ -1,8 +1,12 @@
 using FalFul.API;
 using FalFul.API.Authorization;
+using FalFul.API.Hubs;
 using FalFul.API.Middleware;
+using FalFul.API.Services;
 using FalFul.API.Startup;
 using FalFul.Application;
+using FalFul.Application.Interfaces;
+using FalFul.Application.Services;
 using FalFul.Infrastructure;
 using FalFul.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -47,11 +51,15 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-
+builder.Services.AddSignalR();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence();
-builder.Services.AddScoped<FalFul.API.Services.IFileService, FalFul.API.Services.FileService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<
+    INotificationSender,
+    SignalRNotificationSender>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<ImageUrlNormalizationService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
@@ -61,9 +69,7 @@ if (string.IsNullOrWhiteSpace(jwtKey))
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Keep raw JWT claim names (sub, email, jti) instead of mapping them to
-        // the long ClaimTypes URIs. Without this, User.FindFirstValue("sub") returns
-        // null because the middleware remaps sub → ClaimTypes.NameIdentifier.
+   
         options.MapInboundClaims = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -111,6 +117,9 @@ app.MapScalarApiReference("/scalar", options =>
         .AddHttpAuthentication("Bearer", _ => { });
 });
 app.MapGet("/env", (IWebHostEnvironment env) => env.EnvironmentName);
+
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("FalFulPolicy");

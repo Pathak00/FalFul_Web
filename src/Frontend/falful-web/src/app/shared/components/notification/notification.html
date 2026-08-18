@@ -1,0 +1,78 @@
+<div class="notification-wrapper">
+
+    <!-- Notification Bell -->
+    <button class="notification-btn" (click)="toggleNotifications()">
+        <span class="bell">🔔</span>
+
+        <span class="notification-badge" *ngIf="unreadCount > 0">
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+        </span>
+    </button>
+
+    <!-- Notification Dropdown -->
+    <div class="notification-dropdown" *ngIf="showNotifications">
+
+        <!-- Header -->
+        <div class="notification-header">
+            <div>
+                <h3>Notifications</h3>
+                <span *ngIf="unreadCount > 0">
+                    {{ unreadCount }} unread
+                </span>
+            </div>
+
+            <button class="mark-read-btn" *ngIf="unreadCount > 0" (click)="markAllAsRead()">
+                Mark all as read
+            </button>
+        </div>
+
+        <!-- Notifications -->
+        <div class="notification-list">
+
+            <div class="notification-item" *ngFor="let notification of notifications"
+                [class.unread]="!notification.isRead" (click)="openNotification(notification)">
+
+                <div class="notification-icon">
+                    🛒
+                </div>
+
+                <div class="notification-content">
+                    <h4>{{ notification.title }}</h4>
+
+                    <p>{{ notification.message }}</p>
+
+                    <span class="notification-time">
+                        {{ notification.createdAt | date:'short' }}
+                    </span>
+                </div>
+
+                <span class="unread-dot" *ngIf="!notification.isRead">
+                </span>
+
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-notification" *ngIf="notifications.length === 0">
+
+                <div class="empty-icon">🔔</div>
+
+                <h4>No notifications</h4>
+
+                <p>You're all caught up!</p>
+
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="notification-footer" *ngIf="notifications.length > 0">
+
+            <button (click)="viewAllNotifications()">
+                View all notifications
+            </button>
+
+        </div>
+
+    </div>
+
+</div>

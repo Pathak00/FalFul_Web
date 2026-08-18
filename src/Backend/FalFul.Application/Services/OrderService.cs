@@ -258,14 +258,14 @@ public class OrderService(
         return list.Select(MapSummary);
     }
 
-    public async Task<Result> UpdateOrderStatusAsync(int id, UpdateOrderStatusDto dto)
+    public async Task<Result<Order>> UpdateOrderStatusAsync(int id, UpdateOrderStatusDto dto)
     {
         var order = await orders.GetByIdAsync(id);
-        if (order is null) return Result.Failure("Order not found.");
+        if (order is null) return Result<Order>.Failure("Order not found.");
 
         if ((dto.Status == OrderStatus.Cancelled || dto.Status == OrderStatus.Rejected)
             && string.IsNullOrWhiteSpace(dto.Reason))
-            return Result.Failure("A reason is required when cancelling or rejecting an order.");
+            return Result<Order>.Failure("A reason is required when cancelling or rejecting an order.");
 
         try
         {
@@ -284,9 +284,9 @@ public class OrderService(
                 });
             }
 
-            return Result.Success("");
+            return Result<Order>.Success(order,"");
         }
-        catch (Exception ex) { return Result.Failure(ex.Message); }
+        catch (Exception ex) { return Result<Order>.Failure(ex.Message); }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

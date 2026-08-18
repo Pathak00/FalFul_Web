@@ -6,10 +6,12 @@ import { OrderService } from '../../core/services/order.service';
 import { OrderSummary, ORDER_STATUSES, DELIVERY_STATUSES } from '../../core/models/order.models';
 import { SubscriptionService } from '../../core/services/subscription.service';
 import { UserSubscription } from '../../core/models/subscription.models';
+import { NotificationComponent } from '../../shared/components/notification/notification';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NotificationComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
