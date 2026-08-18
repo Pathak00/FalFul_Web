@@ -38,12 +38,13 @@ public static class DependencyInjection
         services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IDiscountRepository, DiscountRepository>();
-        services.AddScoped<INoticeRepository, NoticeRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IReceiptTemplateRepository, ReceiptTemplateRepository>();
         services.AddScoped<IReceiptPrintLogRepository, ReceiptPrintLogRepository>();
         services.AddScoped<IPasswordResetOtpRepository,   PasswordResetOtpRepository>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<INoticeRepository, NoticeRepository>();
         return services;
     }
 }

@@ -1,9 +1,11 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using FalFul.Application.DTOs.Order;
 using FalFul.Application.Interfaces;
+using FalFul.Application.Services;
+using FalFul.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace FalFul.API.Controllers;
 
@@ -23,6 +25,15 @@ public class OrdersController(IOrderService orderService, IDeliveryService deliv
     {
         var customerName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
         var result = await orderService.PlaceOrderAsync(GetUserId(), customerName, dto);
+
+        if (result.IsSuccess)
+        {
+           
+
+
+            //await NotificationSender.SendToUserAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),notification);
+
+        }
         return result.IsSuccess
             ? Ok(new { orderId = result.Data!.OrderId, orderNumber = result.Data.OrderNumber })
             : BadRequest(new { message = result.Error });

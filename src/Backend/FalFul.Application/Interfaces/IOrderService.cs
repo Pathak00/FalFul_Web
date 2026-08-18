@@ -1,5 +1,6 @@
 using FalFul.Application.DTOs.Order;
 using FalFul.Domain.Common;
+using FalFul.Domain.Entities;
 
 namespace FalFul.Application.Interfaces;
 
@@ -23,5 +24,5 @@ public interface IOrderService
 
     // Orders (admin)
     Task<IEnumerable<OrderSummaryDto>> GetAllOrdersAsync(byte? status = null);
-    Task<Result>                        UpdateOrderStatusAsync(int id, UpdateOrderStatusDto dto);
+    Task<Result<Order>>                        UpdateOrderStatusAsync(int id, UpdateOrderStatusDto dto);
 }
